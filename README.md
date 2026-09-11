@@ -31,3 +31,7 @@ place.
 - `wofi/` — launcher, imported via `@import` from `~/.config/wofi/style.css`
 - `tmux/` — status bar / panes / messages, sourced via `source-file ~/.rice/tmux/theme.conf`
   from `~/.dots/tmux/.config/tmux/tmux.conf`
+- `nvim/` — editor chrome only (statusline, splits, popups, gutter, signs —
+  never Comment/String/Function/`@`-treesitter groups), loaded via
+  `dofile(vim.fn.expand("~/.rice/nvim/theme.lua"))` from
+  `~/.dots/nvim/.config/nvim/lua/config/theme.lua`

@@ -1,0 +1,101 @@
+-- Toxic — black & toxic-waste-green UI theme for Neovim.
+--
+-- Only touches editor *chrome*: statusline, splits, popups, cursorline,
+-- gutter, tabs, selection/search, messages, and a few plugin sign/border
+-- groups (gitsigns, indent-blankline, which-key). Deliberately does NOT set
+-- Comment/String/Function/Type/Constant/... or any `@`-prefixed treesitter
+-- capture group, so code stays colored by whatever colorscheme (or the
+-- Neovim default) is active — this file never changes that.
+--
+-- Loaded from ~/.dots/nvim/.config/nvim/lua/config/theme.lua via
+-- `dofile(vim.fn.expand("~/.rice/nvim/theme.lua"))`.
+
+local colors = {
+  black = "#000000",
+  fg = "#D9FFD9",
+  surface = "#0D1A0D",
+  neon = "#39FF14",
+  acid = "#ADFF2F",
+  dim = "#1F4D0F",
+  deep = "#143D0A",
+  gray = "#4D4D4D",
+  gray2 = "#6C6C6C",
+  red = "#FF3B30",
+  amber = "#CCFF00",
+}
+
+local M = { colors = colors }
+
+function M.setup()
+  local hl = vim.api.nvim_set_hl
+  local c = colors
+
+  -- base editor surface
+  hl(0, "Normal", { fg = c.fg, bg = c.black })
+  hl(0, "NormalNC", { fg = c.fg, bg = c.black })
+  hl(0, "NormalFloat", { fg = c.fg, bg = c.black })
+  hl(0, "FloatBorder", { fg = c.neon, bg = c.black })
+  hl(0, "FloatTitle", { fg = c.neon, bg = c.black, bold = true })
+  hl(0, "Cursor", { fg = c.black, bg = c.neon })
+
+  -- gutter / current line
+  hl(0, "CursorLine", { bg = c.surface })
+  hl(0, "CursorLineNr", { fg = c.neon, bold = true })
+  hl(0, "LineNr", { fg = c.dim })
+  hl(0, "SignColumn", { bg = c.black })
+  hl(0, "ColorColumn", { bg = c.surface })
+  hl(0, "NonText", { fg = c.dim })
+  hl(0, "EndOfBuffer", { fg = c.dim })
+
+  -- splits / status / tabs
+  hl(0, "WinSeparator", { fg = c.dim, bg = c.black })
+  hl(0, "VertSplit", { fg = c.dim, bg = c.black })
+  hl(0, "StatusLine", { fg = c.neon, bg = c.black })
+  hl(0, "StatusLineNC", { fg = c.gray, bg = c.black })
+  hl(0, "WinBar", { fg = c.neon, bg = c.black, bold = true })
+  hl(0, "WinBarNC", { fg = c.gray, bg = c.black })
+  hl(0, "TabLine", { fg = c.gray2, bg = c.black })
+  hl(0, "TabLineSel", { fg = c.black, bg = c.neon, bold = true })
+  hl(0, "TabLineFill", { bg = c.black })
+
+  -- popup menu (completion, cmdline palette, etc.)
+  hl(0, "Pmenu", { fg = c.fg, bg = c.surface })
+  hl(0, "PmenuSel", { fg = c.black, bg = c.neon, bold = true })
+  hl(0, "PmenuSbar", { bg = c.dim })
+  hl(0, "PmenuThumb", { bg = c.neon })
+
+  -- selection / search
+  hl(0, "Visual", { bg = c.dim })
+  hl(0, "VisualNOS", { bg = c.deep })
+  hl(0, "Search", { fg = c.black, bg = c.acid })
+  hl(0, "IncSearch", { fg = c.black, bg = c.neon })
+  hl(0, "CurSearch", { fg = c.black, bg = c.neon })
+  hl(0, "MatchParen", { fg = c.black, bg = c.acid, bold = true })
+
+  -- messages
+  hl(0, "Title", { fg = c.neon, bold = true })
+  hl(0, "Directory", { fg = c.acid })
+  hl(0, "Question", { fg = c.neon })
+  hl(0, "ModeMsg", { fg = c.neon })
+  hl(0, "ErrorMsg", { fg = c.red, bold = true })
+  hl(0, "WarningMsg", { fg = c.amber })
+
+  -- gitsigns (sign-column indicators, not code)
+  hl(0, "GitSignsAdd", { fg = c.neon })
+  hl(0, "GitSignsChange", { fg = c.amber })
+  hl(0, "GitSignsDelete", { fg = c.red })
+
+  -- indent-blankline
+  hl(0, "IblIndent", { fg = c.dim })
+  hl(0, "IblScope", { fg = c.neon })
+
+  -- which-key
+  hl(0, "WhichKey", { fg = c.neon, bold = true })
+  hl(0, "WhichKeyGroup", { fg = c.acid })
+  hl(0, "WhichKeyDesc", { fg = c.fg })
+  hl(0, "WhichKeySeparator", { fg = c.dim })
+  hl(0, "WhichKeyBorder", { fg = c.neon, bg = c.black })
+  hl(0, "WhichKeyFloat", { bg = c.black })
+end
+
+return M
