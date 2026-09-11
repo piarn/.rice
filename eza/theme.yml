@@ -1,0 +1,191 @@
+# Toxic — black & toxic-waste-green eza theme.
+# Loaded via EZA_CONFIG_DIR=~/.rice/eza (must be named theme.yml), set from
+# ~/.dots/fish/.config/fish/conf.d/00-rice.fish -> ~/.rice/eza/colors.fish.
+#
+# NOTE: eza applies LS_COLORS, then EZA_COLORS, *after* this file — so the
+# ten classic file-kind codes (di, ln, ex, pi, so, bd, cd, or) get
+# overridden by whatever LS_COLORS this system already exports (dircolors).
+# ~/.rice/eza/colors.fish sets an EZA_COLORS that reclaims those specific
+# codes to match the palette below; everything else here isn't touched by
+# LS_COLORS/EZA_COLORS and applies as-is.
+
+colourful: true
+
+filekinds:
+  normal:
+    foreground: "#D9FFD9"
+  directory:
+    foreground: "#39FF14"
+    is_bold: true
+  symlink:
+    foreground: "#00E6B8"
+    is_italic: true
+  executable:
+    foreground: "#ADFF2F"
+    is_bold: true
+  pipe:
+    foreground: "#CCFF00"
+  socket:
+    foreground: "#FF3FD0"
+  block_device:
+    foreground: "#00BFFF"
+  char_device:
+    foreground: "#00BFFF"
+  special:
+    foreground: "#CCFF00"
+  mount_point:
+    foreground: "#39FF14"
+    is_bold: true
+
+perms:
+  user_read:
+    foreground: "#ADFF2F"
+  user_write:
+    foreground: "#FF3B30"
+  user_execute_file:
+    foreground: "#39FF14"
+    is_bold: true
+  user_execute_other:
+    foreground: "#39FF14"
+  group_read:
+    foreground: "#1F4D0F"
+  group_write:
+    foreground: "#FF3B30"
+  group_execute:
+    foreground: "#1F4D0F"
+  other_read:
+    foreground: "#143D0A"
+  other_write:
+    foreground: "#FF3B30"
+  other_execute:
+    foreground: "#143D0A"
+  special_user_file:
+    foreground: "#CCFF00"
+  special_other:
+    foreground: "#CCFF00"
+  attribute:
+    foreground: "#00E6B8"
+
+size:
+  number_byte:
+    foreground: "#D9FFD9"
+  number_kilo:
+    foreground: "#ADFF2F"
+  number_mega:
+    foreground: "#39FF14"
+  number_giga:
+    foreground: "#CCFF00"
+  number_huge:
+    foreground: "#FF3B30"
+    is_bold: true
+  unit_byte:
+    foreground: "#4D4D4D"
+  unit_kilo:
+    foreground: "#4D4D4D"
+  unit_mega:
+    foreground: "#4D4D4D"
+  unit_giga:
+    foreground: "#4D4D4D"
+  unit_huge:
+    foreground: "#4D4D4D"
+
+users:
+  user_you:
+    foreground: "#39FF14"
+    is_bold: true
+  user_root:
+    foreground: "#FF3B30"
+    is_bold: true
+  user_other:
+    foreground: "#6C6C6C"
+  group_yours:
+    foreground: "#ADFF2F"
+  group_other:
+    foreground: "#6C6C6C"
+  group_root:
+    foreground: "#FF3B30"
+
+links:
+  normal:
+    foreground: "#4D4D4D"
+  multi_link_file:
+    foreground: "#CCFF00"
+
+git:
+  new:
+    foreground: "#39FF14"
+  modified:
+    foreground: "#CCFF00"
+  deleted:
+    foreground: "#FF3B30"
+  renamed:
+    foreground: "#00BFFF"
+  typechange:
+    foreground: "#00E6B8"
+  ignored:
+    foreground: "#4D4D4D"
+  conflicted:
+    foreground: "#FF3FD0"
+
+git_repo:
+  branch_main:
+    foreground: "#39FF14"
+    is_bold: true
+  branch_other:
+    foreground: "#ADFF2F"
+  git_clean:
+    foreground: "#39FF14"
+  git_dirty:
+    foreground: "#FF3B30"
+
+file_type:
+  image:
+    foreground: "#FF3FD0"
+  video:
+    foreground: "#FF3FD0"
+  music:
+    foreground: "#00BFFF"
+  lossless:
+    foreground: "#00BFFF"
+  crypto:
+    foreground: "#39FF14"
+    is_bold: true
+  document:
+    foreground: "#D9FFD9"
+  compressed:
+    foreground: "#FF3B30"
+  temp:
+    foreground: "#4D4D4D"
+    is_dimmed: true
+  compiled:
+    foreground: "#CCFF00"
+  build:
+    foreground: "#CCFF00"
+    is_bold: true
+    is_underline: true
+  source:
+    foreground: "#ADFF2F"
+
+punctuation:
+  foreground: "#1F4D0F"
+date:
+  foreground: "#ADFF2F"
+inode:
+  foreground: "#4D4D4D"
+blocks:
+  foreground: "#4D4D4D"
+header:
+  foreground: "#39FF14"
+  is_underline: true
+octal:
+  foreground: "#00E6B8"
+symlink_path:
+  foreground: "#00E6B8"
+control_char:
+  foreground: "#FF3B30"
+broken_symlink:
+  foreground: "#FF3B30"
+  is_bold: true
+broken_path_overlay:
+  foreground: "#FF3B30"
+  is_dimmed: true

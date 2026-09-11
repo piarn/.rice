@@ -37,3 +37,8 @@ place.
   `~/.dots/nvim/.config/nvim/lua/config/theme.lua`
 - `fish/` — prompt color (`rice_color_dir`), sourced via the existing
   `~/.dots/fish/.config/fish/conf.d/00-rice.fish` hook
+- `eza/` — `theme.yml` (perms, size, users, git, file types, ...) pointed at
+  via `EZA_CONFIG_DIR`, plus a small `EZA_COLORS` override for the ten
+  classic file-kind codes (di/ln/ex/...) that `LS_COLORS` would otherwise
+  clobber — both set from `~/.rice/eza/colors.fish`, sourced by
+  `00-rice.fish`
