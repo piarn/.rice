@@ -35,3 +35,5 @@ place.
   never Comment/String/Function/`@`-treesitter groups), loaded via
   `dofile(vim.fn.expand("~/.rice/nvim/theme.lua"))` from
   `~/.dots/nvim/.config/nvim/lua/config/theme.lua`
+- `fish/` — prompt color (`rice_color_dir`), sourced via the existing
+  `~/.dots/fish/.config/fish/conf.d/00-rice.fish` hook
