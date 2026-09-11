@@ -29,6 +29,11 @@ place.
 - `waybar/` — `style.css` imported via `@import` from `~/.config/waybar/style.css`
   (functional config lives in `~/.dots/waybar`; swapped in for swaybar since
   swaybar can't center a module or lay out network/battery)
+- `yazi/` — `theme.toml` (TOML has no include directive, so this file *is*
+  the config): `~/.dots/yazi/.config/yazi/theme.toml` is a relative symlink
+  straight to it, stowed to `~/.config/yazi/theme.toml`. Themes UI chrome and
+  the broad filetype mime groups; leaves the per-extension icon/brand-color
+  tables alone, same call as nvim's syntax highlighting
 - `wofi/` — launcher, imported via `@import` from `~/.config/wofi/style.css`
 - `tmux/` — status bar / panes / messages, sourced via `source-file ~/.rice/tmux/theme.conf`
   from `~/.dots/tmux/.config/tmux/tmux.conf`
