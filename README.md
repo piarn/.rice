@@ -91,3 +91,7 @@ symlink straight to it, not a file that sources it.
 - `fzf/` — `FZF_DEFAULT_OPTS` (fzf.fish's base options + `--color`), sourced
   from `00-rice.fish` before fzf.fish's own wrapper would otherwise set its
   defaults
+- `lazygit/`, `lazydocker/` — partial `config.yml` (just `gui.theme`; each
+  tool merges it over its own defaults). YAML has no include directive, so
+  same deal as `yazi/`: `~/.dots/lazygit(.../lazydocker)/.config/.../config.yml`
+  is a relative symlink straight to these files
