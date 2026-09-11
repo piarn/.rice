@@ -1,10 +1,29 @@
-# .rice — Toxic
+# .rice
 
-Black & toxic-waste-green theme. Each app folder holds a theme file that gets
-included/imported from the app's real config, so the palette lives in one
-place.
+Rice repo, built around one idea: **the palette lives in one file, and
+everything else is generated from it.**
 
-## Palette
+## Changing/switching the theme
+
+```
+~/.rice/bin/apply-theme            # re-render the current theme (after editing it)
+~/.rice/bin/apply-theme <name>     # switch to ~/.rice/themes/<name>.toml and render it
+~/.rice/bin/apply-theme <name> --dry-run   # show what would change, write nothing
+```
+
+Edit a color in `~/.rice/themes/<name>.toml`, run `apply-theme`, and every
+app's theme file under `~/.rice/<app>/...` gets re-rendered from
+`~/.rice/templates/<app>/*.tmpl`. `~/.rice/themes/current` remembers which
+theme is active.
+
+To add a new theme: copy `themes/toxic.toml` to `themes/<name>.toml`, change
+the `[colors]` values, then `apply-theme <name>`. Templates reference colors
+by role (`neon`, `dim`, `red`, ...), not by value, so any theme that defines
+the same roles drops in without touching a single app config.
+
+## Current theme: Toxic
+
+Black & toxic-waste-green.
 
 | Role              | Hex       |
 |-------------------|-----------|
@@ -20,6 +39,27 @@ place.
 | Blue                 | `#00BFFF` |
 | Magenta              | `#FF3FD0` |
 | Cyan                 | `#00E6B8` |
+
+Full source of truth (including the bright-ANSI ramp) is
+`~/.rice/themes/toxic.toml`.
+
+## How a template becomes a config file
+
+Templates use `{{token}}` placeholders:
+
+- `{{black}}` → `#000000` (color as `#RRGGBB`)
+- `{{black.hex}}` → `000000` (no `#`, lowercase — for fish `set_color`)
+- `{{black.rgb}}` → `0;0;0` (decimal, `;`-joined — for ANSI SGR strings like `EZA_COLORS`)
+- `{{name}}` / `{{theme}}` → the theme's display name / file stem
+
+`apply-theme` renders `templates/<app>/<file>.tmpl` to `<app>/<file>` for
+every template it finds — e.g. `templates/eza/theme.yml.tmpl` →
+`eza/theme.yml`. It refuses to render (and tells you which token) if a
+template references a color the theme doesn't define.
+
+One exception: TOML has no include directive, so `yazi/theme.toml` (this
+repo) *is* consumed directly — `~/.dots/yazi/.config/yazi/theme.toml` is a
+symlink straight to it, not a file that sources it.
 
 ## Apps
 

@@ -1,0 +1,122 @@
+#!/usr/bin/env python3
+"""Render every ~/.rice/<app>/... theme file from a single palette file.
+
+Usage:
+    apply-theme                 # re-render the currently active theme
+    apply-theme <name>          # switch to ~/.rice/themes/<name>.toml, render it,
+                                 # and remember it as the active theme
+    apply-theme <name> --dry-run   # show what would change, write nothing
+
+Templates live under ~/.rice/templates/<app>/<file>.tmpl and use:
+    {{token}}        the color as "#RRGGBB"
+    {{token.hex}}     the color as "rrggbb", no '#' (lowercase)
+    {{token.rgb}}     the color as decimal "R;G;B" (for ANSI SGR strings)
+    {{name}}          the theme's display name (e.g. "Toxic")
+    {{theme}}         the theme file's stem (e.g. "toxic")
+
+Each template renders to ~/.rice/<same relative path, minus ".tmpl">.
+"""
+
+import argparse
+import re
+import sys
+import tomllib
+from pathlib import Path
+
+RICE = Path.home() / ".rice"
+THEMES = RICE / "themes"
+TEMPLATES = RICE / "templates"
+CURRENT = THEMES / "current"
+
+TOKEN_RE = re.compile(r"\{\{\s*([a-zA-Z0-9_]+)(?:\.(hex|rgb))?\s*\}\}")
+
+
+def load_theme(name: str) -> dict:
+    path = THEMES / f"{name}.toml"
+    if not path.exists():
+        sys.exit(f"error: no such theme file: {path}")
+    with path.open("rb") as f:
+        data = tomllib.load(f)
+    if "colors" not in data:
+        sys.exit(f"error: {path} has no [colors] table")
+    return data
+
+
+def hex_to_rgb(hex_color: str) -> tuple[int, int, int]:
+    h = hex_color.lstrip("#")
+    return int(h[0:2], 16), int(h[2:4], 16), int(h[4:6], 16)
+
+
+def render(text: str, theme: dict, theme_name: str) -> str:
+    colors = theme["colors"]
+
+    def repl(m: re.Match) -> str:
+        token, form = m.group(1), m.group(2)
+        if token == "name":
+            return theme.get("name", theme_name)
+        if token == "theme":
+            return theme_name
+        if token not in colors:
+            raise KeyError(f"unknown color token {{{{{token}}}}} (theme has no '{token}')")
+        value = colors[token]
+        if form == "hex":
+            return value.lstrip("#").lower()
+        if form == "rgb":
+            r, g, b = hex_to_rgb(value)
+            return f"{r};{g};{b}"
+        return value
+
+    return TOKEN_RE.sub(repl, text)
+
+
+def main() -> None:
+    parser = argparse.ArgumentParser(description=__doc__, formatter_class=argparse.RawDescriptionHelpFormatter)
+    parser.add_argument("theme", nargs="?", help="theme name (e.g. toxic); defaults to the current theme")
+    parser.add_argument("--dry-run", action="store_true", help="show what would change, write nothing")
+    args = parser.parse_args()
+
+    if args.theme:
+        theme_name = args.theme
+    elif CURRENT.exists():
+        theme_name = CURRENT.read_text().strip()
+    else:
+        sys.exit("error: no theme given and no ~/.rice/themes/current set")
+
+    theme = load_theme(theme_name)
+
+    template_files = sorted(TEMPLATES.rglob("*.tmpl"))
+    if not template_files:
+        sys.exit(f"error: no templates found under {TEMPLATES}")
+
+    changed = []
+    for tmpl in template_files:
+        rel = tmpl.relative_to(TEMPLATES)
+        dest = RICE / rel.with_suffix("")  # strip .tmpl
+        try:
+            rendered = render(tmpl.read_text(), theme, theme_name)
+        except KeyError as e:
+            sys.exit(f"error rendering {tmpl}: {e}")
+
+        existing = dest.read_text() if dest.exists() else None
+        if existing == rendered:
+            continue
+        changed.append(dest.relative_to(RICE))
+        if not args.dry_run:
+            dest.parent.mkdir(parents=True, exist_ok=True)
+            dest.write_text(rendered)
+
+    if not args.dry_run:
+        THEMES.mkdir(parents=True, exist_ok=True)
+        CURRENT.write_text(theme_name + "\n")
+
+    verb = "would change" if args.dry_run else "wrote"
+    if changed:
+        print(f"{verb} {len(changed)} file(s) for theme '{theme_name}':")
+        for f in changed:
+            print(f"  {f}")
+    else:
+        print(f"nothing to do — all files already match theme '{theme_name}'")
+
+
+if __name__ == "__main__":
+    main()

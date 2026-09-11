@@ -1,0 +1,38 @@
+# Toxic — black & toxic-waste-green.
+#
+# Single source of truth for the whole rice. Edit a value here and run
+# `~/.rice/bin/apply-theme` to re-render every app's theme file. To add a
+# new theme, copy this file to themes/<name>.toml, change the colors, then
+# `apply-theme <name>`.
+
+name = "Toxic"
+
+[colors]
+# Base
+black   = "#000000"  # background everywhere
+surface = "#0D1A0D"  # cursorline / popup surface, one step off black
+fg      = "#D9FFD9"  # default foreground
+white   = "#FFFFFF"  # pure white, used sparingly (cursor text, ghostty bright white)
+
+# Accents
+neon    = "#39FF14"  # primary accent — focused/active/current
+acid    = "#ADFF2F"  # secondary accent — bright highlights, matches
+dim     = "#1F4D0F"  # muted borders, inactive chrome
+deep    = "#143D0A"  # more muted still — unfocused/deep background tints
+gray    = "#4D4D4D"  # inactive text
+gray2   = "#6C6C6C"  # inactive text, lighter
+
+# Status colors
+red     = "#FF3B30"  # errors, urgent, deletions
+amber   = "#CCFF00"  # warnings, modified
+blue    = "#00BFFF"  # info, links, renamed
+magenta = "#FF3FD0"  # conflicts, media files
+cyan    = "#00E6B8"  # symlinks, attributes, typechange
+
+# Bright ANSI ramp (ghostty terminal palette slots 9,11,12,13,14 only —
+# lighter tints of red/amber/blue/magenta/cyan for the "bright" variants)
+red_bright     = "#FF6E6E"
+amber_bright   = "#EAFF70"
+blue_bright    = "#6EA8FF"
+magenta_bright = "#FF7AE0"
+cyan_bright    = "#5CF5C0"
