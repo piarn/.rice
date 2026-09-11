@@ -29,3 +29,5 @@ place.
   `include` can't nest inside the `bar { colors { } }` block, so they're kept
   in sync by hand with the palette above)
 - `wofi/` — launcher, imported via `@import` from `~/.config/wofi/style.css`
+- `tmux/` — status bar / panes / messages, sourced via `source-file ~/.rice/tmux/theme.conf`
+  from `~/.dots/tmux/.config/tmux/tmux.conf`
