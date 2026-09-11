@@ -25,9 +25,10 @@ place.
 
 - `ghostty/` — terminal, included via `config-file = ?~/.rice/ghostty/theme.conf`
 - `sway/` — window border colors, included via `include ~/.rice/sway/theme.conf`
-  (bar colors are inlined directly in `~/.config/sway/config` — sway's
-  `include` can't nest inside the `bar { colors { } }` block, so they're kept
-  in sync by hand with the palette above)
+  (the status bar itself is waybar now, not swaybar — see `waybar/` below)
+- `waybar/` — `style.css` imported via `@import` from `~/.config/waybar/style.css`
+  (functional config lives in `~/.dots/waybar`; swapped in for swaybar since
+  swaybar can't center a module or lay out network/battery)
 - `wofi/` — launcher, imported via `@import` from `~/.config/wofi/style.css`
 - `tmux/` — status bar / panes / messages, sourced via `source-file ~/.rice/tmux/theme.conf`
   from `~/.dots/tmux/.config/tmux/tmux.conf`
