@@ -11,7 +11,6 @@
 window#waybar {
     background-color: #000000;
     color: #D9FFD9;
-    border-bottom: 2px solid #1F4D0F;
 }
 
 #workspaces button {
