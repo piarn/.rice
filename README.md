@@ -42,3 +42,6 @@ place.
   classic file-kind codes (di/ln/ex/...) that `LS_COLORS` would otherwise
   clobber — both set from `~/.rice/eza/colors.fish`, sourced by
   `00-rice.fish`
+- `fzf/` — `FZF_DEFAULT_OPTS` (fzf.fish's base options + `--color`), sourced
+  from `00-rice.fish` before fzf.fish's own wrapper would otherwise set its
+  defaults
