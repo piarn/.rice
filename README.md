@@ -95,3 +95,7 @@ symlink straight to it, not a file that sources it.
   tool merges it over its own defaults). YAML has no include directive, so
   same deal as `yazi/`: `~/.dots/lazygit(.../lazydocker)/.config/.../config.yml`
   is a relative symlink straight to these files
+- `swaylock/` — `config` (ring/text/indicator colors); same symlink deal as
+  yazi/lazygit/lazydocker. Invoked via
+  `~/.dots/scripts/.local/bin/lockscreen` (grim screenshot + ImageMagick
+  blur, then `swaylock -i`), bound to `$mod+Escape` in `~/.config/sway/config`
