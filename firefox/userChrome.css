@@ -1,0 +1,302 @@
+/*===KeyFox by AlfarexGuy2019===*/
+
+/*===COLORS===*/
+
+:root {
+  --accent-color: 45, 45, 45;
+  --tab-color: 240, 240, 244;
+  --tab-text-color: 255, 255, 255;
+  --secondary-accent-color: 127,127,127;
+  --second-tab-text-color: 127,127,127;
+  --third-accent-color: 235, 219, 178;
+  --light-color: 255, 255, 255;
+  --dark-color: 0, 0, 0;
+  --url-back: 249, 249, 251;
+  --caption-min-color: 215, 153, 33;
+  --caption-max-color: 69, 133, 136;
+  --caption-close-color: 177, 98, 134;
+}
+
+/* MIN MAX CLOSE Remove */
+#TabsToolbar > .titlebar-buttonbox-container {
+  visibility: collapse !important;}
+
+/*Basic Settings*/
+
+:root {
+  /* Fixed px, not vw: hamburger+extensions+downloads measure ~117px
+     (fixed-width buttons, doesn't scale with window size). The urlbar
+     used to flex-grow to fill the rest of a 40vw box (~651px at a
+     1920px-wide window); "60% of that" is a fixed ~391px, so the urlbar
+     also gets a fixed px width below instead of a %, which would
+     otherwise be relative to this same box and compound every time this
+     box is resized to fit content. navbarWidth = 117 + 391 = 508px. */
+  --navbarWidth     : 508px;
+  --animationSpeed  : 0.5s;
+}
+
+#TabsToolbar {
+  margin-left : var(--navbarWidth) !important;
+}
+
+#nav-bar {
+  margin-right: calc(100vw - var(--navbarWidth)) !important;
+}
+
+#urlbar-container {
+  min-width   : 0px !important;
+}
+
+:root[uidensity="compact"] #nav-bar {
+  margin-top  : -37px !important;
+  height      : 37px !important;
+}
+
+:root:not([uidensity="compact"]):not([uidensity="touch"]) #nav-bar {
+  margin-top  : -44px !important;
+  height      : 44px !important;
+}
+
+:root[uidensity="touch"] #nav-bar {
+  margin-top  : -49px !important;
+  height      : 49px !important;
+}
+
+/* Hide new-tab "+" button */
+#tabs-newtab-button,
+#new-tab-button {
+  display: none !important;
+}
+
+/* nav-bar order is now set for real via browser.uiCustomization.state
+   (sidebar/back/forward/reload/profile hidden below, then extensions,
+   downloads, urlbar last) instead of CSS `order`, because Firefox's
+   urlbar breakout/expand width calculation uses actual DOM order, and
+   faking the order with CSS made the popup shrink the urlbar instead
+   of expanding it. #PanelUI-button (hamburger) isn't a real nav-bar
+   widget, so it still needs the CSS order hack to sit before the rest. */
+#nav-bar-customization-target {
+  display: flex !important;
+  gap: 0 !important;
+}
+
+/* Equalize the hamburger/extensions/downloads spacing: PanelUI-button
+   lives outside #nav-bar-customization-target's flex box (its gap only
+   governs extensions<->downloads), so give both gaps the same explicit
+   margin instead of relying on each element's own default spacing. */
+#PanelUI-button {
+  order: -200 !important;
+  margin-inline: 0 1px !important;
+}
+
+#unified-extensions-button {
+  margin-inline: 0 1px !important;
+}
+
+#downloads-button {
+  margin-inline: 0 1px !important;
+}
+
+#urlbar-container {
+  margin-inline-start: 0 !important;
+  flex: 0 0 391px !important;
+}
+
+/* Back / Forward - always hidden */
+#back-button,
+#forward-button {
+  display: none !important;
+}
+
+/* Site information button */
+#identity-box > :not(#notification-popup-box) { display: none !important }
+#identity-box { margin: 0 !important }
+#notification-popup-box { margin-inline-end: var(--identity-box-margin-inline) }
+
+/* "Shield" icon */
+#tracking-protection-icon-container { display: none !important }
+
+/* Reload/stop ("restart") button - real id is stop-reload-button */
+#stop-reload-button {
+  display: none !important;
+}
+
+/* All-tabs dropdown arrow (top right) */
+#alltabs-button {
+  display: none !important;
+}
+
+/* Sidebar toggle button */
+#sidebar-button {
+  display: none !important;
+}
+
+/* Profile / account button */
+#profile-button,
+#fxa-toolbar-menu-button {
+  display: none !important;
+}
+
+/* Simplifying interface */
+
+#nav-bar {
+  background  : none !important;
+  box-shadow  : none !important;
+}
+
+#navigator-toolbox {
+  border      : none !important;
+}
+
+.titlebar-spacer {
+  display     : none !important;
+}
+
+#urlbar > .urlbar-background {
+  border      : none !important;
+  background  : rgb(55, 55, 55) !important;
+  border-radius: 6px !important;
+}
+
+#urlbar:not(:hover):not([breakout][breakout-extend]) > .urlbar-background {
+  box-shadow  : none !important;
+  background  : rgb(55, 55, 55) !important;
+}
+
+#urlbar[breakout][breakout-extend] > .urlbar-background {
+  background  : rgb(70, 70, 70) !important;
+}
+
+/* Element Hiding stuff */
+
+.urlbar-icon, #userContext-indicator, #userContext-label {
+  fill        : transparent !important;
+  background  : transparent !important;
+  color       : transparent !important;
+}
+
+#urlbar:not(:hover,:active,[focused]) .urlbar-icon {
+  visibility: hidden;
+}
+
+#urlbar .urlbar-icon {
+  fill        : var(--toolbar-color) !important;
+}
+
+/*================ ACCENT (white icons/text) ================*/
+
+:root {
+  --toolbar-color               : rgb(255, 255, 255) !important;
+  --toolbarbutton-icon-fill     : rgb(255, 255, 255) !important;
+  --toolbarbutton-icon-fill-attention : rgb(255, 255, 255) !important;
+  --lwt-toolbarbutton-icon-fill : rgb(255, 255, 255) !important;
+  --urlbar-popup-url-color      : rgb(255, 255, 255) !important;
+}
+
+#nav-bar,
+#nav-bar toolbarbutton,
+#PersonalToolbar,
+#PersonalToolbar toolbarbutton,
+#TabsToolbar toolbarbutton,
+#urlbar,
+#urlbar-input {
+  color : rgb(255, 255, 255) !important;
+}
+
+toolbar .toolbarbutton-icon,
+toolbar .toolbarbutton-badge-stack,
+#PanelUI-button .toolbarbutton-icon,
+#star-button,
+#unified-extensions-button .toolbarbutton-icon,
+#bookmarks-menu-button .toolbarbutton-icon,
+#PersonalToolbar .bookmark-item .toolbarbutton-icon {
+  fill : rgb(255, 255, 255) !important;
+}
+
+/*================== TABS BAR ==================*/
+
+.browser-toolbox-background {
+  background: rgba(var(--dark-color), 1) !important;
+  will-change: initial;
+}
+
+#PersonalToolbar {
+  background: rgba(var(--dark-color), 1) !important;
+  color: rgba(var(--light-color), 1) !important;
+  padding-bottom: 6px !important;
+  padding-top: 1px !important;
+}
+
+toolbar#nav-bar {
+  background: rgba(var(--dark-color), 1) !important;
+  box-shadow: none !important;
+  padding-bottom: 4px !important;
+}
+
+#TabsToolbar,
+#TabsToolbar .toolbar-items,
+#tabbrowser-tabs,
+#tabbrowser-arrowscrollbox {
+  background: rgba(var(--dark-color), 1) !important;
+}
+
+.tabbrowser-tab:not([selected]) > .tab-stack > .tab-background {
+  background: rgba(var(--dark-color), 1) !important;
+}
+
+#tabs-newtab-button,
+#new-tab-button {
+  background: rgba(var(--dark-color), 1) !important;
+}
+
+/*================ DARK THEME ================*/
+:root:-moz-lwtheme-brighttext,
+.sidebar-panel[lwt-sidebar-brighttext],
+body[lwt-sidebar-brighttext] {
+	--main-bgcolor: var(--dark-color);
+	--transparent-bgcolor: var(--dark-color);
+}
+
+tab[selected="true"] .tab-content {
+  color: rgba(var(--secondary-accent-color), 1) !important;
+}
+
+tab[selected="true"] .tab-background {
+  background: rgba(var(--accent-color), 1) !important;
+}
+
+.tabbrowser-tab:not([selected]):hover > .tab-stack > .tab-background {
+  background-color: rgba(var(--accent-color), 0.7) !important;
+}
+
+.tab-line {
+  height: 0px !important;
+}
+
+.tabbrowser-tab {
+  margin-right: 5px !important;
+}
+
+.tabbrowser-tab:not([visuallyselected="true"]),
+.tabbrowser-tab:-moz-lwtheme {
+  color: rgba(var(--second-tab-text-color), 1) !important;
+}
+
+tab[selected="true"] .tab-content {
+  color: rgba(var(--tab-text-color), 1) !important;
+}
+
+tab[selected="true"] .tab-background {
+  background: rgba(var(--accent-color), 1) !important;
+}
+
+.tabbrowser-tab::after,
+.tabbrowser-tab::before {
+  border-left: 0 !important;
+  opacity: 0 !important;
+}
+
+.tab-close-button {
+  transition: all 0.3s ease !important;
+  border-radius: 4px !important;
+}

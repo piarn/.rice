@@ -99,3 +99,15 @@ symlink straight to it, not a file that sources it.
   yazi/lazygit/lazydocker. Invoked via
   `~/.dots/scripts/.local/bin/lockscreen` (grim screenshot + ImageMagick
   blur, then `swaylock -i`), bound to `$mod+Escape` in `~/.config/sway/config`
+- `firefox/` — `userChrome.css` (the KeyFox one-liner layout, recolored
+  black/white/gray); CSS has no include directive either, so
+  `~/.config/mozilla/firefox/<profile>/chrome/userChrome.css` is a relative
+  symlink straight to it, same deal as yazi/lazygit/lazydocker/swaylock.
+  Not wired into the token/template system — it's a plain flat file, not a
+  `.tmpl`, so switching rice themes won't recolor it. The "glue" pref
+  (`toolkit.legacyUserProfileCustomizations.stylesheets`, plus
+  `browser.download.autohideButton`) lives in the profile's own `user.js`,
+  same idea as nvim's `dofile(...)` line living in `~/.dots` rather than
+  here. Note the profile directory has a random suffix per machine/install,
+  so this symlink needs re-pointing (or the profile's chrome dir needs
+  recreating) on a fresh Firefox profile.
