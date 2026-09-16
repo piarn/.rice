@@ -19,6 +19,7 @@ Each template renders to ~/.rice/<same relative path, minus ".tmpl">.
 
 import argparse
 import re
+import subprocess
 import sys
 import tomllib
 from pathlib import Path
@@ -88,7 +89,11 @@ def main() -> None:
     if not template_files:
         sys.exit(f"error: no templates found under {TEMPLATES}")
 
-    changed = []
+    # Render everything first and only start writing once every template has
+    # proven renderable — otherwise a theme missing one token (e.g. a
+    # half-finished new theme file) would leave some apps on the old theme
+    # and others on the new one.
+    renders = []
     for tmpl in template_files:
         rel = tmpl.relative_to(TEMPLATES)
         dest = RICE / rel.with_suffix("")  # strip .tmpl
@@ -96,7 +101,10 @@ def main() -> None:
             rendered = render(tmpl.read_text(), theme, theme_name)
         except KeyError as e:
             sys.exit(f"error rendering {tmpl}: {e}")
+        renders.append((dest, rendered))
 
+    changed = []
+    for dest, rendered in renders:
         existing = dest.read_text() if dest.exists() else None
         if existing == rendered:
             continue
@@ -116,6 +124,34 @@ def main() -> None:
             print(f"  {f}")
     else:
         print(f"nothing to do — all files already match theme '{theme_name}'")
+
+    if not args.dry_run and changed:
+        reload_running_apps(changed)
+
+
+def reload_running_apps(changed: list) -> None:
+    """Nudge apps that cache their config in memory so the new theme is
+    visible without a manual restart — currently just tmux, which re-reads
+    its config on `source-file` but otherwise ignores on-disk changes.
+    Nvim's autocmd already re-applies on ColorScheme events; other apps
+    (ghostty, fish, etc.) read their theme file on next launch/shell, so
+    there's nothing to nudge there.
+    """
+    if not any(str(f).startswith("tmux/") for f in changed):
+        return
+    # no -x: tmux renames its own processes to "tmux: client"/"tmux: server"
+    if subprocess.run(["pgrep", "tmux"], capture_output=True).returncode != 0:
+        return
+    tmux_conf = Path.home() / ".config" / "tmux" / "tmux.conf"
+    if not tmux_conf.exists():
+        return
+    result = subprocess.run(
+        ["tmux", "source-file", str(tmux_conf)], capture_output=True, text=True
+    )
+    if result.returncode == 0:
+        print("reloaded tmux.conf in the running tmux server")
+    else:
+        print(f"warning: tmux reload failed: {result.stderr.strip()}", file=sys.stderr)
 
 
 if __name__ == "__main__":
