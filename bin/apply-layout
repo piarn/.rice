@@ -10,10 +10,15 @@ Usage:
     apply-layout --list         # list available layouts, marking the active one
 
 Layout profiles live in ~/.rice/layouts/<name>.conf as plain sway `output`
-config, with a `# requires: OUT-1,OUT-2,...` comment naming the outputs
-that must be connected for `--auto` to pick it. The active one is copied
-to ~/.rice/sway/outputs.conf, which ~/.config/sway/config includes, and
-its name is recorded in ~/.rice/layouts/current.
+config, with a `# requires: ID-1,ID-2,...` comment naming the outputs
+that must be connected for `--auto` to pick it. Each ID is either a
+connector name (eDP-1 — stable for a built-in panel) or a
+"<make> <model> <serial>" string (sway accepts this as an output
+criteria too) — prefer the latter for anything external: Thunderbolt/
+DP-MST reconnects renumber connectors (DP-5 can become DP-7 on a
+replug), but make/model/serial survives it. The active profile is
+copied to ~/.rice/sway/outputs.conf, which ~/.config/sway/config
+includes, and its name is recorded in ~/.rice/layouts/current.
 
 `--auto` picks the profile whose `requires:` set is fully connected and
 has the most outputs (most specific match wins) — so a profile requiring
@@ -57,10 +62,19 @@ def requires_for(name: str) -> set[str]:
 
 
 def connected_outputs() -> set[str]:
+    """Every ID a connected output can be matched by: its connector name
+    (e.g. DP-7) and, when available, its "<make> <model> <serial>" string
+    — the latter is what survives a Thunderbolt/DP-MST reconnect."""
     result = subprocess.run(
         ["swaymsg", "-t", "get_outputs"], capture_output=True, text=True, check=True
     )
-    return {o["name"] for o in json.loads(result.stdout)}
+    idents: set[str] = set()
+    for o in json.loads(result.stdout):
+        idents.add(o["name"])
+        make, model, serial = o.get("make"), o.get("model"), o.get("serial")
+        if make and model and serial:
+            idents.add(f"{make} {model} {serial}")
+    return idents
 
 
 def best_match(connected: set[str]) -> str | None:

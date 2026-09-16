@@ -78,7 +78,12 @@ symlink straight to it, not a file that sources it.
   `home-office.conf` (docked: ultrawide + a flipped second monitor +
   laptop panel) and `laptop.conf` (undocked: laptop panel only, externals
   disabled). Each profile is plain sway `output` config plus a
-  `# requires: OUT-1,OUT-2,...` comment naming the outputs it needs.
+  `# requires: ID-1,ID-2,...` comment naming the outputs it needs. An ID
+  is a connector name (`eDP-1`, stable for a built-in panel) or a
+  `"<make> <model> <serial>"` string, which sway also accepts as output
+  criteria — use that for anything external, since Thunderbolt/DP-MST
+  reconnects renumber connectors (DP-5 became DP-7 after one
+  unplug/replug) but not make/model/serial.
   Switch with `~/.rice/bin/apply-layout <name>`, or let it auto-detect
   with `apply-layout --auto` (picks whichever profile's `requires:` set
   is fully connected, preferring the most specific match).
