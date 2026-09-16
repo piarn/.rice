@@ -1,0 +1,53 @@
+#!/usr/bin/env python3
+"""Daemon: auto-switch the sway screen layout whenever outputs change.
+
+Subscribes to sway's IPC `output` event stream and runs
+`apply-layout --auto` (debounced) whenever a monitor is connected or
+disconnected, so docking/undocking switches layouts without user action.
+
+Meant to be started from sway config with `exec_always` (plain `exec`
+only fires on sway's initial startup, not on reload) — it takes an
+exclusive lock on a runtime file and exits immediately if another
+instance already holds it, so it stays deduplicated across reloads.
+"""
+
+import fcntl
+import os
+import subprocess
+import sys
+import time
+
+LOCK_PATH = os.path.join(
+    os.environ.get("XDG_RUNTIME_DIR", "/tmp"), "layout-watch.lock"
+)
+DEBOUNCE_SECONDS = 1.5
+APPLY_LAYOUT = os.path.join(os.path.dirname(os.path.abspath(__file__)), "apply-layout")
+
+
+def acquire_lock():
+    lock_file = open(LOCK_PATH, "w")
+    try:
+        fcntl.flock(lock_file, fcntl.LOCK_EX | fcntl.LOCK_NB)
+    except OSError:
+        sys.exit(0)
+    return lock_file  # kept open for the life of the process
+
+
+def main() -> None:
+    _lock_file = acquire_lock()  # noqa: F841 — held open for the life of the process
+
+    subprocess.run([APPLY_LAYOUT, "--auto"])
+
+    proc = subprocess.Popen(
+        ["swaymsg", "-t", "subscribe", "-m", '["output"]'],
+        stdout=subprocess.PIPE,
+        text=True,
+    )
+    assert proc.stdout is not None
+    for _ in proc.stdout:
+        time.sleep(DEBOUNCE_SECONDS)
+        subprocess.run([APPLY_LAYOUT, "--auto"])
+
+
+if __name__ == "__main__":
+    main()

@@ -64,8 +64,30 @@ symlink straight to it, not a file that sources it.
 ## Apps
 
 - `ghostty/` — terminal, included via `config-file = ?~/.rice/ghostty/theme.conf`
-- `sway/` — window border colors, included via `include ~/.rice/sway/theme.conf`
-  (the status bar itself is waybar now, not swaybar — see `waybar/` below)
+- `sway/` — window border colors and gaps, included via
+  `include ~/.rice/sway/theme.conf` (the status bar itself is waybar now,
+  not swaybar — see `waybar/` below). `gaps inner/outer` in a config file
+  only sets the default for workspaces created *after* a reload —
+  already-open ones keep their old gap value otherwise (a sway quirk) —
+  so `theme.conf` also carries an `exec_always` that replays the gap
+  values as live `gaps ... all set N` IPC commands on every reload.
+  `sway/outputs.conf` is a separate generated file (not theme-related,
+  see `layouts/` below), included right after it from
+  `~/.config/sway/config`.
+- `layouts/` — screen (output) profiles, one per physical setup, e.g.
+  `home-office.conf` (docked: ultrawide + a flipped second monitor +
+  laptop panel) and `laptop.conf` (undocked: laptop panel only, externals
+  disabled). Each profile is plain sway `output` config plus a
+  `# requires: OUT-1,OUT-2,...` comment naming the outputs it needs.
+  Switch with `~/.rice/bin/apply-layout <name>`, or let it auto-detect
+  with `apply-layout --auto` (picks whichever profile's `requires:` set
+  is fully connected, preferring the most specific match).
+  `~/.rice/bin/layout-watch` is a small daemon, started via
+  `exec_always` from `~/.config/sway/config`, that subscribes to sway's
+  output-change events and calls `apply-layout --auto` on dock/undock; it
+  takes an exclusive lock on a runtime file so re-running it on every
+  config reload doesn't pile up processes. `layouts/current` remembers
+  which profile is active, same pattern as `themes/current`.
 - `waybar/` — `style.css` imported via `@import` from `~/.config/waybar/style.css`
   (functional config lives in `~/.dots/waybar`; swapped in for swaybar since
   swaybar can't center a module or lay out network/battery)
