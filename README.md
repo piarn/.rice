@@ -68,14 +68,14 @@ symlink straight to it, not a file that sources it.
   `include=~/.rice/foot/theme.ini` from
   `~/.dots/foot/.config/foot/foot.ini`
 - `sway/` — window border colors and gaps, included via
-  `include ~/.rice/sway/theme.conf` (the status bar itself is waybar now,
-  not swaybar — see `waybar/` below). `gaps inner/outer` in a config file
-  only sets the default for workspaces created *after* a reload —
-  already-open ones keep their old gap value otherwise (a sway quirk) —
-  so `theme.conf` also carries an `exec_always` that replays the gap
-  values as live `gaps ... all set N` IPC commands on every reload.
-  `sway/outputs.conf` is a separate generated file (not theme-related,
-  see `layouts/` below), included right after it from
+  `include ~/.rice/sway/theme.conf` (the status bar and launcher are
+  quickshell now, not swaybar/wofi — see `quickshell/` below). `gaps
+  inner/outer` in a config file only sets the default for workspaces
+  created *after* a reload — already-open ones keep their old gap value
+  otherwise (a sway quirk) — so `theme.conf` also carries an `exec_always`
+  that replays the gap values as live `gaps ... all set N` IPC commands on
+  every reload. `sway/outputs.conf` is a separate generated file (not
+  theme-related, see `layouts/` below), included right after it from
   `~/.config/sway/config`.
 - `layouts/` — screen (output) profiles, one per physical setup, e.g.
   `home-office.conf` (docked: ultrawide + a flipped second monitor +
@@ -96,15 +96,29 @@ symlink straight to it, not a file that sources it.
   takes an exclusive lock on a runtime file so re-running it on every
   config reload doesn't pile up processes. `layouts/current` remembers
   which profile is active, same pattern as `themes/current`.
-- `waybar/` — `style.css` imported via `@import` from `~/.config/waybar/style.css`
-  (functional config lives in `~/.dots/waybar`; swapped in for swaybar since
-  swaybar can't center a module or lay out network/battery)
+- `quickshell/` — bar + app launcher, replacing waybar/swaybar and wofi.
+  `Colors.qml` is a `pragma Singleton` QML object rendered from
+  `templates/quickshell/Colors.qml.tmpl`, paired with a static (untemplated)
+  `qmldir` that declares it — same "just a plain file, not rendered"
+  exception as `yazi/theme.toml` below, except here it's the *loader*, not
+  the theme file itself, that has no include-directive equivalent to lean
+  on. `~/.dots/quickshell`'s QML (`shell.qml`, `Bar.qml`, `Launcher.qml`)
+  pulls it in via `import quickshell`, an unquoted module import resolved
+  through `QML2_IMPORT_PATH=$HOME/.rice` (set inline on the `exec_always`
+  in `~/.config/sway/config`) — a quoted relative import
+  (`import "../../.rice/quickshell"`) does *not* work here, because
+  quickshell loads each config into a virtual `qs:/` resource tree where
+  `..` never escapes `~/.config/quickshell`. The bar's few icon glyphs
+  (bluetooth on/off) need `~/.local/share/fonts/NerdFontSymbols`
+  (`install.sh`'s `install_nerd_font_symbols`) — plain "monospace" has no
+  bluetooth glyph, patched or otherwise, confirmed by screenshotting actual
+  candidate codepoints rather than trusting a font's cmap table (several
+  looked present in Noto Sans Mono's cmap but rendered as nothing).
 - `yazi/` — `theme.toml` (TOML has no include directive, so this file *is*
   the config): `~/.dots/yazi/.config/yazi/theme.toml` is a relative symlink
   straight to it, stowed to `~/.config/yazi/theme.toml`. Themes UI chrome and
   the broad filetype mime groups; leaves the per-extension icon/brand-color
   tables alone, same call as nvim's syntax highlighting
-- `wofi/` — launcher, imported via `@import` from `~/.config/wofi/style.css`
 - `tmux/` — status bar / panes / messages, sourced via `source-file ~/.rice/tmux/theme.conf`
   from `~/.dots/tmux/.config/tmux/tmux.conf`
 - `nvim/` — editor chrome only (statusline, splits, popups, gutter, signs —
