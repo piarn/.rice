@@ -143,6 +143,15 @@ symlink straight to it, not a file that sources it.
   yazi/lazygit/lazydocker. Invoked via
   `~/.dots/scripts/.local/bin/lockscreen` (grim screenshot + ImageMagick
   blur, then `swaylock -i`), bound to `$mod+Escape` in `~/.config/sway/config`
+- `satty/` — `config.toml` (color palette, save location, save/copy
+  actions); same symlink deal as swaylock (TOML has no include directive).
+  Not packaged for apt/dnf — `install.sh`'s `install_satty` grabs the
+  prebuilt glibc binary from github.com/Satty-org/Satty's latest release,
+  same pattern as yazi/lazygit/lazydocker. Both screenshot binds in
+  `~/.config/sway/config` (`Print`, `$mod+Shift+s`) pipe grim/grim+slurp
+  into `satty --filename -` for annotation (crop/arrows/blur/numbered
+  markers/text, undo/redo) before saving+copying on Enter. Replaced swappy,
+  which covered the same job with a smaller toolset
 - `firefox/` — `userChrome.css` (the KeyFox one-liner layout, recolored
   black/white/gray); CSS has no include directive either, so
   `~/.config/mozilla/firefox/<profile>/chrome/userChrome.css` is a relative
