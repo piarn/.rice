@@ -134,7 +134,7 @@ def reload_running_apps(changed: list) -> None:
     visible without a manual restart — currently just tmux, which re-reads
     its config on `source-file` but otherwise ignores on-disk changes.
     Nvim's autocmd already re-applies on ColorScheme events; other apps
-    (ghostty, fish, etc.) read their theme file on next launch/shell, so
+    (foot, fish, etc.) read their theme file on next launch/shell, so
     there's nothing to nudge there.
     """
     if not any(str(f).startswith("tmux/") for f in changed):

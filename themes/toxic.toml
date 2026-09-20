@@ -12,7 +12,7 @@ name = "Toxic"
 black   = "#000000"  # background everywhere
 surface = "#0D1A0D"  # cursorline / popup surface, one step off black
 fg      = "#D9FFD9"  # default foreground
-white   = "#FFFFFF"  # pure white, used sparingly (cursor text, ghostty bright white)
+white   = "#FFFFFF"  # pure white, used sparingly (cursor text, foot bright white)
 
 # Accents
 neon    = "#39FF14"  # primary accent — focused/active/current
@@ -29,8 +29,8 @@ blue    = "#00BFFF"  # info, links, renamed
 magenta = "#FF3FD0"  # conflicts, media files
 cyan    = "#00E6B8"  # symlinks, attributes, typechange
 
-# Bright ANSI ramp (ghostty terminal palette slots 9,11,12,13,14 only —
-# lighter tints of red/amber/blue/magenta/cyan for the "bright" variants)
+# Bright ANSI ramp (foot's bright0-7 palette slots — lighter tints of
+# red/amber/blue/magenta/cyan for the "bright" variants)
 red_bright     = "#FF6E6E"
 amber_bright   = "#EAFF70"
 blue_bright    = "#6EA8FF"

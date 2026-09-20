@@ -63,9 +63,7 @@ symlink straight to it, not a file that sources it.
 
 ## Apps
 
-- `ghostty/` — terminal, included via `config-file = ?~/.rice/ghostty/theme.conf`
-- `foot/` — terminal, mirrors `ghostty/`'s palette, included via
-  `include=~/.rice/foot/theme.ini` from
+- `foot/` — terminal, included via `include=~/.rice/foot/theme.ini` from
   `~/.dots/foot/.config/foot/foot.ini`
 - `sway/` — window border colors and gaps, included via
   `include ~/.rice/sway/theme.conf` (the status bar and launcher are
