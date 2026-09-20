@@ -112,6 +112,16 @@ symlink straight to it, not a file that sources it.
   bluetooth glyph, patched or otherwise, confirmed by screenshotting actual
   candidate codepoints rather than trusting a font's cmap table (several
   looked present in Noto Sans Mono's cmap but rendered as nothing).
+  `popups/LockScreen.qml` replaces swaylock: a `WlSessionLock`
+  (`ext-session-lock-v1`, same protocol swaylock used — the compositor
+  keeps the screen locked and painted solid even if quickshell crashes)
+  styled straight from `Colors.qml`, authenticating via `PamContext`
+  against `/etc/pam.d/quickshell-lock` (a system file `install.sh`'s
+  `install_pam_lock_config` writes — not itself part of this repo).
+  `~/.dots/scripts/.local/bin/lock-wallpaper` blurs a per-output
+  screenshot into `$XDG_RUNTIME_DIR/quickshell-lock/` right after the lock
+  engages (locking itself is instant, the blurred background fades in a
+  beat later).
 - `yazi/` — `theme.toml` (TOML has no include directive, so this file *is*
   the config): `~/.dots/yazi/.config/yazi/theme.toml` is a relative symlink
   straight to it, stowed to `~/.config/yazi/theme.toml`. Themes UI chrome and
@@ -137,12 +147,11 @@ symlink straight to it, not a file that sources it.
   tool merges it over its own defaults). YAML has no include directive, so
   same deal as `yazi/`: `~/.dots/lazygit(.../lazydocker)/.config/.../config.yml`
   is a relative symlink straight to these files
-- `swaylock/` — `config` (ring/text/indicator colors); same symlink deal as
-  yazi/lazygit/lazydocker. Invoked via
-  `~/.dots/scripts/.local/bin/lockscreen` (grim screenshot + ImageMagick
-  blur, then `swaylock -i`), bound to `$mod+Escape` in `~/.config/sway/config`
+- `quickshell/`'s `Colors.qml` also styles the lock screen — see
+  `LockScreen.qml` below in the quickshell entry; there's no separate
+  `~/.rice/swaylock/` anymore, since swaylock itself was replaced.
 - `satty/` — `config.toml` (color palette, save location, save/copy
-  actions); same symlink deal as swaylock (TOML has no include directive).
+  actions); same symlink deal as yazi/lazygit/lazydocker (TOML has no include directive).
   Not packaged for apt/dnf — `install.sh`'s `install_satty` grabs the
   prebuilt glibc binary from github.com/Satty-org/Satty's latest release,
   same pattern as yazi/lazygit/lazydocker. Both screenshot binds in
@@ -153,7 +162,7 @@ symlink straight to it, not a file that sources it.
 - `firefox/` — `userChrome.css` (the KeyFox one-liner layout, recolored
   black/white/gray); CSS has no include directive either, so
   `~/.config/mozilla/firefox/<profile>/chrome/userChrome.css` is a relative
-  symlink straight to it, same deal as yazi/lazygit/lazydocker/swaylock.
+  symlink straight to it, same deal as yazi/lazygit/lazydocker.
   Not wired into the token/template system — it's a plain flat file, not a
   `.tmpl`, so switching rice themes won't recolor it. The "glue" pref
   (`toolkit.legacyUserProfileCustomizations.stylesheets`, plus
