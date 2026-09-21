@@ -7,23 +7,31 @@ everything else is generated from it.**
 
 ```
 ~/.rice/bin/apply-theme            # re-render the current theme (after editing it)
-~/.rice/bin/apply-theme <name>     # switch to ~/.rice/themes/<name>.toml and render it
+~/.rice/bin/apply-theme <name>     # switch to ~/.rice/themes/<name>/theme.toml and render it
 ~/.rice/bin/apply-theme <name> --dry-run   # show what would change, write nothing
 ```
 
-Edit a color in `~/.rice/themes/<name>.toml`, run `apply-theme`, and every
-app's theme file under `~/.rice/<app>/...` gets re-rendered from
+Edit a color in `~/.rice/themes/<name>/theme.toml`, run `apply-theme`, and
+every app's theme file under `~/.rice/<app>/...` gets re-rendered from
 `~/.rice/templates/<app>/*.tmpl`. `~/.rice/themes/current` remembers which
 theme is active.
 
-To add a new theme: copy `themes/toxic.toml` to `themes/<name>.toml`, change
-the `[colors]` values, then `apply-theme <name>`. Templates reference colors
-by role (`neon`, `dim`, `red`, ...), not by value, so any theme that defines
-the same roles drops in without touching a single app config.
+Each theme is a directory, `~/.rice/themes/<name>/`, holding:
+- `theme.toml` — the `[colors]` table templates render from
+- `wallpaper.<ext>` — optional; copied verbatim to `~/.rice/wallpaper.png`
+  (the fixed path `~/.config/sway/config` points at) and pushed live to
+  every output via `swaymsg` if sway is running. A theme with no wallpaper
+  file just leaves the current one in place (with a warning).
 
-## Current theme: Toxic
+To add a new theme: copy `themes/toxic/` to `themes/<name>/`, change the
+`[colors]` values in `theme.toml` (and swap in a `wallpaper.<ext>` if you
+have one), then `apply-theme <name>`. Templates reference colors by role
+(`neon`, `dim`, `red`, ...), not by value, so any theme that defines the
+same roles drops in without touching a single app config.
 
-Black & toxic-waste-green.
+## Themes
+
+**Toxic** — black & toxic-waste-green.
 
 | Role              | Hex       |
 |-------------------|-----------|
@@ -40,8 +48,25 @@ Black & toxic-waste-green.
 | Magenta              | `#FF3FD0` |
 | Cyan                 | `#00E6B8` |
 
-Full source of truth (including the bright-ANSI ramp) is
-`~/.rice/themes/toxic.toml`.
+**Forest Night** — deep woodland black-green, moonlit mint highlights.
+
+| Role              | Hex       |
+|-------------------|-----------|
+| Black (bg)        | `#060B07` |
+| Foreground        | `#D6F2DC` |
+| Green (accent)     | `#2F6B44` |
+| Green (bright)     | `#4BAB6D` |
+| Dim green (muted)  | `#1F3725` |
+| Deep green (inactive) | `#18291C` |
+| Gray (inactive text) | `#4B584E` / `#6A7C6E` |
+| Red (urgent/error)   | `#E0605A` |
+| Amber                | `#E0B84F` |
+| Blue                 | `#4FA8D8` |
+| Magenta              | `#C77DD1` |
+| Cyan                 | `#4FD8B0` |
+
+Full source of truth for each theme (including the bright-ANSI ramp) is
+`~/.rice/themes/<name>/theme.toml`.
 
 ## How a template becomes a config file
 

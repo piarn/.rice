@@ -3,7 +3,7 @@
 
 Usage:
     apply-theme                 # re-render the currently active theme
-    apply-theme <name>          # switch to ~/.rice/themes/<name>.toml, render it,
+    apply-theme <name>          # switch to ~/.rice/themes/<name>/theme.toml, render it,
                                  # and remember it as the active theme
     apply-theme <name> --dry-run   # show what would change, write nothing
 
@@ -12,12 +12,18 @@ Templates live under ~/.rice/templates/<app>/<file>.tmpl and use:
     {{token.hex}}     the color as "rrggbb", no '#' (lowercase)
     {{token.rgb}}     the color as decimal "R;G;B" (for ANSI SGR strings)
     {{name}}          the theme's display name (e.g. "Toxic")
-    {{theme}}         the theme file's stem (e.g. "toxic")
+    {{theme}}         the theme's directory name (e.g. "toxic")
 
 Each template renders to ~/.rice/<same relative path, minus ".tmpl">.
+
+Wallpapers aren't templated — drop an image at
+~/.rice/themes/<theme>/wallpaper.<ext> and it gets copied verbatim to
+~/.rice/wallpaper.png (the fixed path sway's config points at), pushed
+live to every output via `swaymsg` if sway is running.
 """
 
 import argparse
+import os
 import re
 import subprocess
 import sys
@@ -28,12 +34,13 @@ RICE = Path.home() / ".rice"
 THEMES = RICE / "themes"
 TEMPLATES = RICE / "templates"
 CURRENT = THEMES / "current"
+WALLPAPER_DEST = RICE / "wallpaper.png"
 
 TOKEN_RE = re.compile(r"\{\{\s*([a-zA-Z0-9_]+)(?:\.(hex|rgb))?\s*\}\}")
 
 
 def load_theme(name: str) -> dict:
-    path = THEMES / f"{name}.toml"
+    path = THEMES / name / "theme.toml"
     if not path.exists():
         sys.exit(f"error: no such theme file: {path}")
     with path.open("rb") as f:
@@ -113,6 +120,21 @@ def main() -> None:
             dest.parent.mkdir(parents=True, exist_ok=True)
             dest.write_text(rendered)
 
+    # Wallpapers aren't templated (they're images, not text) — each theme
+    # just drops a file at themes/<theme>/wallpaper.<ext> and it gets copied
+    # verbatim to the fixed path sway/quickshell actually reference.
+    theme_dir = THEMES / theme_name
+    wallpaper_src = next(iter(sorted(theme_dir.glob("wallpaper.*"))), None)
+    if wallpaper_src:
+        new_bytes = wallpaper_src.read_bytes()
+        existing_bytes = WALLPAPER_DEST.read_bytes() if WALLPAPER_DEST.exists() else None
+        if new_bytes != existing_bytes:
+            changed.append(WALLPAPER_DEST.relative_to(RICE))
+            if not args.dry_run:
+                WALLPAPER_DEST.write_bytes(new_bytes)
+    else:
+        print(f"warning: no wallpaper found at {theme_dir}/wallpaper.* — leaving wallpaper.png as-is", file=sys.stderr)
+
     if not args.dry_run:
         THEMES.mkdir(parents=True, exist_ok=True)
         CURRENT.write_text(theme_name + "\n")
@@ -137,6 +159,26 @@ def reload_running_apps(changed: list) -> None:
     (foot, fish, etc.) read their theme file on next launch/shell, so
     there's nothing to nudge there.
     """
+    if any(str(f) == "wallpaper.png" for f in changed):
+        reload_wallpaper()
+
+    # quickshell's Colors.qml singleton is loaded once at startup via
+    # QML2_IMPORT_PATH and isn't file-watched like the rest of its config,
+    # so a plain `swaymsg reload` alone won't pick up new colors — kill the
+    # running instance first so the exec_always respawn (still `-n`, so it
+    # only fires because nothing's running anymore) loads it fresh.
+    if any(str(f).startswith("quickshell/") for f in changed):
+        reload_quickshell()
+
+    # Sway only re-reads its config (border colors, gaps) on an explicit
+    # reload — the theme.conf include changing on disk doesn't do anything
+    # by itself.
+    if any(str(f).startswith("sway/") or str(f).startswith("quickshell/") for f in changed):
+        reload_sway()
+
+    if any(str(f) == "fish/colors.fish" for f in changed):
+        reload_fish()
+
     if not any(str(f).startswith("tmux/") for f in changed):
         return
     # no -x: tmux renames its own processes to "tmux: client"/"tmux: server"
@@ -152,6 +194,66 @@ def reload_running_apps(changed: list) -> None:
         print("reloaded tmux.conf in the running tmux server")
     else:
         print(f"warning: tmux reload failed: {result.stderr.strip()}", file=sys.stderr)
+
+
+def reload_fish() -> None:
+    """rice_color_dir is a universal variable (set -U): fish broadcasts a
+    change to every running fish session as soon as one process sets it,
+    so a throwaway `fish -c` re-sourcing colors.fish is enough to update
+    the prompt color in every already-open shell, no restart needed."""
+    if subprocess.run(["pgrep", "-x", "fish"], capture_output=True).returncode != 0:
+        return
+    fish_colors = RICE / "fish" / "colors.fish"
+    result = subprocess.run(
+        ["fish", "-c", f"source {fish_colors}"], capture_output=True, text=True
+    )
+    if result.returncode == 0:
+        print("pushed prompt color to running fish sessions")
+    else:
+        print(f"warning: fish reload failed: {result.stderr.strip()}", file=sys.stderr)
+
+
+def reload_sway() -> None:
+    """Reload sway's config so border colors and gaps (theme.conf) and a
+    freshly-killed quickshell instance (exec_always) pick up the new
+    theme immediately, instead of waiting for the next manual reload."""
+    if not os.environ.get("SWAYSOCK"):
+        return
+    result = subprocess.run(["swaymsg", "reload"], capture_output=True, text=True)
+    if result.returncode == 0:
+        print("reloaded sway config")
+    else:
+        print(f"warning: swaymsg reload failed: {result.stderr.strip()}", file=sys.stderr)
+
+
+def reload_quickshell() -> None:
+    """Kill the running quickshell instance so sway's `exec_always ... -n`
+    line (which only spawns when none is running) launches a fresh one
+    that re-imports Colors.qml. Left to `reload_sway()` to actually
+    trigger that respawn."""
+    if subprocess.run(["pgrep", "-x", "quickshell"], capture_output=True).returncode != 0:
+        return
+    result = subprocess.run(["qs", "kill", "-n"], capture_output=True, text=True)
+    if result.returncode == 0:
+        print("killed quickshell (will respawn on sway reload)")
+    else:
+        print(f"warning: qs kill failed: {result.stderr.strip()}", file=sys.stderr)
+
+
+def reload_wallpaper() -> None:
+    """Push the new wallpaper.png to every output right away via sway IPC,
+    rather than waiting for the next full `sway reload` (which the wallpaper
+    line in ~/.config/sway/config would otherwise need to pick it up)."""
+    if not os.environ.get("SWAYSOCK"):
+        return
+    result = subprocess.run(
+        ["swaymsg", "output", "*", "bg", str(WALLPAPER_DEST), "fill"],
+        capture_output=True, text=True,
+    )
+    if result.returncode == 0:
+        print("reloaded wallpaper on all outputs")
+    else:
+        print(f"warning: swaymsg wallpaper reload failed: {result.stderr.strip()}", file=sys.stderr)
 
 
 if __name__ == "__main__":

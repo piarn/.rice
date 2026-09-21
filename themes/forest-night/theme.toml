@@ -1,0 +1,38 @@
+# Forest Night — deep woodland black-green, moonlit mint highlights.
+#
+# Single source of truth for the whole rice. Edit a value here and run
+# `~/.rice/bin/apply-theme` to re-render every app's theme file. To add a
+# new theme, copy this file to themes/<name>.toml, change the colors, then
+# `apply-theme <name>`.
+
+name = "Forest Night"
+
+[colors]
+# Base
+black   = "#060b07"  # background everywhere
+surface = "#132016"  # cursorline / popup surface, one step off black
+fg      = "#d6f2dc"  # default foreground
+white   = "#fdfefd"  # pure white, used sparingly (cursor text, foot bright white)
+
+# Accents
+neon    = "#2f6b44"  # primary accent — focused/active/current
+acid    = "#4bab6d"  # secondary accent — bright highlights, matches
+dim     = "#1f3725"  # muted borders, inactive chrome
+deep    = "#18291c"  # more muted still — unfocused/deep background tints
+gray    = "#4b584e"  # inactive text
+gray2   = "#6a7c6e"  # inactive text, lighter
+
+# Status colors
+red     = "#e0605a"  # errors, urgent, deletions
+amber   = "#e0b84f"  # warnings, modified
+blue    = "#4fa8d8"  # info, links, renamed
+magenta = "#c77dd1"  # conflicts, media files
+cyan    = "#4fd8b0"  # symlinks, attributes, typechange
+
+# Bright ANSI ramp (foot's bright0-7 palette slots — lighter tints of
+# red/amber/blue/magenta/cyan for the "bright" variants)
+red_bright     = "#ec9e9a"
+amber_bright   = "#ebd290"
+blue_bright    = "#8ec7e6"
+magenta_bright = "#dfb6e5"
+cyan_bright    = "#8ee6cc"
