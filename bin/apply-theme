@@ -35,6 +35,17 @@ THEMES = RICE / "themes"
 TEMPLATES = RICE / "templates"
 CURRENT = THEMES / "current"
 WALLPAPER_DEST = RICE / "wallpaper.png"
+# themes/current is gitignored (it's per-machine state, not something a
+# theme switch should ever show up as a repo diff) — a fresh clone has none,
+# so fall back to this rather than making every new machine's first run
+# require an explicit `apply-theme <name>`.
+DEFAULT_THEME = "toxic"
+# `qs` links against quickshell's private Qt 6.8 ABI, which system Qt
+# packages don't reliably provide (e.g. Ubuntu 24.04's is 6.4.2) — mirrors
+# sway config's `$qs` variable (`env LD_LIBRARY_PATH=... qs`), since a plain
+# `qs` invocation here would only work by coincidence, on a machine whose
+# system Qt already happens to be >=6.8.
+QUICKSHELL_QT_LIB_DIR = Path.home() / "Qt" / "6.8.0" / "gcc_64" / "lib"
 
 TOKEN_RE = re.compile(r"\{\{\s*([a-zA-Z0-9_]+)(?:\.(hex|rgb))?\s*\}\}")
 
@@ -88,7 +99,7 @@ def main() -> None:
     elif CURRENT.exists():
         theme_name = CURRENT.read_text().strip()
     else:
-        sys.exit("error: no theme given and no ~/.rice/themes/current set")
+        theme_name = DEFAULT_THEME
 
     theme = load_theme(theme_name)
 
@@ -153,11 +164,11 @@ def main() -> None:
 
 def reload_running_apps(changed: list) -> None:
     """Nudge apps that cache their config in memory so the new theme is
-    visible without a manual restart — currently just tmux, which re-reads
-    its config on `source-file` but otherwise ignores on-disk changes.
-    Nvim's autocmd already re-applies on ColorScheme events; other apps
-    (foot, fish, etc.) read their theme file on next launch/shell, so
-    there's nothing to nudge there.
+    visible without a manual restart. Nvim's autocmd already re-applies on
+    ColorScheme events; foot/kitty read their theme file live (kitty) or on
+    next launch (foot) — cursor color is intentionally not themed (always
+    white, see templates/{foot,kitty,nvim}/...), so there's nothing to nudge
+    for either of them.
     """
     if any(str(f) == "wallpaper.png" for f in changed):
         reload_wallpaper()
@@ -243,7 +254,13 @@ def reload_quickshell() -> None:
               "skipping quickshell kill, since sway's exec_always respawn "
               "(reload_sway) won't be able to bring it back", file=sys.stderr)
         return
-    result = subprocess.run(["qs", "kill", "-n"], capture_output=True, text=True)
+    if not QUICKSHELL_QT_LIB_DIR.is_dir():
+        print(f"warning: {QUICKSHELL_QT_LIB_DIR} not found — qs needs this "
+              "Qt 6.8 build to run at all (see sway config's $qs); skipping "
+              "quickshell kill", file=sys.stderr)
+        return
+    env = os.environ | {"LD_LIBRARY_PATH": str(QUICKSHELL_QT_LIB_DIR)}
+    result = subprocess.run(["qs", "kill", "-n"], capture_output=True, text=True, env=env)
     if result.returncode == 0:
         print("killed quickshell (will respawn on sway reload)")
     else:

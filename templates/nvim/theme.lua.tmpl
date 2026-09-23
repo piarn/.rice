@@ -36,7 +36,11 @@ function M.setup()
   hl(0, "NormalFloat", { fg = c.fg, bg = c.black })
   hl(0, "FloatBorder", { fg = c.neon, bg = c.black })
   hl(0, "FloatTitle", { fg = c.neon, bg = c.black, bold = true })
-  hl(0, "Cursor", { fg = c.black, bg = c.neon })
+  -- Cursor is deliberately not themed — same white block cursor in every
+  -- theme, so switching themes never needs to touch it (see apply-theme's
+  -- git history for why: OSC 12 sync + tmux/kitty reload edge cases made a
+  -- per-theme cursor color more trouble than it was worth).
+  hl(0, "Cursor", { fg = c.black, bg = "#ffffff" })
 
   -- gutter / current line
   hl(0, "CursorLine", { bg = c.surface })
