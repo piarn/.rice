@@ -1,0 +1,45 @@
+# Monochrome — near-grayscale with a single warm accent. Lowest-eye-strain
+# theme in the set: almost everything is neutral gray, and one pale
+# champagne-gold accent is the only color that's allowed to draw the eye
+# (focused windows, the active prompt, current-line highlights). Status
+# colors stay in their normal hues (desaturated) so git/diff output is
+# still readable — a fully grayscale theme would make errors/warnings
+# indistinguishable from each other.
+#
+# Single source of truth for the whole rice. Edit a value here and run
+# `~/.rice/bin/apply-theme` to re-render every app's theme file. To add a
+# new theme, copy this file to themes/<name>/theme.toml, change the colors,
+# then `apply-theme <name>`.
+
+name = "Monochrome"
+
+[colors]
+# Base
+black   = "#121212"  # background everywhere — neutral, no color tint
+surface = "#1c1c1c"  # cursorline / popup surface, one step off black
+fg      = "#e4e4e4"  # default foreground — neutral light gray
+white   = "#ffffff"  # pure white, used sparingly (cursor text, foot bright white)
+
+# Accents
+neon    = "#d9c98f"  # primary accent — focused/active/current (champagne gold)
+acid    = "#f0e3b8"  # secondary accent — bright highlights, matches
+dim     = "#3a3a3a"  # muted borders, inactive chrome
+deep    = "#262626"  # more muted still — unfocused/deep background tints
+gray    = "#6b6b6b"  # inactive text
+gray2   = "#8f8f8f"  # inactive text, lighter
+
+# Status colors (kept in their normal hues, just desaturated, so file
+# status/diff output stays legible against the grayscale bulk)
+red     = "#d97a7a"  # errors, urgent, deletions
+amber   = "#d9a44f"  # warnings, modified
+blue    = "#7a9ed9"  # info, links, renamed
+magenta = "#b57ad9"  # conflicts, media files
+cyan    = "#7ad9c9"  # symlinks, attributes, typechange
+
+# Bright ANSI ramp (foot's bright0-7 palette slots — lighter tints of
+# red/amber/blue/magenta/cyan for the "bright" variants)
+red_bright     = "#e9b2b2"
+amber_bright   = "#e6c28a"
+blue_bright    = "#b2c7e9"
+magenta_bright = "#d4b2e9"
+cyan_bright    = "#b2e9e0"

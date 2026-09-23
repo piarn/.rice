@@ -1,0 +1,41 @@
+# Ember — warm charcoal & glowing copper. Built for long reading sessions:
+# a soft off-black base (never pure black) and a warm off-white foreground
+# (never pure white) keep contrast high without the glare, and the accent
+# sits in copper/amber territory instead of Catppuccin-style blue/pastel.
+#
+# Single source of truth for the whole rice. Edit a value here and run
+# `~/.rice/bin/apply-theme` to re-render every app's theme file. To add a
+# new theme, copy this file to themes/<name>/theme.toml, change the colors,
+# then `apply-theme <name>`.
+
+name = "Ember"
+
+[colors]
+# Base
+black   = "#1a1512"  # background everywhere — warm charcoal, not pure black
+surface = "#241d18"  # cursorline / popup surface, one step off black
+fg      = "#e8ddd0"  # default foreground — warm cream, not stark white
+white   = "#fff8f0"  # pure white, used sparingly (cursor text, foot bright white)
+
+# Accents
+neon    = "#d98a4f"  # primary accent — focused/active/current (copper)
+acid    = "#f0b660"  # secondary accent — bright highlights, matches (gold)
+dim     = "#4a3b2e"  # muted borders, inactive chrome
+deep    = "#332922"  # more muted still — unfocused/deep background tints
+gray    = "#6b6058"  # inactive text
+gray2   = "#8a7f74"  # inactive text, lighter
+
+# Status colors
+red     = "#d9695a"  # errors, urgent, deletions
+amber   = "#e0a640"  # warnings, modified
+blue    = "#6fa8c9"  # info, links, renamed
+magenta = "#c17ba5"  # conflicts, media files
+cyan    = "#5fada0"  # symlinks, attributes, typechange
+
+# Bright ANSI ramp (foot's bright0-7 palette slots — lighter tints of
+# red/amber/blue/magenta/cyan for the "bright" variants)
+red_bright     = "#e69e94"
+amber_bright   = "#eac37d"
+blue_bright    = "#a3c7dc"
+magenta_bright = "#d8acc6"
+cyan_bright    = "#8ec5bc"

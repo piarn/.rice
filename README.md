@@ -65,6 +65,85 @@ same roles drops in without touching a single app config.
 | Magenta              | `#C77DD1` |
 | Cyan                 | `#4FD8B0` |
 
+**Ember** — warm charcoal & glowing copper. Built for readability: a soft
+off-black base (never pure black) and warm off-white foreground (never
+pure white), accent in copper/amber territory rather than the blue/pastel
+of themes like Catppuccin Mocha.
+
+| Role              | Hex       |
+|-------------------|-----------|
+| Black (bg)        | `#1A1512` |
+| Foreground        | `#E8DDD0` |
+| Copper (accent)    | `#D98A4F` |
+| Gold (bright)      | `#F0B660` |
+| Dim brown (muted)  | `#4A3B2E` |
+| Deep brown (inactive) | `#332922` |
+| Gray (inactive text) | `#6B6058` / `#8A7F74` |
+| Red (urgent/error)   | `#D9695A` |
+| Amber                | `#E0A640` |
+| Blue                 | `#6FA8C9` |
+| Magenta              | `#C17BA5` |
+| Cyan                 | `#5FADA0` |
+
+**Nightshade** — deep violet & moonlit plum. Cool counterpart to Ember;
+the violet accent and the pink magenta status color are kept a deliberate
+hue-distance apart so neither reads as the other.
+
+| Role              | Hex       |
+|-------------------|-----------|
+| Black (bg)        | `#120A17` |
+| Foreground        | `#ECE3F0` |
+| Violet (accent)    | `#8A4FD9` |
+| Violet (bright)    | `#B57AF0` |
+| Dim plum (muted)   | `#3A2447` |
+| Deep plum (inactive) | `#291A33` |
+| Gray (inactive text) | `#5E5266` / `#7D7186` |
+| Red (urgent/error)   | `#D95A6E` |
+| Amber                | `#D9A24F` |
+| Blue                 | `#4F8FD9` |
+| Magenta              | `#D94FC1` |
+| Cyan                 | `#4FD9C7` |
+
+**Monochrome** — near-grayscale with a single champagne-gold accent.
+Lowest-eye-strain theme in the set: almost everything is neutral gray, and
+only the accent (focused window, active prompt, current line) is allowed
+to draw the eye. Status colors stay in their usual hues, just desaturated,
+so diffs/git output stay legible.
+
+| Role              | Hex       |
+|-------------------|-----------|
+| Black (bg)        | `#121212` |
+| Foreground        | `#E4E4E4` |
+| Gold (accent)      | `#D9C98F` |
+| Gold (bright)      | `#F0E3B8` |
+| Dim gray (muted)   | `#3A3A3A` |
+| Deep gray (inactive) | `#262626` |
+| Gray (inactive text) | `#6B6B6B` / `#8F8F8F` |
+| Red (urgent/error)   | `#D97A7A` |
+| Amber                | `#D9A44F` |
+| Blue                 | `#7A9ED9` |
+| Magenta              | `#B57AD9` |
+| Cyan                 | `#7AD9C9` |
+
+**Crimson** — near-black with a deep rust-red glow. The accent is pulled
+toward rust/maroon rather than pure red on purpose, so "focused" and
+"broken" (the error status color, pure scarlet) never share one hue.
+
+| Role              | Hex       |
+|-------------------|-----------|
+| Black (bg)        | `#140808` |
+| Foreground        | `#F0E0DD` |
+| Rust (accent)      | `#A8313F` |
+| Rust (bright)      | `#D94F5C` |
+| Dim red (muted)    | `#4A1F22` |
+| Deep red (inactive) | `#331519` |
+| Gray (inactive text) | `#6B5452` / `#8A706D` |
+| Red (urgent/error)   | `#FF4D4D` |
+| Amber                | `#D9954F` |
+| Blue                 | `#4F8FD9` |
+| Magenta              | `#C14FA8` |
+| Cyan                 | `#4FADA0` |
+
 Full source of truth for each theme (including the bright-ANSI ramp) is
 `~/.rice/themes/<name>/theme.toml`.
 

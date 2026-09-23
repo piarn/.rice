@@ -1,0 +1,41 @@
+# Crimson — near-black with a deep rust-red glow. The primary accent is
+# pulled toward rust/maroon rather than pure red on purpose: pure red is
+# reserved for the error/urgent status color, so "this is focused" and
+# "this is broken" never share the exact same hue.
+#
+# Single source of truth for the whole rice. Edit a value here and run
+# `~/.rice/bin/apply-theme` to re-render every app's theme file. To add a
+# new theme, copy this file to themes/<name>/theme.toml, change the colors,
+# then `apply-theme <name>`.
+
+name = "Crimson"
+
+[colors]
+# Base
+black   = "#140808"  # background everywhere — near-black, warm red tint
+surface = "#200d0d"  # cursorline / popup surface, one step off black
+fg      = "#f0e0dd"  # default foreground — warm blush-white
+white   = "#fff5f3"  # pure white, used sparingly (cursor text, foot bright white)
+
+# Accents
+neon    = "#a8313f"  # primary accent — focused/active/current (rust-crimson)
+acid    = "#d94f5c"  # secondary accent — bright highlights, matches
+dim     = "#4a1f22"  # muted borders, inactive chrome
+deep    = "#331519"  # more muted still — unfocused/deep background tints
+gray    = "#6b5452"  # inactive text
+gray2   = "#8a706d"  # inactive text, lighter
+
+# Status colors
+red     = "#ff4d4d"  # errors, urgent, deletions — pure scarlet, distinct from the rust accent
+amber   = "#d9954f"  # warnings, modified
+blue    = "#4f8fd9"  # info, links, renamed
+magenta = "#c14fa8"  # conflicts, media files
+cyan    = "#4fada0"  # symlinks, attributes, typechange
+
+# Bright ANSI ramp (foot's bright0-7 palette slots — lighter tints of
+# red/amber/blue/magenta/cyan for the "bright" variants)
+red_bright     = "#ff9494"
+amber_bright   = "#e6b88a"
+blue_bright    = "#8ab4e6"
+magenta_bright = "#d484c2"
+cyan_bright    = "#7fc5bb"
