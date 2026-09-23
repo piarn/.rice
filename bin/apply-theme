@@ -218,6 +218,9 @@ def reload_sway() -> None:
     freshly-killed quickshell instance (exec_always) pick up the new
     theme immediately, instead of waiting for the next manual reload."""
     if not os.environ.get("SWAYSOCK"):
+        print("warning: SWAYSOCK not set in this process's environment — "
+              "skipping swaymsg reload (border colors/gaps and any killed "
+              "quickshell instance won't be picked back up)", file=sys.stderr)
         return
     result = subprocess.run(["swaymsg", "reload"], capture_output=True, text=True)
     if result.returncode == 0:
@@ -232,6 +235,13 @@ def reload_quickshell() -> None:
     that re-imports Colors.qml. Left to `reload_sway()` to actually
     trigger that respawn."""
     if subprocess.run(["pgrep", "-x", "quickshell"], capture_output=True).returncode != 0:
+        print("warning: no running quickshell instance found — skipping kill "
+              "(it'll pick up the new theme on next launch)", file=sys.stderr)
+        return
+    if not os.environ.get("SWAYSOCK"):
+        print("warning: SWAYSOCK not set in this process's environment — "
+              "skipping quickshell kill, since sway's exec_always respawn "
+              "(reload_sway) won't be able to bring it back", file=sys.stderr)
         return
     result = subprocess.run(["qs", "kill", "-n"], capture_output=True, text=True)
     if result.returncode == 0:
