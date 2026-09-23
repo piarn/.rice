@@ -1,0 +1,41 @@
+# Nightshade — deep violet & moonlit plum. Cool, moody counterpart to
+# Ember: a near-black with a faint violet tint, a soft lavender foreground,
+# and a saturated violet accent kept a good hue-distance from the pink
+# magenta status color so the two never get confused at a glance.
+#
+# Single source of truth for the whole rice. Edit a value here and run
+# `~/.rice/bin/apply-theme` to re-render every app's theme file. To add a
+# new theme, copy this file to themes/<name>/theme.toml, change the colors,
+# then `apply-theme <name>`.
+
+name = "Nightshade"
+
+[colors]
+# Base
+black   = "#120a17"  # background everywhere — near-black, violet-tinted
+surface = "#1e1225"  # cursorline / popup surface, one step off black
+fg      = "#ece3f0"  # default foreground — soft lavender-white
+white   = "#fbf7fd"  # pure white, used sparingly (cursor text, foot bright white)
+
+# Accents
+neon    = "#8a4fd9"  # primary accent — focused/active/current (violet)
+acid    = "#b57af0"  # secondary accent — bright highlights, matches
+dim     = "#3a2447"  # muted borders, inactive chrome
+deep    = "#291a33"  # more muted still — unfocused/deep background tints
+gray    = "#5e5266"  # inactive text
+gray2   = "#7d7186"  # inactive text, lighter
+
+# Status colors
+red     = "#d95a6e"  # errors, urgent, deletions
+amber   = "#d9a24f"  # warnings, modified
+blue    = "#4f8fd9"  # info, links, renamed
+magenta = "#d94fc1"  # conflicts, media files — kept pink, not violet, so it never reads as the accent
+cyan    = "#4fd9c7"  # symlinks, attributes, typechange
+
+# Bright ANSI ramp (foot's bright0-7 palette slots — lighter tints of
+# red/amber/blue/magenta/cyan for the "bright" variants)
+red_bright     = "#e694a1"
+amber_bright   = "#e6c18a"
+blue_bright    = "#8ab4e6"
+magenta_bright = "#e68ad6"
+cyan_bright    = "#8ae6da"
