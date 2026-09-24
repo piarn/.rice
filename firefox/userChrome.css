@@ -24,14 +24,16 @@
 /*Basic Settings*/
 
 :root {
-  /* Fixed px, not vw: hamburger+extensions+downloads measure ~117px
-     (fixed-width buttons, doesn't scale with window size). The urlbar
-     used to flex-grow to fill the rest of a 40vw box (~651px at a
-     1920px-wide window); "60% of that" is a fixed ~391px, so the urlbar
-     also gets a fixed px width below instead of a %, which would
-     otherwise be relative to this same box and compound every time this
-     box is resized to fit content. navbarWidth = 117 + 391 = 508px. */
-  --navbarWidth     : 508px;
+  /* Fixed px, not vw: hamburger+extensions+downloads measure ~117-124px
+     depending on Firefox version (fixed-width buttons, doesn't scale with
+     window size). The urlbar used to flex-grow to fill the rest of a 40vw
+     box (~651px at a 1920px-wide window); "60% of that" is a fixed
+     ~391px, so the urlbar also gets a fixed px width below instead of a
+     %, which would otherwise be relative to this same box and compound
+     every time this box is resized to fit content. navbarWidth = 124 +
+     391 + a small gap = 524px (508 overlapped the first tab by ~7px on
+     Firefox 156, whose buttons measure 124px). */
+  --navbarWidth     : 524px;
   --animationSpeed  : 0.5s;
 }
 
@@ -282,12 +284,27 @@ tab[selected="true"] .tab-background {
   color: rgba(var(--second-tab-text-color), 1) !important;
 }
 
-tab[selected="true"] .tab-content {
-  color: rgba(var(--tab-text-color), 1) !important;
+/* Selected tab. Firefox 156 no longer sets selected="true" on tabs: it
+   marks selection on .tab-background itself and paints it through the
+   --tab-selected-* variables, so tab[selected="true"] rules never match
+   there. Cover the variables and every selection attribute. */
+:root, #navigator-toolbox, #TabsToolbar {
+  --tab-selected-bgcolor: rgb(var(--accent-color)) !important;
+  --tab-selected-textcolor: rgb(var(--tab-text-color)) !important;
+  --tab-selected-outline-color: transparent !important;
+  --tab-selected-shadow: none !important;
 }
 
-tab[selected="true"] .tab-background {
+.tabbrowser-tab:is([selected], [visuallyselected], [multiselected]) .tab-background,
+.tab-background:is([selected], [multiselected]) {
   background: rgba(var(--accent-color), 1) !important;
+  outline: none !important;
+  box-shadow: none !important;
+}
+
+.tabbrowser-tab:is([selected], [visuallyselected], [multiselected]) :is(.tab-content, .tab-label, .tab-close-button) {
+  color: rgba(var(--tab-text-color), 1) !important;
+  fill: rgba(var(--tab-text-color), 1) !important;
 }
 
 .tabbrowser-tab::after,
