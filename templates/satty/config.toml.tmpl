@@ -4,8 +4,8 @@
 # this file via ~/.dots/satty (TOML has no include directive, so like
 # ~/.rice/swaylock, this file *is* the config).
 #
-# Invoked from ~/.config/sway/config's screenshot binds: grim/grim+slurp
-# pipe the capture into `satty --filename -` for annotation before saving.
+# Invoked by ~/.local/bin/screenshot-region ($mod+Shift+s): grim pipes the
+# focused monitor into satty, opened fullscreen on the crop tool.
 # Replaced swappy (~/.rice/README.md's old swappy/ entry) for a feature set
 # closer to Flameshot/ShareX — crop, numbered markers, blur, highlight,
 # undo/redo, per-key save/copy actions.
@@ -23,7 +23,6 @@ actions-on-right-click = ["save-to-clipboard"]
 output-filename = "~/Pictures/Screenshots/%Y-%m-%d_%H-%M-%S.png"
 default-hide-toolbars = false
 primary-highlighter = "block"
-default-round-caps = true
 
 [color-palette]
 # Shown in the toolbar for quick selection — RRGGBBAA, alpha ff = opaque.
