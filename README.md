@@ -275,3 +275,15 @@ symlink straight to it, not a file that sources it.
   here. Note the profile directory has a random suffix per machine/install,
   so this symlink needs re-pointing (or the profile's chrome dir needs
   recreating) on a fresh Firefox profile.
+- `kde/` — `kdeglobals`, a full KDE color scheme (view/window/header/
+  button/selection/tooltip groups) plus `Icons/Theme=breeze-dark`. KConfig
+  has no include directive, so same symlink deal as yazi:
+  `~/.dots/kde/.config/kdeglobals` points straight at it, stowed to
+  `~/.config/kdeglobals`. Themes the KDE flatpaks (Dolphin, Gwenview, Ark),
+  which all ship `--filesystem=xdg-config/kdeglobals:ro`. Outside a Plasma
+  session they only honor its colors with `QT_QPA_PLATFORMTHEME=kde`
+  (otherwise stock Breeze Dark) — `~/.dots/install.sh`'s
+  `install_kde_flatpak_theme` sets that as a per-app `flatpak override`.
+  Running KDE apps don't recolor live (a `KGlobalSettings.notifyChange`
+  D-Bus signal doesn't reach them); they pick up a theme switch on next
+  launch.

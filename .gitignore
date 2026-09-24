@@ -22,3 +22,4 @@ __pycache__
 /sway/theme.conf
 /tmux/theme.conf
 /yazi/theme.toml
+/kde/kdeglobals
