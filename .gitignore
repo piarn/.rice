@@ -8,6 +8,7 @@ __pycache__
 # and templates/**/*.tmpl, both of which stay tracked.
 /wallpaper.png
 /themes/current
+/layouts/current
 /eza/colors.fish
 /eza/theme.yml
 /fish/colors.fish
