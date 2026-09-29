@@ -198,24 +198,23 @@ symlink straight to it, not a file that sources it.
   takes an exclusive lock on a runtime file so re-running it on every
   config reload doesn't pile up processes. `layouts/current` remembers
   which profile is active, same pattern as `themes/current`.
-- `quickshell/` — bar + the dots hub (launcher, settings, themes), replacing waybar/swaybar and wofi.
+- `quickshell/` — bar + the dots command center (apps, settings, themes), replacing waybar/swaybar and wofi.
   `Colors.qml` is a `pragma Singleton` QML object rendered from
   `templates/quickshell/Colors.qml.tmpl`, paired with a static (untemplated)
   `qmldir` that declares it — same "just a plain file, not rendered"
   exception as `yazi/theme.toml` below, except here it's the *loader*, not
   the theme file itself, that has no include-directive equivalent to lean
-  on. `~/.dots/quickshell`'s QML (`shell.qml`, `Bar.qml`, `popups/Hub.qml`)
+  on. `~/.dots/quickshell`'s QML (`shell.qml`, `Bar.qml`, `popups/CommandCenter.qml`)
   pulls it in via `import quickshell`, an unquoted module import resolved
   through `QML2_IMPORT_PATH=$HOME/.rice` (set inline on the `exec_always`
   in `~/.config/sway/config`) — a quoted relative import
   (`import "../../.rice/quickshell"`) does *not* work here, because
   quickshell loads each config into a virtual `qs:/` resource tree where
-  `..` never escapes `~/.config/quickshell`. The bar's few icon glyphs
-  (bluetooth on/off) need `~/.local/share/fonts/NerdFontSymbols`
-  (`install.sh`'s `install_nerd_font_symbols`) — plain "monospace" has no
-  bluetooth glyph, patched or otherwise, confirmed by screenshotting actual
-  candidate codepoints rather than trusting a font's cmap table (several
-  looked present in Noto Sans Mono's cmap but rendered as nothing).
+  `..` never escapes `~/.config/quickshell`. The bar's icon glyphs need
+  `~/.local/share/fonts/MaterialSymbols` (`install.sh`'s
+  `install_material_symbols`) — plain "monospace" has none of them,
+  confirmed by screenshotting actual candidate codepoints rather than
+  trusting a font's cmap table.
   `popups/LockScreen.qml` replaces swaylock: a `WlSessionLock`
   (`ext-session-lock-v1`, same protocol swaylock used — the compositor
   keeps the screen locked and painted solid even if quickshell crashes)
