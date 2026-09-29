@@ -198,13 +198,13 @@ symlink straight to it, not a file that sources it.
   takes an exclusive lock on a runtime file so re-running it on every
   config reload doesn't pile up processes. `layouts/current` remembers
   which profile is active, same pattern as `themes/current`.
-- `quickshell/` — bar + app launcher, replacing waybar/swaybar and wofi.
+- `quickshell/` — bar + the dots hub (launcher, settings, themes), replacing waybar/swaybar and wofi.
   `Colors.qml` is a `pragma Singleton` QML object rendered from
   `templates/quickshell/Colors.qml.tmpl`, paired with a static (untemplated)
   `qmldir` that declares it — same "just a plain file, not rendered"
   exception as `yazi/theme.toml` below, except here it's the *loader*, not
   the theme file itself, that has no include-directive equivalent to lean
-  on. `~/.dots/quickshell`'s QML (`shell.qml`, `Bar.qml`, `Launcher.qml`)
+  on. `~/.dots/quickshell`'s QML (`shell.qml`, `Bar.qml`, `popups/Hub.qml`)
   pulls it in via `import quickshell`, an unquoted module import resolved
   through `QML2_IMPORT_PATH=$HOME/.rice` (set inline on the `exec_always`
   in `~/.config/sway/config`) — a quoted relative import
