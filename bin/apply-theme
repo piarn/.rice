@@ -40,13 +40,6 @@ WALLPAPER_DEST = RICE / "wallpaper.png"
 # so fall back to this rather than making every new machine's first run
 # require an explicit `apply-theme <name>`.
 DEFAULT_THEME = "toxic"
-# `qs` links against quickshell's private Qt 6.8 ABI, which system Qt
-# packages don't reliably provide (e.g. Ubuntu 24.04's is 6.4.2) — mirrors
-# sway config's `$qs` variable (`env LD_LIBRARY_PATH=... qs`), since a plain
-# `qs` invocation here would only work by coincidence, on a machine whose
-# system Qt already happens to be >=6.8.
-QUICKSHELL_QT_LIB_DIR = Path.home() / "Qt" / "6.8.0" / "gcc_64" / "lib"
-
 TOKEN_RE = re.compile(r"\{\{\s*([a-zA-Z0-9_]+)(?:\.(hex|rgb))?\s*\}\}")
 
 
@@ -254,17 +247,10 @@ def reload_quickshell() -> None:
               "skipping quickshell kill, since sway's exec_always respawn "
               "(reload_sway) won't be able to bring it back", file=sys.stderr)
         return
-    if not QUICKSHELL_QT_LIB_DIR.is_dir():
-        print(f"warning: {QUICKSHELL_QT_LIB_DIR} not found — qs needs this "
-              "Qt 6.8 build to run at all (see sway config's $qs); skipping "
-              "quickshell kill", file=sys.stderr)
-        return
-    env = os.environ | {"LD_LIBRARY_PATH": str(QUICKSHELL_QT_LIB_DIR)}
-    result = subprocess.run(["qs", "kill", "-n"], capture_output=True, text=True, env=env)
-    if result.returncode == 0:
-        print("killed quickshell (will respawn on sway reload)")
-    else:
-        print(f"warning: qs kill failed: {result.stderr.strip()}", file=sys.stderr)
+    # SIGKILL like sway's $mod+Shift+c: `qs kill` asks over IPC, which a
+    # hung instance never answers.
+    subprocess.run(["pkill", "-KILL", "-x", "quickshell"])
+    print("killed quickshell (will respawn on sway reload)")
 
 
 def reload_wallpaper() -> None:
