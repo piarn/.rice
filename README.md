@@ -264,17 +264,17 @@ symlink straight to it, not a file that sources it.
   markers/text, undo/redo) before saving+copying on Enter. Replaced swappy,
   which covered the same job with a smaller toolset
 - `firefox/` — `userChrome.css` (the KeyFox one-liner layout, recolored
-  black/white/gray); CSS has no include directive either, so
-  `~/.config/mozilla/firefox/<profile>/chrome/userChrome.css` is a relative
-  symlink straight to it, same deal as yazi/lazygit/lazydocker.
+  black/white/gray). Snap/flatpak Firefox can't read hidden paths under
+  `$HOME`, so unlike yazi/lazygit/lazydocker this is *copied*, not
+  symlinked: `~/.dots/install.sh`'s `install_firefox_profiles` finds every
+  existing profile (snap, flatpak or native — it never installs Firefox)
+  and copies it to `chrome/userChrome.css` — re-run it after editing.
   Not wired into the token/template system — it's a plain flat file, not a
   `.tmpl`, so switching rice themes won't recolor it. The "glue" pref
   (`toolkit.legacyUserProfileCustomizations.stylesheets`, plus
-  `browser.download.autohideButton`) lives in the profile's own `user.js`,
-  same idea as nvim's `dofile(...)` line living in `~/.dots` rather than
-  here. Note the profile directory has a random suffix per machine/install,
-  so this symlink needs re-pointing (or the profile's chrome dir needs
-  recreating) on a fresh Firefox profile.
+  `browser.download.autohideButton`) lives in `~/.dots/firefox/user.js`,
+  copied alongside it, same idea as nvim's `dofile(...)` line living in
+  `~/.dots` rather than here.
 - `kde/` — `kdeglobals`, a full KDE color scheme (view/window/header/
   button/selection/tooltip groups) plus `Icons/Theme=breeze-dark`. KConfig
   has no include directive, so same symlink deal as yazi:
