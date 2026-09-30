@@ -176,7 +176,7 @@ symlink straight to it, not a file that sources it.
   created *after* a reload — already-open ones keep their old gap value
   otherwise (a sway quirk) — so `theme.conf` also carries an `exec_always`
   that replays the gap values as live `gaps ... all set N` IPC commands on
-  every reload. `sway/outputs.conf` is a separate generated file (not
+  every reload. `sway/outputs.conf` is a separate generated, per-machine (gitignored) file (not
   theme-related, see `layouts/` below), included right after it from
   `~/.config/sway/config`.
 - `layouts/` — screen (output) profiles, one per physical setup, e.g.

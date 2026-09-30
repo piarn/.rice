@@ -24,3 +24,8 @@ __pycache__
 /tmux/theme.conf
 /yazi/theme.toml
 /kde/kdeglobals
+
+# Rendered by apply-layout from the active layouts/*.conf profile (and
+# seeded from layouts/laptop.conf by ~/.dots/install.sh on a fresh clone):
+# which monitors are connected is per machine, like layouts/current.
+/sway/outputs.conf
