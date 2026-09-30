@@ -5,10 +5,10 @@ Subscribes to sway's IPC `output` event stream and runs
 `apply-layout --auto` (debounced) whenever a monitor is connected or
 disconnected, so docking/undocking switches layouts without user action.
 
-Meant to be started from sway config with `exec_always` (plain `exec`
-only fires on sway's initial startup, not on reload) — it takes an
+Runs as layout-watch.service (~/.dots, sway package) under
+dots-session.target, which restarts it if it dies. It still takes an
 exclusive lock on a runtime file and exits immediately if another
-instance already holds it, so it stays deduplicated across reloads.
+instance already holds it, so a second copy started by hand is harmless.
 """
 
 import fcntl

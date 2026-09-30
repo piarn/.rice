@@ -36,3 +36,10 @@ gui:
       - "{{red}}"
     defaultFgColor:
       - "{{fg}}"
+
+# Not theme, but it has to live in this one file (see above): diffs through
+# delta like `git diff` (~/.dots/git/.gitconfig).
+git:
+  paging:
+    colorArg: always
+    pager: delta --paging=never
