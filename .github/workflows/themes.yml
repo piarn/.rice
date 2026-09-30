@@ -1,0 +1,47 @@
+# Renders every theme against every template on each push, so a theme
+# missing a color some template uses (or a template using a new token not
+# every theme defines) fails here rather than the next time someone
+# switches to that theme. apply-theme --dry-run renders everything and
+# writes nothing; HOME points it at this checkout.
+name: themes
+
+on:
+  push:
+  pull_request:
+
+jobs:
+  render:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: render every theme
+        run: |
+          export HOME="$RUNNER_TEMP/home"
+          mkdir -p "$HOME"
+          ln -s "$GITHUB_WORKSPACE" "$HOME/.rice"
+          failed=0
+          for dir in themes/*/; do
+            theme=$(basename "$dir")
+            echo "::group::$theme"
+            python3 bin/apply-theme "$theme" --dry-run || failed=1
+            echo "::endgroup::"
+          done
+          exit "$failed"
+
+      - name: check theme files
+        run: |
+          python3 - <<'PY'
+          import re, sys, tomllib
+          from pathlib import Path
+          bad = []
+          for toml in sorted(Path("themes").glob("*/theme.toml")):
+              colors = tomllib.loads(toml.read_text()).get("colors", {})
+              for key, value in colors.items():
+                  if not re.fullmatch(r"#[0-9a-fA-F]{6}", str(value)):
+                      bad.append(f"{toml}: {key} = {value!r} isn't #RRGGBB")
+              if not list(toml.parent.glob("wallpaper.*")):
+                  bad.append(f"{toml.parent}: no wallpaper.* (switching to it keeps the old one)")
+          print("\n".join(bad) or "all themes OK")
+          sys.exit(1 if bad else 0)
+          PY

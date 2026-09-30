@@ -23,7 +23,6 @@ live to every output via `swaymsg` if sway is running.
 """
 
 import argparse
-import os
 import re
 import subprocess
 import sys
@@ -155,118 +154,37 @@ def main() -> None:
         reload_running_apps(changed)
 
 
+# Theme files an app only re-reads when told to, mapped to dots-reload's
+# target for it. The rest (nvim via its ColorScheme autocmd, foot on next
+# launch, yazi/lazygit/... on next start) need nothing.
+RELOAD_TARGETS = {
+    "tmux/": "tmux",
+    "kitty/": "kitty",
+    "fish/colors.fish": "fish",
+    "quickshell/": "quickshell",  # Colors.qml isn't file-watched
+    "sway/": "sway",
+    "wallpaper.png": "wallpaper",
+}
+# ~/.dots/scripts/.local/bin/dots-reload, stowed from .dots, which owns
+# reloading everything; install.sh runs this with DOTS_NO_RELOAD=1 and
+# reloads once at the end instead.
+DOTS_RELOAD = Path.home() / ".local" / "bin" / "dots-reload"
+
+
 def reload_running_apps(changed: list) -> None:
-    """Nudge apps that cache their config in memory so the new theme is
-    visible without a manual restart. Nvim's autocmd already re-applies on
-    ColorScheme events; foot/kitty read their theme file live (kitty) or on
-    next launch (foot) — cursor color is intentionally not themed (always
-    white, see templates/{foot,kitty,nvim}/...), so there's nothing to nudge
-    for either of them.
-    """
-    if any(str(f) == "wallpaper.png" for f in changed):
-        reload_wallpaper()
-
-    # quickshell's Colors.qml singleton is loaded once at startup via
-    # QML2_IMPORT_PATH and isn't file-watched like the rest of its config,
-    # so a plain `swaymsg reload` alone won't pick up new colors — kill the
-    # running instance first so the exec_always respawn (still `-n`, so it
-    # only fires because nothing's running anymore) loads it fresh.
-    if any(str(f).startswith("quickshell/") for f in changed):
-        reload_quickshell()
-
-    # Sway only re-reads its config (border colors, gaps) on an explicit
-    # reload — the theme.conf include changing on disk doesn't do anything
-    # by itself.
-    if any(str(f).startswith("sway/") or str(f).startswith("quickshell/") for f in changed):
-        reload_sway()
-
-    if any(str(f) == "fish/colors.fish" for f in changed):
-        reload_fish()
-
-    if not any(str(f).startswith("tmux/") for f in changed):
+    """Tell apps that cache their theme in memory to pick up the new one."""
+    targets = []
+    for f in map(str, changed):
+        for prefix, target in RELOAD_TARGETS.items():
+            if f.startswith(prefix) and target not in targets:
+                targets.append(target)
+    if not targets:
         return
-    # no -x: tmux renames its own processes to "tmux: client"/"tmux: server"
-    if subprocess.run(["pgrep", "tmux"], capture_output=True).returncode != 0:
+    if not DOTS_RELOAD.exists():
+        print(f"note: {DOTS_RELOAD} not found (is ~/.dots installed?); "
+              f"restart {', '.join(targets)} to see the new theme", file=sys.stderr)
         return
-    tmux_conf = Path.home() / ".config" / "tmux" / "tmux.conf"
-    if not tmux_conf.exists():
-        return
-    result = subprocess.run(
-        ["tmux", "source-file", str(tmux_conf)], capture_output=True, text=True
-    )
-    if result.returncode == 0:
-        print("reloaded tmux.conf in the running tmux server")
-    else:
-        print(f"warning: tmux reload failed: {result.stderr.strip()}", file=sys.stderr)
-
-
-def reload_fish() -> None:
-    """rice_color_dir is a universal variable (set -U): fish broadcasts a
-    change to every running fish session as soon as one process sets it,
-    so a throwaway `fish -c` re-sourcing colors.fish is enough to update
-    the prompt color in every already-open shell, no restart needed."""
-    if subprocess.run(["pgrep", "-x", "fish"], capture_output=True).returncode != 0:
-        return
-    fish_colors = RICE / "fish" / "colors.fish"
-    result = subprocess.run(
-        ["fish", "-c", f"source {fish_colors}"], capture_output=True, text=True
-    )
-    if result.returncode == 0:
-        print("pushed prompt color to running fish sessions")
-    else:
-        print(f"warning: fish reload failed: {result.stderr.strip()}", file=sys.stderr)
-
-
-def reload_sway() -> None:
-    """Reload sway's config so border colors and gaps (theme.conf) and a
-    freshly-killed quickshell instance (exec_always) pick up the new
-    theme immediately, instead of waiting for the next manual reload."""
-    if not os.environ.get("SWAYSOCK"):
-        print("warning: SWAYSOCK not set in this process's environment — "
-              "skipping swaymsg reload (border colors/gaps and any killed "
-              "quickshell instance won't be picked back up)", file=sys.stderr)
-        return
-    result = subprocess.run(["swaymsg", "reload"], capture_output=True, text=True)
-    if result.returncode == 0:
-        print("reloaded sway config")
-    else:
-        print(f"warning: swaymsg reload failed: {result.stderr.strip()}", file=sys.stderr)
-
-
-def reload_quickshell() -> None:
-    """Kill the running quickshell instance so sway's `exec_always ... -n`
-    line (which only spawns when none is running) launches a fresh one
-    that re-imports Colors.qml. Left to `reload_sway()` to actually
-    trigger that respawn."""
-    if subprocess.run(["pgrep", "-x", "quickshell"], capture_output=True).returncode != 0:
-        print("warning: no running quickshell instance found — skipping kill "
-              "(it'll pick up the new theme on next launch)", file=sys.stderr)
-        return
-    if not os.environ.get("SWAYSOCK"):
-        print("warning: SWAYSOCK not set in this process's environment — "
-              "skipping quickshell kill, since sway's exec_always respawn "
-              "(reload_sway) won't be able to bring it back", file=sys.stderr)
-        return
-    # SIGKILL like sway's $mod+Shift+c: `qs kill` asks over IPC, which a
-    # hung instance never answers.
-    subprocess.run(["pkill", "-KILL", "-x", "quickshell"])
-    print("killed quickshell (will respawn on sway reload)")
-
-
-def reload_wallpaper() -> None:
-    """Push the new wallpaper.png to every output right away via sway IPC,
-    rather than waiting for the next full `sway reload` (which the wallpaper
-    line in ~/.config/sway/config would otherwise need to pick it up)."""
-    if not os.environ.get("SWAYSOCK"):
-        return
-    result = subprocess.run(
-        ["swaymsg", "output", "*", "bg", str(WALLPAPER_DEST), "fill"],
-        capture_output=True, text=True,
-    )
-    if result.returncode == 0:
-        print("reloaded wallpaper on all outputs")
-    else:
-        print(f"warning: swaymsg wallpaper reload failed: {result.stderr.strip()}", file=sys.stderr)
+    subprocess.run([str(DOTS_RELOAD), *targets])
 
 
 if __name__ == "__main__":
