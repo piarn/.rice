@@ -22,7 +22,7 @@ fi
 # shellcheck source=/dev/null
 . "$DOTS_DIR/.bootstrap/lib.sh"
 
-DESKTOP_PACKAGES=(firefox foot hidden-apps kitty quickshell satty scripts sway)
+DESKTOP_PACKAGES=(firefox foot hidden-apps quickshell satty scripts sway)
 
 # shellcheck disable=SC2034  # read by .bootstrap/lib.sh
 declare -A RELEASE_VERSIONS=([satty]=v0.22.0)

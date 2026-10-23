@@ -3,7 +3,6 @@
 # terminal profile's ~/.dots/.bootstrap/packages.txt.
 sway
 foot
-kitty
 # app installs from .bootstrap/flatpaks.txt
 flatpak
 grim
@@ -18,5 +17,4 @@ wl-mirror
 swayidle
 # dots-lock's fallback when quickshell's lock screen doesn't come up
 swaylock
-brightnessctl
 pulseaudio-utils

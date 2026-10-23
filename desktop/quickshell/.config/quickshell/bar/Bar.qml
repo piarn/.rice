@@ -143,7 +143,7 @@ PanelWindow {
             }
             MouseArea {
                 anchors.fill: parent
-                onClicked: Quickshell.execDetached(["kitty", "--class", "floating-tool", "-e", "nmtui"])
+                onClicked: Quickshell.execDetached(["foot", "--app-id", "floating-tool", "nmtui"])
             }
         }
 

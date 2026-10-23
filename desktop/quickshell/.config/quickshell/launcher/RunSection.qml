@@ -43,7 +43,7 @@ Item {
     property var toolRows: []
 
     readonly property string home: Quickshell.env("HOME")
-    readonly property string term: "kitty"
+    readonly property string term: "foot"
     readonly property string searchUrl: "https://duckduckgo.com/?q="
 
     readonly property var prefixes: ({ "=": "calc", ">": "run", "/": "files", "?": "web", "@": "windows",
@@ -143,7 +143,7 @@ Item {
             title: e.name,
             subtitle: e.genericName || e.comment || "",
             icon: e.icon,
-            // execute() ignores Terminal=true, so those go through kitty
+            // execute() ignores Terminal=true, so those go through foot
             run: () => e.runInTerminal ? Quickshell.execDetached([root.term].concat(e.command)) : e.execute(),
         }))
     }
@@ -216,7 +216,7 @@ Item {
             subtitle: path.startsWith(home) ? "~" + path.slice(home.length) : path,
             glyph: f.dir ? "\u{e2c8}" : "\u{e873}",   // folder_open / description
             run: alt => Quickshell.execDetached(alt
-                ? ["kitty", "-e", "yazi", path]
+                ? ["foot", "yazi", path]
                 : ["xdg-open", path]),
         }
     }
@@ -288,7 +288,7 @@ Item {
     readonly property var sessionActions: [
         { title: "lock", glyph: "\u{e899}", aliases: "screen",
           cmd: [Quickshell.env("HOME") + "/.local/bin/dots-lock"] },
-        { title: "reload", glyph: "\u{e5d5}", aliases: "restart refresh sway quickshell tmux kitty config",
+        { title: "reload", glyph: "\u{e5d5}", aliases: "restart refresh sway quickshell tmux config",
           cmd: [Quickshell.env("HOME") + "/.local/bin/dots-reload"] },
         { title: "suspend", glyph: "\u{f159}", aliases: "sleep",
           cmd: ["systemctl", "suspend"] },

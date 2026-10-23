@@ -1,7 +1,7 @@
 # .rice
 
 The desktop: sway, quickshell (status bar, launcher, lock screen, login
-screen), kitty/foot and the session around them. Installed only on
+screen), foot and the session around them. Installed only on
 machines using [`~/.dots`](https://github.com/piarn/.dotfiles)' **desktop**
 profile: `~/.dots/install.sh desktop` installs the terminal profile and
 then runs this repo's `install.sh` on top. A work laptop on the
@@ -17,11 +17,10 @@ switching), no gaps, 1px borders, no titlebars, no wallpaper.
 ~/.rice/tests/run.sh            the desktop scripts' tests
 ```
 
-`desktop/` holds one stow package per app (`sway`, `quickshell`, `kitty`,
+`desktop/` holds one stow package per app (`sway`, `quickshell`,
 `foot`, `satty`, `firefox`, `hidden-apps`, `scripts`), each mirroring
 `$HOME`; the palette is written straight into each app's config (sway's
-`theme.conf`, quickshell's `theme/quickshell/Colors.qml`, kitty.conf,
-foot.ini). The packages are in `.bootstrap/`; the only flatpaks are
+`theme.conf`, quickshell's `theme/quickshell/Colors.qml`, foot.ini). The packages are in `.bootstrap/`; the only flatpaks are
 Firefox and Prism Launcher. `layouts/` and `bin/apply-layout` are the
 screen layouts (below).
 
@@ -70,12 +69,12 @@ system). Plain Alt is left to apps.
 
 | Keys | Action |
 | --- | --- |
-| `$mod+Return` / `$mod+Shift+Return` | terminal (kitty) / quick terminal (foot) |
+| `$mod+Return` | terminal (foot) |
 | `$mod+Space` / `$mod+d` | launcher |
 | `$mod+q` | close window |
 | `$mod+v` | clipboard history (`clip-pick`: cliphist in fzf, floating) |
 | `$mod+n` | network (`nmtui`, floating) |
-| `$mod+e` | files (yazi, in kitty) |
+| `$mod+e` | files (yazi, in foot) |
 | `$mod+b` | browser (Firefox) |
 | `$mod+h/j/k/l`, arrows | focus; add Shift to move the window |
 | `$mod+1`–`0` | workspace; add Shift to send the window there |
@@ -100,11 +99,11 @@ character switches to a mode:
 | Prefix | Mode |
 | --- | --- |
 | `=` | calculator (`=2^10*3`, `sqrt`, `pi`); Enter copies the result |
-| `>` | shell command; Enter runs it in kitty, Shift+Enter in the background |
+| `>` | shell command; Enter runs it in foot, Shift+Enter in the background |
 | `/` | files under `~` via fd (empty: recently opened); Shift+Enter shows it in yazi |
 | `?` | web search (or open an address) |
 | `@` | switch to an open window |
-| `~` | dev: tmux sessions (running and frozen), git projects, ssh hosts from `~/.ssh/config`; Enter opens one as a tmux session (`tmux-open`) in the terminal already showing tmux, or a new kitty |
+| `~` | dev: tmux sessions (running and frozen), git projects, ssh hosts from `~/.ssh/config`; Enter opens one as a tmux session (`tmux-open`) in the terminal already showing tmux, or a new foot |
 | `!` | tools: region screenshot, screen recording, color picker (`color-pick`), clipboard history, silence |
 | `:` | session: lock, reload, suspend, logout, reboot, shutdown (the last three need Enter twice); `:layout <name>` |
 

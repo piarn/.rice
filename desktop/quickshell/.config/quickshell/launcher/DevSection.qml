@@ -1,7 +1,7 @@
 // Data for the command center's `~` (dev) mode: tmux sessions (running and
 // the sessionizer's frozen ones), git projects, and ssh hosts — each opened
 // as a tmux session through ~/.local/bin/tmux-open, which switches the
-// terminal already showing tmux or opens a kitty. One session per case: a project
+// terminal already showing tmux or opens a foot. One session per case: a project
 // session is named after its directory and starts nvim, a host session
 // starts ssh.
 import Quickshell

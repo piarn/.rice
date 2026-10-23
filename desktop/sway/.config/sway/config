@@ -17,13 +17,10 @@ set $right l
 # see ~/.config/environment.d/cursor.conf for the env vars GTK/Xwayland
 # apps need too (must be set before sway starts, so it can't live here).
 seat seat0 xcursor_theme Adwaita 24
-# Terminals — kitty is primary (live theme reload via
-# reload_config_on_change), foot stays for quick/lightweight launches (see
-# $mod+Shift+Return below) since it's the lighter of the two.
-set $term kitty
-set $term_fast foot
-# File manager and browser (both flatpaks)
-set $files $term -e yazi
+# The terminal
+set $term foot
+# File manager (yazi) and browser (Firefox, a flatpak)
+set $files $term yazi
 set $browser flatpak run org.mozilla.firefox
 # quickshell's IPC client (the distro package)
 set $qs $HOME/.local/bin/qs
@@ -79,16 +76,14 @@ input "type:keyboard" {
 # One rule throughout: $mod+<letter> is the everyday action, named by its
 # first letter where possible; $mod+Shift is the bigger version — move
 # things, capture the screen, or system actions (reload, session).
-# Nothing ends the session directly: logout sits behind the command
-# center's `:` session rows, which ask for Enter twice.
+# Nothing ends the session directly: logout sits behind the launcher's
+# `:` session rows, which ask for Enter twice.
 # Plain Alt is left alone for apps (Firefox, nvim, tmux).
 #
 # Basics:
 #
     # Start a terminal
     bindsym $mod+Return exec $term
-    # Start the lightweight terminal (foot) for quick/throwaway launches
-    bindsym $mod+Shift+Return exec $term_fast
 
     # Close (quit) the focused window
     bindsym $mod+q kill
@@ -131,7 +126,7 @@ input "type:keyboard" {
     bindsym $mod+Shift+Escape exec $qs ipc call commandcenter open ":"
 
     # Network (nmtui, floating)
-    bindsym $mod+n exec $term --class floating-tool -e nmtui
+    bindsym $mod+n exec $term --app-id floating-tool nmtui
 #
 # Moving around:
 #

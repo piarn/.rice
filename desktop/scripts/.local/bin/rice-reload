@@ -1,10 +1,10 @@
 #!/bin/sh
 # The desktop half of dots-reload: push the configs on disk into the
-# running kitty, sway and quickshell. Anything that isn't running is
+# running sway and quickshell. Anything that isn't running is
 # skipped.
 #
 #   rice-reload                  everything
-#   rice-reload TARGET...        kitty quickshell sway
+#   rice-reload TARGET...        quickshell sway
 #
 # Normally reached through dots-reload (~/.dots), which reloads the
 # terminal side (tmux, fish) and hands these targets on. A quickshell
@@ -12,12 +12,11 @@
 # reloaded when its config passes `sway -C`. DOTS_NO_RELOAD=1 makes it a
 # no-op, same as dots-reload.
 [ -n "${DOTS_NO_RELOAD:-}" ] && exit 0
-[ $# -gt 0 ] || set -- kitty quickshell sway
+[ $# -gt 0 ] || set -- quickshell sway
 
-kitty=; quickshell=; sway=
+quickshell=; sway=
 for target; do
     case $target in
-        kitty) kitty=1 ;;
         quickshell) quickshell=1 ;;
         sway) sway=1 ;;
         *) sed -n '6,7p' "$0" | sed 's/^# \{0,1\}/usage: /' >&2; exit 1 ;;
@@ -37,11 +36,6 @@ sway_config_ok() {
     printf '%s\n' "$out" | grep -i 'error' | grep -viE 'nvidia|nouveau|proprietary' >&2
     return 1
 }
-
-# kitty re-reads kitty.conf on SIGUSR1
-if [ -n "$kitty" ] && pkill -USR1 -x kitty 2>/dev/null; then
-    echo "==> reloading kitty"
-fi
 
 if [ -n "$quickshell$sway" ] && ! sway_up; then
     pgrep -x sway >/dev/null \
