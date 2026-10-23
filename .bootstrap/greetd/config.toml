@@ -1,0 +1,9 @@
+# greetd: the login on tty1. install.sh installs this as
+# /etc/greetd/config.toml. The greeter is /usr/local/bin/dots-greeter (the
+# quickshell login screen, falling back to a text login), run as greetd.
+[terminal]
+vt = 1
+
+[default_session]
+command = "/usr/local/bin/dots-greeter"
+user = "greetd"

@@ -1,0 +1,30 @@
+#!/bin/sh
+# greetd's greeter (/etc/greetd/config.toml), run as the greetd user on
+# tty1: the quickshell login screen (greeter.qml in ~/.rice's quickshell
+# config, copied to /var/lib/dots-greeter) in a bare sway. Lives in
+# ~/.rice/.bootstrap; install.sh installs it to /usr/local/bin.
+#
+# sway starts through sway-session, for the same GPU choice and sync
+# workaround the desktop gets, but without its safe-mode retry (the stock
+# sway config would be a desktop for the greetd user). If the greeter
+# doesn't end by starting a session — sway or quickshell failed, it never
+# became ready, or Ctrl+Alt+Backspace — this falls back to agreety, greetd's
+# text login, so tty1 always offers some way in.
+set -u
+
+run=${XDG_RUNTIME_DIR:-/tmp}
+rm -f "$run/dots-greeter.status" "$run/dots-greeter.ready"
+
+# what the desktop gets from environment.d, which the greeter has none of
+export WLR_NO_HARDWARE_CURSORS=1 XCURSOR_THEME=Adwaita XCURSOR_SIZE=24
+export XDG_SESSION_TYPE=wayland XDG_CURRENT_DESKTOP=sway
+export XDG_STATE_HOME="${HOME:-/var/lib/greetd}/.local/state"
+export XDG_CACHE_HOME="${HOME:-/var/lib/greetd}/.cache"
+
+SWAY_SESSION_SAFE_CONFIG='' "${DOTS_SWAY_SESSION:-/usr/local/bin/sway-session}" \
+    --config "${DOTS_GREETER_SWAY_CONFIG:-/etc/greetd/dots-greeter.sway}"
+
+[ "$(cat "$run/dots-greeter.status" 2>/dev/null)" = 0 ] && exit 0
+
+printf '\nThe graphical login failed; see %s/sway.log.\n\n' "$XDG_STATE_HOME" >&2
+exec "${DOTS_AGREETY:-agreety}" --cmd /usr/local/bin/sway-session

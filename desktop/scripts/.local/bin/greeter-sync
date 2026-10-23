@@ -1,0 +1,47 @@
+#!/bin/sh
+# Copies what the login screen needs into /var/lib/dots-greeter, which the
+# greetd user can read (it can't read $HOME): the quickshell config (its
+# greeter.qml and the lock screen parts it reuses), the current theme's
+# Colors.qml, and this machine's screen layout and keyboard so the login
+# screen matches the desktop. The directory belongs to the user
+# (~/.rice/install.sh creates it), so no sudo: rice-reload runs this
+# whenever quickshell or the theme changes.
+#
+#   greeter-sync          copy; a no-op (status 0) when the dir isn't set up
+#   greeter-sync --check  exit 1 if the copy is out of date
+#
+# DOTS_GREETER_DIR and RICE_DIR override paths for tests.
+set -eu
+
+dest="${DOTS_GREETER_DIR:-/var/lib/dots-greeter}"
+rice="${RICE_DIR:-$HOME/.rice}"
+shell_src="$rice/desktop/quickshell/.config/quickshell"
+sway_config="${DOTS_SWAY_CONFIG:-$HOME/.config/sway/config}"
+
+if [ "${1:-}" = --check ]; then
+    diff -rq "$shell_src" "$dest/shell" >/dev/null 2>&1 \
+        && cmp -s "$rice/quickshell/Colors.qml" "$dest/rice/quickshell/Colors.qml"
+    exit
+fi
+
+[ -d "$dest" ] && [ -w "$dest" ] || exit 0
+
+# Built beside the live copy and swapped in, so a greeter starting right
+# now never sees half a tree.
+new="$dest/.new.$$"
+rm -rf "$new"
+mkdir -p "$new/rice/quickshell" "$new/sway.d"
+cp -RL "$shell_src" "$new/shell"
+cp "$rice/quickshell/Colors.qml" "$rice/quickshell/qmldir" "$new/rice/quickshell/"
+[ -f "$rice/sway/outputs.conf" ] && cp "$rice/sway/outputs.conf" "$new/sway.d/outputs.conf"
+# the keyboard (and other input) blocks of the desktop's sway config
+[ -f "$sway_config" ] && awk '/^input /,/^}/' "$sway_config" >"$new/sway.d/input.conf"
+chmod -R a+rX "$new"
+
+for part in shell rice sway.d; do
+    rm -rf "$dest/.old-$part"
+    [ -e "$dest/$part" ] && mv "$dest/$part" "$dest/.old-$part"
+    mv "$new/$part" "$dest/$part"
+    rm -rf "$dest/.old-$part"
+done
+rmdir "$new"

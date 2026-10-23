@@ -1,0 +1,18 @@
+# The sway the login screen runs in (as the greetd user), installed as
+# /etc/greetd/dots-greeter.sway by ~/.rice/install.sh, which fills in
+# @USER@. Nothing but the greeter: no bar, no binds, no other clients.
+# Screens and keyboard come from the user's own config, copied by
+# greeter-sync to /var/lib/dots-greeter (missing files are skipped).
+include /var/lib/dots-greeter/sway.d/*.conf
+
+default_border none
+seat seat0 xcursor_theme Adwaita 24
+
+# The greeter; its exit status tells dots-greeter whether a session was
+# started (0) or it failed (anything else: fall back to a text login).
+exec sh -c 'env DOTS_GREETER_USER=@USER@ QML2_IMPORT_PATH=/var/lib/dots-greeter/rice /usr/local/libexec/dots-greeter/quickshell -p /var/lib/dots-greeter/shell/greeter.qml; echo $? >"$XDG_RUNTIME_DIR/dots-greeter.status"; swaymsg exit'
+
+# A greeter that never came up (no ready marker after 15s) or that you
+# want out of: end this sway, and dots-greeter falls back to a text login.
+exec sh -c 'sleep 15; [ -e "$XDG_RUNTIME_DIR/dots-greeter.ready" ] || swaymsg exit'
+bindsym --locked Ctrl+Mod1+BackSpace exec swaymsg exit

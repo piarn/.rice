@@ -29,11 +29,16 @@ check "fast failure: safe mode's status returned" [ "$rc" = 0 ]
 check "fast failure: logged" grep -q "safe mode" "$XDG_STATE_HOME/sway.log"
 
 : >"$CALLS"; SWAY_STUB=fast-fail "$S"; rc=$?
-check "safe mode fails too: back to GDM (non-zero)" [ "$rc" != 0 ]
+check "safe mode fails too: back to the login screen (non-zero)" [ "$rc" != 0 ]
 check "safe mode fails too: only one retry" [ "$(grep -c '^sway' "$CALLS")" = 2 ]
 
 : >"$CALLS"; SWAY_STUB=slow-fail "$S"; rc=$?
 check "failure after a long session: no retry" [ "$(grep -c '^sway' "$CALLS")" = 1 ]
 check "failure after a long session: status kept" [ "$rc" != 0 ]
+
+# the greeter's sway: set but empty means never fall back to the stock config
+: >"$CALLS"; SWAY_STUB=fast-fail SWAY_SESSION_SAFE_CONFIG='' "$S"; rc=$?
+check "safe mode off: no retry" [ "$(grep -c '^sway' "$CALLS")" = 1 ]
+check "safe mode off: failure returned" [ "$rc" != 0 ]
 
 finish

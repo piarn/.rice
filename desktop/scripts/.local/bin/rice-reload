@@ -7,7 +7,8 @@
 #   rice-reload TARGET...        kitty quickshell sway wallpaper
 #
 # Normally reached through dots-reload (~/.dots), which reloads the
-# terminal side (tmux, fish) and hands these targets on. sway is only
+# terminal side (tmux, fish) and hands these targets on. A quickshell
+# reload also refreshes the login screen's copy (greeter-sync). sway is only
 # reloaded when its config passes `sway -C`. DOTS_NO_RELOAD=1 makes it a
 # no-op, same as dots-reload.
 [ -n "${DOTS_NO_RELOAD:-}" ] && exit 0
@@ -61,6 +62,12 @@ if [ -n "$quickshell" ] && command -v stow >/dev/null 2>&1; then
     desktop=$(cd "$(dirname "$(readlink -f "$0")")/../../.." && pwd)
     stow -d "$desktop" -t "$HOME" --no-folding -R quickshell \
         || echo "warning: re-linking quickshell failed; new files may be missing" >&2
+fi
+
+# The login screen runs a copy of the quickshell config and theme.
+if [ -n "$quickshell" ]; then
+    "$(dirname "$(readlink -f "$0")")/greeter-sync" \
+        || echo "warning: couldn't refresh the login screen's copy (greeter-sync)" >&2
 fi
 
 # Same as $mod+Shift+c: Colors.qml isn't file-watched, so quickshell only

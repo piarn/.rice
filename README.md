@@ -32,18 +32,28 @@ What makes the machine come up usable after a boot, all installed by
 `install.sh` (system files, so it asks for sudo) and checked by
 `--doctor`'s "boot" section:
 
-- **ly** (`ly@tty1`), the TUI login manager, owns tty1 alone —
-  `getty@tty1` is disabled so the two never contend for it. Ctrl+Alt+F2 and
-  up still give a plain text login (logind's autovt).
-- ly lists only `/usr/local/share/wayland-sessions`, whose **Sway** entry
-  runs `/usr/local/bin/sway-session` (from `.bootstrap/`): one GPU per
-  session on the hybrid NVIDIA laptop, a log at `~/.local/state/sway.log`
-  (the previous one kept as `sway.log.old`), and a safe-mode retry with
-  the stock config when sway dies within 10s. The distro's own entry runs a
-  bare `sway` that skips all of that, so it isn't offered.
-- ly also offers a **Terminal** session (`/etc/ly/custom-sessions/terminal.desktop`):
-  a login shell and nothing else — tmux, nvim and the agent pool all work
-  from it — for when the desktop is what's broken, or isn't wanted.
+- **greetd** owns tty1 (ly and `getty@tty1` are disabled). Its greeter,
+  `/usr/local/bin/dots-greeter`, runs the **quickshell login screen** —
+  `greeter.qml` in the quickshell config, built from the lock screen's own
+  face, so logging in and unlocking look the same — in a bare sway, as the
+  `greetd` user.
+- Type the password and Enter; **Tab** switches between the **sway**
+  session and **terminal** (a plain login shell, for when the desktop is
+  what's broken or isn't wanted). The choice is remembered.
+- The greeter can't read `$HOME`, so it runs quickshell from
+  `/usr/local/libexec/dots-greeter/` and its QML, theme, screen layout and
+  keyboard from `/var/lib/dots-greeter/`. That directory is yours:
+  `greeter-sync` refreshes it without sudo, and `rice-reload` runs it
+  whenever quickshell or the theme changes.
+- If the login screen doesn't work out — sway or quickshell fails, it
+  isn't up within 15s, or you press **Ctrl+Alt+Backspace** — greetd's text
+  login (`agreety`) takes over on tty1, starting sway after the password.
+  Ctrl+Alt+F2 and up still give a plain text login (logind's autovt).
+- Both the greeter and the sway session start through
+  `/usr/local/bin/sway-session` (from `.bootstrap/`): one GPU per session
+  on the hybrid NVIDIA laptop and a log in `~/.local/state/sway.log`; for
+  the desktop also a safe-mode retry with the stock config when sway dies
+  within 10s.
 - Inside sway, the session services start under `dots-session.target`
   once sway has exported its environment, and are restarted if they die;
   quickshell is watched by `qs-watchdog`.
@@ -143,8 +153,8 @@ type" until then.
   when quickshell's lock screen doesn't come up.
 - **sway dies at startup:** `sway-session` retries once with the stock
   `/etc/sway/config` (safe mode); see `~/.local/state/sway.log`. If that
-  fails too you're back at the login screen: pick the **Terminal**
-  session there (F-keys / arrows in ly) for a plain shell.
+  fails too you're back at the login screen: Tab to the **terminal**
+  session there for a plain shell.
   `dots-reload` won't reload a sway config that fails `sway -C`.
 - **The session is wedged:** switch to a TTY (Ctrl+Alt+F3) or ssh in and
   run `dots-rescue` for the options (restart or roll back quickshell,

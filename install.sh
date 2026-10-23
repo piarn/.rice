@@ -192,43 +192,66 @@ install_pam_lock_config() {
 
 # The login screen and the session it starts — what decides whether the
 # machine comes up usable after a boot:
-#  - /usr/local/bin/sway-session starts sway (GPU selection, a log at
-#    ~/.local/state/sway.log, a safe-mode retry when sway dies at startup);
-#    the sway.desktop beside it is the login screen's "Sway" entry.
-#  - ly (the TUI login manager) is pointed at that entry only, so it can't
-#    start a bare `sway` that bypasses all of the above, and gets a
-#    "Terminal" session: a plain login shell for when the desktop is what's
-#    broken.
-#  - ly owns tty1; getty@tty1 is disabled so the two never fight over it.
-#    Ctrl+Alt+F2.. still give a text login (logind's autovt).
-LY_CONFIG=/etc/ly/config.ini
-LY_SESSIONS=/usr/local/share/wayland-sessions
-LY_CUSTOM=/etc/ly/custom-sessions
+#  - greetd owns tty1 (getty@tty1 and ly are disabled) and runs
+#    /usr/local/bin/dots-greeter as the greetd user: the quickshell login
+#    screen (desktop/quickshell/.config/quickshell/greeter.qml) in a bare
+#    sway. It falls back to greetd's text login (agreety) whenever the
+#    graphical one fails, hangs or is escaped with Ctrl+Alt+Backspace.
+#  - The greeter runs quickshell from /usr/local/libexec/dots-greeter (the
+#    greetd user can't reach ~/.local/bin) and its QML/theme from
+#    /var/lib/dots-greeter, a directory this user owns so greeter-sync
+#    keeps it current without sudo.
+#  - Both the greeter and the "sway" session start through
+#    /usr/local/bin/sway-session (GPU selection, a log, a safe-mode retry
+#    for the desktop). The "terminal" session is a plain login shell.
+#  - Ctrl+Alt+F2 and up still give a text login (logind's autovt).
+GREETD_CONFIG=/etc/greetd/config.toml
+GREETER_SWAY=/etc/greetd/dots-greeter.sway
+GREETER_DIR=/var/lib/dots-greeter
+GREETER_QS=/usr/local/libexec/dots-greeter/quickshell
+
+# sudo install of $1 to $2 (mode $3) unless it's already identical.
+install_system_file() {
+    cmp -s "$1" "$2" && return
+    echo "==> installing $2"
+    sudo install -D -m "$3" "$1" "$2"
+}
 
 install_login() {
-    local src dest
-    for src in sway-session:/usr/local/bin/sway-session:755 \
-               sway.desktop:$LY_SESSIONS/sway.desktop:644; do
-        dest=${src#*:}; dest=${dest%:*}
-        cmp -s "$BOOTSTRAP_DIR/${src%%:*}" "$dest" && continue
-        echo "==> installing $dest"
-        sudo install -D -m "${src##*:}" "$BOOTSTRAP_DIR/${src%%:*}" "$dest"
-    done
+    pkg_install greetd greetd-selinux -- greetd -- greetd
 
-    if [ -f "$LY_CONFIG" ]; then
-        if [ -d "$LY_CUSTOM" ] && ! cmp -s "$BOOTSTRAP_DIR/terminal-session.desktop" "$LY_CUSTOM/terminal.desktop"; then
-            echo "==> installing $LY_CUSTOM/terminal.desktop"
-            sudo install -m 644 "$BOOTSTRAP_DIR/terminal-session.desktop" "$LY_CUSTOM/terminal.desktop"
+    install_system_file "$BOOTSTRAP_DIR/sway-session" /usr/local/bin/sway-session 755
+    install_system_file "$BOOTSTRAP_DIR/dots-greeter" /usr/local/bin/dots-greeter 755
+    install_system_file "$LOCAL_BIN/quickshell" "$GREETER_QS" 755
+    local sway_conf
+    sway_conf=$(mktemp)
+    sed "s|@USER@|$USER|g" "$BOOTSTRAP_DIR/greetd/dots-greeter.sway" >"$sway_conf"
+    install_system_file "$sway_conf" "$GREETER_SWAY" 644
+    rm -f "$sway_conf"
+    install_system_file "$BOOTSTRAP_DIR/greetd/config.toml" "$GREETD_CONFIG" 644
+
+    if [ ! -w "$GREETER_DIR" ]; then
+        echo "==> creating $GREETER_DIR (the login screen's copy of the shell and theme)"
+        sudo install -d -o "$USER" -g "$(id -gn)" -m 755 "$GREETER_DIR"
+    fi
+    "$DESKTOP_DIR/scripts/.local/bin/greeter-sync"
+
+    # The old ly setup's Sway entry; the greeter starts sway-session itself.
+    [ -e /usr/local/share/wayland-sessions/sway.desktop ] \
+        && sudo rm -f /usr/local/share/wayland-sessions/sway.desktop
+
+    # Only takes effect at the next boot: the running session may well
+    # have been started by ly, and stopping it now would end it.
+    local unit
+    for unit in ly@tty1.service getty@tty1.service; do
+        if systemctl is-enabled -q "$unit" 2>/dev/null; then
+            echo "==> disabling $unit (greetd owns tty1 from the next boot)"
+            sudo systemctl disable "$unit" >/dev/null 2>&1 || true
         fi
-        if ! grep -qx "waylandsessions = $LY_SESSIONS" "$LY_CONFIG"; then
-            echo "==> pointing ly at $LY_SESSIONS (sway via sway-session)"
-            sudo sed -i "s|^waylandsessions = .*|waylandsessions = $LY_SESSIONS|" "$LY_CONFIG"
-        fi
-        if systemctl is-enabled -q getty@tty1.service 2>/dev/null \
-            && systemctl is-enabled -q ly@tty1.service 2>/dev/null; then
-            echo "==> disabling getty@tty1 (ly@tty1 owns tty1)"
-            sudo systemctl disable getty@tty1.service >/dev/null 2>&1 || true
-        fi
+    done
+    if ! systemctl is-enabled -q greetd.service 2>/dev/null; then
+        echo "==> enabling greetd (from the next boot)"
+        sudo systemctl enable greetd.service
     fi
 }
 
@@ -289,27 +312,35 @@ doctor() {
     [ -f /etc/pam.d/quickshell-lock ] && ok "lock screen PAM service" || bad "/etc/pam.d/quickshell-lock missing (lock screen can't unlock)"
 
     echo "boot"
-    if cmp -s "$BOOTSTRAP_DIR/sway-session" /usr/local/bin/sway-session \
-        && cmp -s "$BOOTSTRAP_DIR/sway.desktop" "$LY_SESSIONS/sway.desktop"; then
-        ok "sway-session and its login entry"
+    local f
+    for f in "$BOOTSTRAP_DIR/sway-session:/usr/local/bin/sway-session" \
+             "$BOOTSTRAP_DIR/dots-greeter:/usr/local/bin/dots-greeter" \
+             "$BOOTSTRAP_DIR/greetd/config.toml:$GREETD_CONFIG" \
+             "$LOCAL_BIN/quickshell:$GREETER_QS"; do
+        cmp -s "${f%%:*}" "${f#*:}" && ok "${f#*:}" || bad "${f#*:} missing or differs from ${f%%:*} (run install.sh)"
+    done
+    if sed "s|@USER@|$USER|g" "$BOOTSTRAP_DIR/greetd/dots-greeter.sway" | cmp -s - "$GREETER_SWAY"; then
+        ok "$GREETER_SWAY"
     else
-        bad "/usr/local/bin/sway-session or $LY_SESSIONS/sway.desktop differs from .bootstrap (run install.sh)"
+        bad "$GREETER_SWAY missing or out of date (run install.sh)"
     fi
-    if [ -f "$LY_CONFIG" ]; then
-        systemctl is-enabled -q ly@tty1.service 2>/dev/null && ok "ly@tty1 enabled" || bad "ly@tty1 not enabled (sudo systemctl enable ly@tty1)"
-        if systemctl is-enabled -q getty@tty1.service 2>/dev/null; then
-            bad "getty@tty1 is enabled too and contends with ly for tty1 (run install.sh)"
-        else
-            ok "tty1 belongs to ly alone"
+    systemctl is-enabled -q greetd.service 2>/dev/null && ok "greetd enabled" || bad "greetd not enabled (run install.sh)"
+    for f in ly@tty1.service getty@tty1.service; do
+        if systemctl is-enabled -q "$f" 2>/dev/null; then
+            bad "$f is enabled and contends with greetd for tty1 (run install.sh)"
         fi
-        if grep -qx "waylandsessions = $LY_SESSIONS" "$LY_CONFIG"; then
-            ok "ly starts sway through sway-session"
+    done
+    if command -v ly >/dev/null 2>&1; then
+        if systemctl is-active -q ly@tty1.service 2>/dev/null; then
+            warn "ly is still installed (this session came from it); after a reboot: sudo dnf remove ly"
         else
-            bad "ly lists the stock sway entry, which skips sway-session's safe mode and log (run install.sh)"
+            warn "ly is still installed, unused: sudo dnf remove ly"
         fi
-        [ -f "$LY_CUSTOM/terminal.desktop" ] && ok "ly has a Terminal session (fallback login)" || warn "no Terminal session in ly (run install.sh)"
+    fi
+    if "$DESKTOP_DIR/scripts/.local/bin/greeter-sync" --check; then
+        ok "login screen's copy of the shell and theme is current"
     else
-        warn "no ly; the login screen isn't managed here"
+        bad "$GREETER_DIR is out of date (greeter-sync)"
     fi
     if [ -f "$HOME/.local/state/sway.log" ] && grep -q "retrying in safe mode" "$HOME/.local/state/sway.log"; then
         bad "the last sway start fell back to safe mode; see ~/.local/state/sway.log"
