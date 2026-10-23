@@ -30,7 +30,7 @@ declare -A RELEASE_VERSIONS=([satty]=v0.22.0)
 declare -A RELEASE_REPOS=([satty]=Satty-org/Satty)
 
 # Quickshell ships no prebuilt binary (no AppImage, no GitHub release
-# tarball like yazi/lazygit get) and Fedora/Debian/Arch each package
+# tarball like yazi gets) and Fedora/Debian/Arch each package
 # their own point release, sometimes months apart — risky for something
 # this whole desktop is built against the QML API of (quickshell itself
 # warns it can break across Qt updates). Built from source instead,
