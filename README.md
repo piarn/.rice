@@ -8,7 +8,9 @@ then runs this repo's `install.sh` on top. A work laptop on the
 **terminal** profile never needs this repo.
 
 Looks are deliberately plain and fixed: one black/gray palette (no theme
-switching), no gaps, 1px borders, no titlebars, no wallpaper.
+switching), no gaps, 1px borders, no titlebars, no wallpaper. Windows tile
+in a **spiral**: each new one halves the focused window along its longer
+side (`spiral-tiling`), so splits alternate side by side and top/bottom.
 
 ```
 ~/.rice/install.sh              install / re-link the desktop (after ~/.dots)
@@ -79,7 +81,7 @@ system). Plain Alt is left to apps.
 | `$mod+b` | browser (Firefox) |
 | `$mod+h/j/k/l`, arrows | focus; add Shift to move the window |
 | `$mod+1`–`0` | workspace; add Shift to send the window there |
-| `$mod+t` | toggle split direction (side by side ↔ stacked) |
+| `$mod+t` | flip the next split's direction by hand (the spiral picks it otherwise) |
 | `$mod+w` | toggle tabbed ↔ tiled |
 | `$mod+f` / `$mod+Shift+f` | maximize / fullscreen |
 | `$mod+Shift+t` | toggle floating |
@@ -118,7 +120,7 @@ Background services run as systemd user services under
 sway has exported its environment and stopped when it exits: the polkit
 agent (`mate-polkit`, password prompts), swayidle (lock after 10 minutes
 idle and before sleep), cliphist, udiskie, the bluetooth agent,
-`layout-watch` and `qs-watchdog`. A dead one is restarted;
+`layout-watch`, `spiral-tiling` and `qs-watchdog`. A dead one is restarted;
 `journalctl --user -u <name>` has its log, and `~/.dots/install.sh
 --doctor` flags any that aren't running.
 
