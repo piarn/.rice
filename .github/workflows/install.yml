@@ -1,0 +1,54 @@
+# Runs install.sh --ci (the desktop profile's packages, the polkit agent,
+# satty and a full quickshell build from the pinned tag) in a fresh
+# container per supported distro, on top of ~/.dots' installer library.
+# Weekly as well as on changes, since the distros move even when this
+# repo doesn't.
+name: install
+
+on:
+  push:
+    paths:
+      - install.sh
+      - .bootstrap/**
+      - desktop/scripts/.local/bin/polkit-agent
+      - .github/workflows/install.yml
+  schedule:
+    - cron: "0 6 * * 1"
+  workflow_dispatch:
+
+jobs:
+  install:
+    strategy:
+      fail-fast: false
+      matrix:
+        image:
+          - fedora:latest
+          - debian:trixie
+          - ubuntu:24.04 # Qt 6.4: exercises the aqtinstall Qt fallback
+          - archlinux:latest
+    runs-on: ubuntu-latest
+    container: ${{ matrix.image }}
+    timeout-minutes: 60
+    env:
+      DEBIAN_FRONTEND: noninteractive
+      GITHUB_TOKEN: ${{ github.token }}
+    steps:
+      - name: prerequisites
+        run: |
+          if command -v dnf; then dnf install -y sudo git python3 curl
+          elif command -v apt-get; then apt-get update && apt-get install -y sudo git python3 curl ca-certificates
+          else pacman -Syu --noconfirm sudo git python curl
+          fi
+
+      - uses: actions/checkout@v4
+
+      # the installer library (.bootstrap/lib.sh, extras/lib.sh): the
+      # same-named branch of .dotfiles when there is one, else master
+      - name: ~/.dots
+        run: |
+          branch="${GITHUB_REF_NAME}"
+          git ls-remote --exit-code --heads https://github.com/piarn/.dotfiles.git "$branch" >/dev/null || branch=master
+          git clone --depth 1 --branch "$branch" https://github.com/piarn/.dotfiles.git "$HOME/.dots"
+
+      - name: install.sh --ci
+        run: ./install.sh --ci

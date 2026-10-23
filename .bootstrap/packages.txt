@@ -1,0 +1,22 @@
+# Desktop profile: sway and what the session around it uses (dnf names;
+# ~/.dots/.bootstrap/lib.sh translates for apt/pacman). On top of the
+# terminal profile's ~/.dots/.bootstrap/packages.txt.
+sway
+foot
+kitty
+# app installs from .bootstrap/flatpaks.txt
+flatpak
+grim
+wf-recorder
+cliphist
+wlsunset
+udiskie
+slurp
+wl-clipboard
+# mirrors the laptop panel onto HDMI in the `present` screen layout
+wl-mirror
+swayidle
+# dots-lock's fallback when quickshell's lock screen doesn't come up
+swaylock
+brightnessctl
+pulseaudio-utils

@@ -1,0 +1,6 @@
+[Desktop Entry]
+Name=Terminal
+Comment=Just a login shell: no desktop. For terminal-only work, or when sway won't start.
+Exec=/bin/sh -lc 'exec "${SHELL:-/bin/bash}" -l'
+Type=Application
+Terminal=true
