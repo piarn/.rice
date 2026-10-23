@@ -16,7 +16,7 @@ Item {
     property var screen: null
 
     function show(k, v, m) {
-        if (!shown) screen = IslandState.focusedScreen
+        if (!shown) screen = ScreenState.focused
         kind = k
         value = v
         muted = m
@@ -44,9 +44,8 @@ Item {
         arm.restart()
     }
 
-    // The quick settings sliders already show the level.
     function suppressed() {
-        return !armed || IslandState.tab === "system"
+        return !armed
     }
 
     Connections {

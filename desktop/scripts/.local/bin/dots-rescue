@@ -13,7 +13,7 @@
 rundir="${DOTS_RESCUE_RUNDIR:-/run/user/$(id -u)}"
 rice="${RICE_DIR:-$HOME/.rice}"
 good="${QS_GOOD:-$HOME/.local/state/dots/quickshell-good}"
-start="env QML2_IMPORT_PATH=$HOME/.rice $HOME/.local/bin/quickshell -n"
+start="env QML2_IMPORT_PATH=$HOME/.config/quickshell/theme $HOME/.local/bin/quickshell -n"
 
 usage() {
     sed -n '4,9p' "$0" | sed 's/^# \{0,1\}//' >&2

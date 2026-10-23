@@ -1,6 +1,6 @@
 // The lock screen's status, under the password field: two centered,
 // │-separated lines in the tmux status line's style — who and how long,
-// then weather, connectivity and power. Display only: LockScreen.qml feeds
+// then connectivity and power. Display only: LockScreen.qml feeds
 // it, so it can also be rendered outside a session lock for previews.
 import QtQuick
 import quickshell
@@ -12,9 +12,6 @@ Column {
     property string host: ""
     property string lockedFor: ""
     property string uptime: ""
-
-    property string weatherGlyph: ""
-    property string weather: ""         // "15° overcast"; empty hides it
 
     property string netGlyph: ""
     property string netLabel: ""        // SSID, "wired", or "offline"
@@ -45,13 +42,6 @@ Column {
         anchors.horizontalCenter: parent.horizontalCenter
         spacing: Style.gap
 
-        Icon {
-            visible: root.weather !== ""
-            text: root.weatherGlyph
-            anchors.verticalCenter: parent.verticalCenter
-        }
-        MonoText { visible: root.weather !== ""; text: root.weather; color: Colors.gray2 }
-        Sep { visible: root.weather !== "" }
 
         Icon {
             text: root.netGlyph

@@ -1,9 +1,8 @@
 // Notification daemon backend — org.freedesktop.Notifications, replacing
 // mako/dunst/swaync (nothing else was providing this service; confirmed via
 // `busctl --user list` before adding it, since only one process may own that
-// D-Bus name at a time). Item root (not QtObject) for the same reason
-// BluetoothState.qml is one: NotificationServer is a non-Item child object,
-// which needs the generic "data" default property Item has and QtObject
+// D-Bus name at a time). Item root, not QtObject: NotificationServer is a
+// non-Item child object, which needs the generic "data" default property Item has and QtObject
 // doesn't.
 //
 // Every notification is tracked (listed in the calendar popup until
@@ -117,7 +116,7 @@ Item {
     Timer {
         interval: 200
         repeat: true
-        running: root.popups.length > 0 && !root.popupsHovered && !IslandState.grown
+        running: root.popups.length > 0 && !root.popupsHovered
         onTriggered: {
             const r = Object.assign({}, root.remaining)
             const expired = []

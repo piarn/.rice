@@ -34,7 +34,7 @@ live="${QS_LIVE:-$HOME/.config/quickshell}"
 stale=10
 # Same launch line as sway's exec_always (QML2_IMPORT_PATH loads the rice
 # Colors singleton); swaymsg exec runs it with sway's environment.
-start="env QML2_IMPORT_PATH=$HOME/.rice $HOME/.local/bin/quickshell -n"
+start="env QML2_IMPORT_PATH=$HOME/.config/quickshell/theme $HOME/.local/bin/quickshell -n"
 # instances whose config state was already acted on
 checked=""
 

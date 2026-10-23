@@ -1,7 +1,5 @@
-// Shared network status, polled once here (not per-screen) and read by both
-// the island's Strip and its network tab (island/tabs/NetworkTab.qml) — pulled in via
-// `import "./state"` / `import "../state"`; no IPC needed since it's the
-// same QML singleton either way.
+// Shared network status, polled once here (not per-screen) and read by the
+// bar and the lock screen's status line.
 //
 // Tracks every managed ethernet/wifi/wwan device, not just one: "primary"
 // is whichever connected device holds the lowest-metric IPv4 default route,
@@ -40,14 +38,8 @@ Item {
     readonly property string kind: !primary ? "none" : primary.type === "wifi" ? "wifi" : "eth"
     readonly property int signal: primary && primary.type === "wifi" ? primary.signal : 0
 
-    // Names of the VPNs up right now: NetworkManager profiles (minus the
-    // interfaces provider extras own, like wg0-mullvad) and provider extras.
-    // Shared by the system tab and the lock screen's status line.
-    readonly property var activeVpns: {
-        const hidden = [].concat(...ExtrasState.vpns.map(v => Array.from(v.interfaces)))
-        return vpns.filter(v => v.active && !hidden.some(h => v.name.startsWith(h))).map(v => v.name)
-            .concat(ExtrasState.vpns.filter(v => v.available && v.active).map(v => v.name))
-    }
+    // Names of the NetworkManager VPNs up right now (the lock screen's status line).
+    readonly property var activeVpns: vpns.filter(v => v.active).map(v => v.name)
 
     property bool scanning: false
     property string actionStatus: ""
@@ -402,7 +394,7 @@ Item {
     Timer { id: debounce; interval: 400; onTriggered: root.refresh() }
 
     Timer {
-        interval: IslandState.tab === "network" ? 3000 : 15000
+        interval: 15000
         running: true
         repeat: true
         triggeredOnStart: true

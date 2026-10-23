@@ -4,7 +4,7 @@
 # skipped.
 #
 #   rice-reload                  everything
-#   rice-reload TARGET...        kitty quickshell sway wallpaper
+#   rice-reload TARGET...        kitty quickshell sway
 #
 # Normally reached through dots-reload (~/.dots), which reloads the
 # terminal side (tmux, fish) and hands these targets on. A quickshell
@@ -12,15 +12,14 @@
 # reloaded when its config passes `sway -C`. DOTS_NO_RELOAD=1 makes it a
 # no-op, same as dots-reload.
 [ -n "${DOTS_NO_RELOAD:-}" ] && exit 0
-[ $# -gt 0 ] || set -- kitty quickshell sway wallpaper
+[ $# -gt 0 ] || set -- kitty quickshell sway
 
-kitty=; quickshell=; sway=; wallpaper=
+kitty=; quickshell=; sway=
 for target; do
     case $target in
         kitty) kitty=1 ;;
         quickshell) quickshell=1 ;;
         sway) sway=1 ;;
-        wallpaper) wallpaper=1 ;;
         *) sed -n '6,7p' "$0" | sed 's/^# \{0,1\}/usage: /' >&2; exit 1 ;;
     esac
 done
@@ -39,7 +38,7 @@ sway_config_ok() {
     return 1
 }
 
-# kitty re-reads kitty.conf (and the ~/.rice theme it includes) on SIGUSR1
+# kitty re-reads kitty.conf on SIGUSR1
 if [ -n "$kitty" ] && pkill -USR1 -x kitty 2>/dev/null; then
     echo "==> reloading kitty"
 fi
@@ -47,7 +46,7 @@ fi
 if [ -n "$quickshell$sway" ] && ! sway_up; then
     pgrep -x sway >/dev/null \
         && echo "warning: sway is running but unreachable (SWAYSOCK unset?); skipped sway/quickshell" >&2
-    quickshell=; sway=; wallpaper=
+    quickshell=; sway=
 fi
 
 # quickshell's restart needs the reload (exec_always respawns it)
@@ -83,7 +82,4 @@ if [ -n "$sway" ]; then
     swaymsg -q reload || echo "warning: swaymsg reload failed" >&2
 fi
 
-if [ -n "$wallpaper" ] && [ -f "$HOME/.rice/wallpaper.png" ] && sway_up; then
-    swaymsg -q output '*' bg "$HOME/.rice/wallpaper.png" fill
-fi
 exit 0

@@ -31,7 +31,7 @@ import "./lock"
 // IpcHandler below have to live as its siblings rather than its children —
 // nesting them inside WlSessionLock silently drops them (no QML error, they
 // just never get created). Item has the generic "data" default property
-// that holds arbitrary children, same reason state/BluetoothState.qml's
+// that holds arbitrary children, same reason state/NotificationState.qml's
 // singleton is an Item rather than a QtObject.
 Item {
     id: root
@@ -76,8 +76,6 @@ Item {
         : net.type === "wifi" ? net.connection
         : net.type === "wwan" ? "mobile" : "wired"
 
-    readonly property string weatherGlyph: WeatherState.glyph
-    readonly property string weather: WeatherState.available ? WeatherState.temp + " " + WeatherState.desc : ""
 
     readonly property string netGlyph: NetworkState.icon(net)
     readonly property var vpns: NetworkState.activeVpns

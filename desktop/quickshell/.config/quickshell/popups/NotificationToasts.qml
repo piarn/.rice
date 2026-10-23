@@ -17,22 +17,21 @@ PanelWindow {
     property var targetScreen: null
     readonly property bool active: NotificationState.popups.length > 0
     onActiveChanged: {
-        if (active) targetScreen = IslandState.focusedScreen
+        if (active) targetScreen = ScreenState.focused
         // The surface unmaps under the pointer without a hover-exit.
         else NotificationState.popupsHovered = false
     }
 
     // Step aside while the island is grown on the same monitor — it covers
     // the same spot. NotificationState pauses the countdown too.
-    visible: active && !(IslandState.grown && IslandState.screen === targetScreen)
+    visible: active
     screen: targetScreen
     WlrLayershell.layer: WlrLayer.Overlay
     WlrLayershell.namespace: "quickshell-notifications"
     WlrLayershell.keyboardFocus: WlrKeyboardFocus.None
     exclusionMode: ExclusionMode.Normal
     color: "transparent"
-    // top-centered; the exclusive zone (island/Spacer.qml) puts it just
-    // under the collapsed island
+    // top-centered, just under the bar (its exclusive zone)
     anchors.top: true
     margins.top: 4
     implicitWidth: 600

@@ -1,0 +1,9 @@
+#!/bin/sh
+# Clipboard history picker ($mod+v): cliphist's entries in fzf, newest
+# first; Enter copies the picked one back, Esc leaves the clipboard alone.
+# Opens itself in a small floating kitty when not already in a terminal.
+if [ ! -t 0 ]; then
+    exec kitty --class floating-tool -o initial_window_width=90c -o initial_window_height=24c -e "$0"
+fi
+pick=$(cliphist list | fzf --no-sort --prompt 'clipboard> ' --with-nth 2.. --delimiter '\t') || exit 0
+printf '%s\n' "$pick" | cliphist decode | wl-copy

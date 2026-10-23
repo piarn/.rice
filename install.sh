@@ -235,6 +235,8 @@ install_login() {
         sudo install -d -o "$USER" -g "$(id -gn)" -m 755 "$GREETER_DIR"
     fi
     "$DESKTOP_DIR/scripts/.local/bin/greeter-sync"
+    # where the palette lived before it moved into the shell copy (shell/theme)
+    rm -rf "${GREETER_DIR:?}/rice"
 
     # The old ly setup's Sway entry; the greeter starts sway-session itself.
     [ -e /usr/local/share/wayland-sessions/sway.desktop ] \
@@ -288,7 +290,7 @@ preflight() {
 }
 
 doctor() {
-    local name missing=() now
+    local name missing=()
     doctor_init
     echo "desktop packages"
     mapfile -t missing < <(missing_packages "$BOOTSTRAP_DIR/packages.txt")
@@ -379,17 +381,6 @@ doctor() {
             ok "sway config current"
         else
             bad "sway is running an older ~/.config/sway/config than the one on disk (run dots-reload)"
-        fi
-        # the rest of its QML is file-watched and reloads itself
-        local pid colors="$RICE_DIR/quickshell/Colors.qml"
-        now=$(date +%s)
-        pid=$(pgrep -xo quickshell || true)
-        if [ -n "$pid" ] && [ -f "$colors" ]; then
-            if [ "$(stat -c %Y "$colors")" -gt $((now - $(ps -o etimes= -p "$pid"))) ]; then
-                bad "quickshell started before the current theme's Colors.qml (run dots-reload)"
-            else
-                ok "quickshell colors current"
-            fi
         fi
     else
         warn "not inside sway; skipped the session checks"

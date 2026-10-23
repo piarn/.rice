@@ -1,1 +1,32 @@
-../../../../satty/config.toml
+# satty: palette, save location, save/copy actions.
+[general]
+initial-tool = "brush"
+copy-command = "wl-copy"
+corner-roundness = 12
+annotation-size-factor = 1
+# Enter saves to file *and* clipboard, then exits — same one-step "annotate,
+# hit enter, it's on your clipboard" flow ShareX/Flameshot give you.
+actions-on-enter = ["save-to-file", "save-to-clipboard", "exit"]
+actions-on-escape = ["exit"]
+actions-on-right-click = ["save-to-clipboard"]
+output-filename = "~/Pictures/Screenshots/%Y-%m-%d_%H-%M-%S.png"
+default-hide-toolbars = false
+primary-highlighter = "block"
+
+[color-palette]
+# Shown in the toolbar for quick selection — RRGGBBAA, alpha ff = opaque.
+palette = [
+    "#bdbdbdFF",
+    "#c46a6aFF",
+    "#c2a061FF",
+    "#7f93adFF",
+    "#a08aadFF",
+    "#7fa8a3FF",
+]
+
+# Available as presets in the color picker.
+custom = [
+    "#e6e6e6",
+    "#d0d0d0",
+    "#f2f2f2",
+]

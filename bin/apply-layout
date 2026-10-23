@@ -35,7 +35,7 @@ revert a manual choice like `docked`. --auto leaves a pinned layout alone
 as long as its own `requires:` are still satisfied; it only overrides
 once the connected outputs actually stop matching it.
 
-Gaps and colors are theme concerns, not layout ones — see ~/.rice/sway/theme.conf.
+Borders and colors aren't layout concerns — see ~/.config/sway/theme.conf.
 """
 
 import argparse
