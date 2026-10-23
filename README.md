@@ -2,7 +2,7 @@
 
 The desktop: sway, quickshell (status bar, launcher, lock screen, login
 screen), foot and the session around them. Installed only on
-machines using [`~/.dots`](https://github.com/piarn/.dotfiles)' **desktop**
+machines using [`~/.dots`](https://github.com/piarn/.dots)' **desktop**
 profile: `~/.dots/install.sh desktop` installs the terminal profile and
 then runs this repo's `install.sh` on top. A work laptop on the
 **terminal** profile never needs this repo.

@@ -47,8 +47,8 @@ jobs:
       - name: ~/.dots
         run: |
           branch="${GITHUB_REF_NAME}"
-          git ls-remote --exit-code --heads https://github.com/piarn/.dotfiles.git "$branch" >/dev/null || branch=master
-          git clone --depth 1 --branch "$branch" https://github.com/piarn/.dotfiles.git "$HOME/.dots"
+          git ls-remote --exit-code --heads https://github.com/piarn/.dots.git "$branch" >/dev/null || branch=master
+          git clone --depth 1 --branch "$branch" https://github.com/piarn/.dots.git "$HOME/.dots"
 
       - name: install.sh --ci
         run: ./install.sh --ci

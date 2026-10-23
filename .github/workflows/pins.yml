@@ -24,7 +24,7 @@ jobs:
       - uses: actions/checkout@v4
 
       - name: ~/.dots
-        run: git clone --depth 1 https://github.com/piarn/.dotfiles.git "$HOME/.dots"
+        run: git clone --depth 1 https://github.com/piarn/.dots.git "$HOME/.dots"
 
       - name: check pins
         run: |
