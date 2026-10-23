@@ -118,6 +118,9 @@ def apply(name: str, *, pinned: bool) -> None:
     )
     CURRENT.write_text(name + "\n" + ("manual\n" if pinned else ""))
 
+    # A mirroring layout (present) starts wl-mirror via exec_always; stop
+    # it here so leaving that layout doesn't leave the mirror running.
+    subprocess.run(["pkill", "-x", "wl-mirror"], stderr=subprocess.DEVNULL)
     subprocess.run(["swaymsg", "reload"], check=True)
     print(f"layout: {name}" + (" (pinned)" if pinned else ""))
 

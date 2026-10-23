@@ -1,0 +1,25 @@
+#!/bin/sh
+# Run by the `present` layout (exec_always): keeps every real workspace on
+# the laptop panel and turns HDMI-A-1 into a pure mirror of it.
+#
+# Sway gives each output its own workspaces, so plugging in HDMI can land
+# workspace 1 (and keyboard focus) on the TV, hidden behind the mirror.
+# This moves any such workspace back to eDP-1; HDMI then falls back to the
+# `mirror` workspace (assigned to it in present.conf), where wl-mirror runs
+# full-screen showing a live copy of eDP-1. Safe to re-run on every reload.
+
+pkill -x wl-mirror
+
+# the workspace you were on, to land back on it afterwards
+back=$(swaymsg -t get_workspaces | jq -r '.[] | select(.output == "eDP-1" and .visible) | .name')
+
+swaymsg -t get_workspaces |
+    jq -r '.[] | select(.output == "HDMI-A-1" and .name != "mirror") | .name' |
+    while read -r ws; do
+        swaymsg "workspace \"$ws\"; move workspace to output eDP-1" >/dev/null
+    done
+
+swaymsg "focus output HDMI-A-1; workspace mirror" >/dev/null
+setsid -f wl-mirror --fullscreen-output HDMI-A-1 eDP-1 >/dev/null 2>&1
+sleep 0.3
+swaymsg "workspace \"${back:-1}\"" >/dev/null
