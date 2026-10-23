@@ -453,7 +453,7 @@ install_satty
 
 seed_outputs
 stow_packages "$DESKTOP_DIR" "${DESKTOP_PACKAGES[@]}"
-# The VPN extras' quickshell panels live here; extras.sh links the ones
+# Extras' desktop halves (desktop/extras); extras.sh links the ones
 # enabled on this machine now that the profile is desktop.
 "$DOTS_DIR/extras/extras.sh" restow
 prune_dangling_links

@@ -22,8 +22,8 @@ The desktop, and the palette everything is drawn in.
 
 `desktop/` holds one stow package per app (`sway`, `quickshell`, `kitty`,
 `foot`, `satty`, `kde`, `firefox`, `hidden-apps`, `scripts`), each mirroring
-`$HOME`; `desktop/extras/<name>` is the desktop half of a `~/.dots` extra
-(a VPN's quickshell panel), linked by `extras.sh` on the desktop profile.
+`$HOME`; `desktop/extras/<name>` (none right now) is where the desktop
+half of a `~/.dots` extra goes, linked by `extras.sh` on the desktop profile.
 The packages and flatpaks are in `.bootstrap/`.
 
 ## Boot and login
