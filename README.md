@@ -61,7 +61,8 @@ What makes the machine come up usable after a boot, all installed by
 sway + [quickshell](desktop/quickshell/.config/quickshell): a thin
 full-width **bar** at the top of each screen — workspaces on the left,
 time and date in the middle, and on the right recording, "silenced",
-network, volume and battery as plain text (click network for `nmtui`,
+network, volume and battery as plain text (click network for the
+launcher's network mode,
 volume to mute, scroll it to change it) — plus the **launcher**, the lock
 screen and notification toasts. The rule for keys: `$mod`+letter is the
 everyday action, `$mod+Shift` is the bigger version (move, capture,
@@ -73,7 +74,7 @@ system). Plain Alt is left to apps.
 | `$mod+Space` / `$mod+d` | launcher |
 | `$mod+q` | close window |
 | `$mod+v` | clipboard history (`clip-pick`: cliphist in fzf, floating) |
-| `$mod+n` | network (`nmtui`, floating) |
+| `$mod+n` | network: the launcher's `#` mode |
 | `$mod+e` | files (yazi, in foot) |
 | `$mod+b` | browser (Firefox) |
 | `$mod+h/j/k/l`, arrows | focus; add Shift to move the window |
@@ -105,6 +106,7 @@ character switches to a mode:
 | `@` | switch to an open window |
 | `~` | dev: tmux sessions (running and frozen), git projects, ssh hosts from `~/.ssh/config`; Enter opens one as a tmux session (`tmux-open`) in the terminal already showing tmux, or a new foot |
 | `!` | tools: region screenshot, screen recording, color picker (`color-pick`), clipboard history, silence |
+| `#` | network: wi-fi on/off, nearby networks (Enter connects, asking for the password of a new secured one; Shift+Enter forgets a saved one), VPN profiles up/down. Hidden or enterprise networks: `>nmtui` |
 | `:` | session: lock, reload, suspend, logout, reboot, shutdown (the last three need Enter twice); `:layout <name>` |
 
 Keys: ↑↓ or `^j`/`^k` move, Enter acts, Esc or a click outside closes.

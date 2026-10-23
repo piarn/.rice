@@ -4,7 +4,7 @@
 //    exists; the focused one inverted, an urgent one red. Click to go there.
 //  - center: time and date
 //  - right: recording (click stops it), "silenced" while toasts are off,
-//    network (click: nmtui), volume (click mutes, wheel steps), battery,
+//    network (click: the launcher's network mode), volume (click mutes, wheel steps), battery,
 //    and ● while there are unread notifications (click clears them).
 // Anything that needs attention (offline, weak wi-fi, low battery) turns
 // amber or red; everything else stays gray.
@@ -143,7 +143,7 @@ PanelWindow {
             }
             MouseArea {
                 anchors.fill: parent
-                onClicked: Quickshell.execDetached(["foot", "--app-id", "floating-tool", "nmtui"])
+                onClicked: Quickshell.execDetached([Quickshell.env("HOME") + "/.local/bin/qs", "ipc", "call", "commandcenter", "open", "#"])
             }
         }
 

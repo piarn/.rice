@@ -21,6 +21,8 @@ Scope {
     id: cc
 
     property bool shown: false
+    // a row waiting for typed input (a wi-fi password): {prompt, submit(text)}
+    property var prompt: null
     readonly property int maxRows: 8
 
     property int selected: 0
@@ -30,6 +32,7 @@ Scope {
 
     function open(text) {
         win.screen = ScreenState.focused
+        prompt = null
         input.text = text || ""
         selected = 0
         armed = -1
@@ -37,7 +40,21 @@ Scope {
         shown = true
         Qt.callLater(() => input.forceActiveFocus())
     }
-    function close() { shown = false }
+    function close() { shown = false; prompt = null }
+
+    // Enter on a prompt: hand the text over, back to the mode it came from
+    // (where the status row shows how it went). Esc: just back.
+    function submitPrompt() {
+        const item = prompt
+        prompt = null
+        const text = input.text
+        input.text = "#"
+        item.submit(text)
+    }
+    function cancelPrompt() {
+        prompt = null
+        input.text = "#"
+    }
     function toggle() { if (shown) close(); else open("") }
 
     function move(delta) {
@@ -47,8 +64,13 @@ Scope {
 
     function activate(item, alt) {
         if (!item) return
+        if (item.prompt && !alt) {
+            prompt = item
+            input.text = ""
+            return
+        }
         if (item.kind === "toggle" || item.kind === "choice" || item.kind === "level") {
-            if (item.run) item.run()
+            if (item.run) item.run(alt)
             return
         }
         if (item.confirm && armed !== selected) {
@@ -72,7 +94,8 @@ Scope {
     ToolsSection { id: tools }
     RunSection {
         id: run
-        query: input.text
+        // a password being typed never reaches the search
+        query: cc.prompt ? "#" : input.text
         active: cc.shown
         devRows: dev.rows
         toolRows: tools.rows
@@ -128,15 +151,21 @@ Scope {
                         anchors.rightMargin: modeLabel.visible ? modeLabel.width + 20 : 10
                         verticalAlignment: TextInput.AlignVCenter
                         color: Colors.fg
+                        echoMode: cc.prompt ? TextInput.Password : TextInput.Normal
                         font.family: "monospace"
                         font.pixelSize: 14
                         clip: true
-                        onTextChanged: { cc.selected = 0; cc.armed = -1 }
+                        onTextChanged: if (!cc.prompt) { cc.selected = 0; cc.armed = -1 }
 
                         Keys.onPressed: (event) => {
                             const ctrl = event.modifiers & Qt.ControlModifier
                             const shift = event.modifiers & Qt.ShiftModifier
-                            if (event.key === Qt.Key_Escape) cc.close()
+                            if (cc.prompt) {
+                                if (event.key === Qt.Key_Escape) cc.cancelPrompt()
+                                else if (event.key === Qt.Key_Return || event.key === Qt.Key_Enter) cc.submitPrompt()
+                                else return
+                            }
+                            else if (event.key === Qt.Key_Escape) cc.close()
                             else if (event.key === Qt.Key_Return || event.key === Qt.Key_Enter) cc.activate(cc.results[cc.selected], shift)
                             else if (event.key === Qt.Key_Down || event.key === Qt.Key_Tab || (ctrl && (event.key === Qt.Key_J || event.key === Qt.Key_N))) cc.move(1)
                             else if (event.key === Qt.Key_Up || event.key === Qt.Key_Backtab || (ctrl && (event.key === Qt.Key_K || event.key === Qt.Key_P))) cc.move(-1)
@@ -152,16 +181,16 @@ Scope {
                         anchors.right: parent.right
                         anchors.rightMargin: 10
                         anchors.verticalCenter: parent.verticalCenter
-                        visible: run.mode !== "apps"
+                        visible: cc.prompt || run.mode !== "apps"
                         color: Colors.gray2
-                        text: run.mode
+                        text: cc.prompt ? "password" : run.mode
                     }
                 }
 
                 ListView {
                     width: parent.width
                     height: Math.min(count, cc.maxRows) * 34
-                    visible: count > 0
+                    visible: count > 0 && !cc.prompt
                     clip: true
                     boundsBehavior: Flickable.StopAtBounds
                     model: cc.results
@@ -184,7 +213,8 @@ Scope {
                     elide: Text.ElideRight
                     font.pixelSize: 11
                     color: Colors.gray
-                    text: run.hint + " · ↑↓/^j^k move · esc close"
+                    text: cc.prompt ? cc.prompt.prompt + " · enter connects · esc back"
+                        : run.hint + " · ↑↓/^j^k move · esc close"
                 }
             }
         }

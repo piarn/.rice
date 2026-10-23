@@ -6,6 +6,8 @@
 //   ?  web search                   @  open windows
 //   ~  dev: tmux sessions, git projects, ssh hosts (needs devRows)
 //   !  tools: capture, clipboard, silence (needs toolRows)
+//   #  network: wi-fi on/off, networks (Enter connects, asking for a
+//      password when needed; Shift+Enter forgets a saved one), VPNs
 //   :  system actions (lock/reload/suspend/logout/reboot/shutdown),
 //      :layout <name>
 // A prefix forces its scope, but it's never required to reach something:
@@ -47,7 +49,7 @@ Item {
     readonly property string searchUrl: "https://duckduckgo.com/?q="
 
     readonly property var prefixes: ({ "=": "calc", ">": "run", "/": "files", "?": "web", "@": "windows",
-                                        "~": "dev", "!": "tools", ":": "session" })
+                                        "~": "dev", "!": "tools", ":": "session", "#": "network" })
     readonly property string mode: prefixes[query.charAt(0)] ?? "apps"
     readonly property string rest: (mode === "apps" ? query : query.slice(1)).trim()
 
@@ -69,6 +71,7 @@ Item {
         case "dev": return devResults()
         case "tools": return toolResults()
         case "session": return sessionResults()
+        case "network": return networkResults()
         default: return defaultResults(rest)
         }
     }
@@ -87,6 +90,7 @@ Item {
         case "windows": return "enter focus"
         case "dev": return "enter opens a tmux session"
         case "tools": return "enter runs · toggles stay open"
+        case "network": return networkStatus() + " · enter connects · shift+enter forgets"
         case "session": return rest.match(/^layout\b/) ? "enter applies" : "enter acts · destructive actions need enter twice"
         default: return "=calc  >run  /files  ?web  @windows  ~dev  !tools  :session"
         }
@@ -325,16 +329,72 @@ Item {
         ])
     }
 
+    // `#`: what NetworkState (nmcli) knows, refreshed by a scan when the
+    // mode opens. Rows stay open after acting; the hint line shows how it
+    // went (networkStatus).
+    function networkStatus() {
+        const n = NetworkState
+        if (n.actionStatus) return n.actionStatus
+        if (n.scanning) return "scanning…"
+        const p = n.primary
+        if (!p || !p.connected) return "offline"
+        return p.type === "wifi" ? "connected to " + p.connection : "wired · " + p.connection
+    }
+
+    function networkResults() {
+        const n = NetworkState
+        const rows = []
+        rows.push({ kind: "toggle", title: "wi-fi", glyph: "\u{e63e}", keepOpen: true,
+                    on: n.wifiEnabled, subtitle: n.wifiEnabled ? "on" : "off",
+                    run: () => n.setWifiEnabled(!n.wifiEnabled) })
+        if (n.wifiEnabled) {
+            // A steady order (connected, saved, then by name) rather than by
+            // signal: the list rescans while it's open, and a re-sort by
+            // fluctuating signal would move a different network under the
+            // cursor just as Enter is pressed. Each row still shows its signal.
+            const rank = w => w.active ? 0 : n.savedSsids[w.ssid] ? 1 : 2
+            const nets = Array.from(n.wifiNetworks).filter(w => w.ssid)
+                .sort((a, b) => rank(a) - rank(b) || a.ssid.localeCompare(b.ssid))
+            rows.push(...ranked(nets, rest, w => [{ text: w.ssid, weight: 1, loose: true }]).map(w => {
+                const secured = !!w.security && w.security !== "--"
+                const saved = !!n.savedSsids[w.ssid]
+                return {
+                    kind: "choice", title: w.ssid, glyph: n.wifiGlyph(w.signal),
+                    on: !!w.active, keepOpen: true,
+                    subtitle: [w.signal + "%", secured ? w.security : "open", saved ? "saved" : ""].filter(x => x).join(" · "),
+                    // a secured network with no saved profile needs its password first
+                    prompt: secured && !saved && !w.active ? "password for " + w.ssid : "",
+                    submit: (password) => n.connectWifi(w, password),
+                    run: (alt) => alt ? n.forgetWifi(w.ssid) : w.active ? null : n.connectWifi(w),
+                }
+            }))
+        }
+        const vpns = ranked(Array.from(n.vpns), rest, v => [{ text: v.name, weight: 1, loose: true }])
+        if (vpns.length) {
+            rows.push({ kind: "header", title: "vpn" })
+            rows.push(...vpns.map(v => ({
+                kind: "toggle", title: v.name, glyph: "\u{e0da}", keepOpen: true,
+                on: !!v.active, subtitle: v.active ? "up" : "down", run: () => n.toggleVpn(v),
+            })))
+        }
+        return rows
+    }
+
     // Windows load as soon as the command center opens, not just on
     // switching into `@` mode: the plain apps search folds window matches
     // in too (extraMatches), so it needs them ready before you've typed
     // anything mode-specific.
-    onActiveChanged: if (active) treeProc.running = true
+    onActiveChanged: {
+        if (!active) return
+        treeProc.running = true
+        if (mode === "network") NetworkState.scan()
+    }
 
     onModeChanged: {
         if (!active) return
         if (mode === "windows") treeProc.running = true
         if (mode === "files") recentProc.running = true
+        if (mode === "network") NetworkState.scan()
     }
 
     onRestChanged: if (mode === "files" && rest !== "") fdDebounce.restart()

@@ -25,13 +25,13 @@ set $browser flatpak run org.mozilla.firefox
 # quickshell's IPC client (the distro package)
 set $qs $HOME/.local/bin/qs
 # The launcher (quickshell's launcher/Launcher.qml):
-# apps plus the prefix modes (=calc >run /files ?web @windows ~dev !tools :session).
+# apps plus the prefix modes (=calc >run /files ?web @windows ~dev !tools #network :session).
 set $menu exec $qs ipc call commandcenter toggle
 
 ### Looks
 include ~/.config/sway/theme.conf
 
-# Small terminal tools (clip-pick, nmtui) float, centered
+# Small terminal tools (clip-pick) float, centered
 for_window [app_id="floating-tool"] floating enable, resize set 900 560, move position center
 
 ### Output configuration
@@ -125,8 +125,8 @@ input "type:keyboard" {
     # reboot/shutdown) — the deliberate next step up from the direct lock
     bindsym $mod+Shift+Escape exec $qs ipc call commandcenter open ":"
 
-    # Network (nmtui, floating)
-    bindsym $mod+n exec $term --app-id floating-tool nmtui
+    # Network: the launcher's # mode (wi-fi, networks, VPNs)
+    bindsym $mod+n exec $qs ipc call commandcenter open "#"
 #
 # Moving around:
 #
