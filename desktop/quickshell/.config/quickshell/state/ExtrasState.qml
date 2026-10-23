@@ -1,11 +1,10 @@
-// Opt-in extras: whatever ~/.dots/extras/extras.sh has stowed (from
-// ~/.rice/desktop/extras, on the desktop profile) under
+// Opt-in panels: whatever is under
 // ~/.config/quickshell/extras/<name>/. Nothing here knows about any
 // particular extra — each is picked up by file name:
 //  - Vpn.qml: a components/VpnProvider, created once here and listed in
 //    the network tab's vpn section
-// Scanned once at startup; extras.sh restarts quickshell after enabling
-// or disabling one, so new directories are always picked up.
+// Scanned once at startup. Nothing ships any right now (the VPN extras
+// were dropped); a new one needs a quickshell restart to show up.
 pragma Singleton
 import Quickshell
 import Quickshell.Io

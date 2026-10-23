@@ -23,7 +23,6 @@ __pycache__
 /sway/theme.conf
 /tmux/theme.conf
 /yazi/theme.toml
-/kde/kdeglobals
 
 # Rendered by apply-layout from the active layouts/*.conf profile (and
 # seeded from layouts/laptop.conf by ~/.dots/install.sh on a fresh clone):

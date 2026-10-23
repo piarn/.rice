@@ -21,10 +21,10 @@ The desktop, and the palette everything is drawn in.
 ```
 
 `desktop/` holds one stow package per app (`sway`, `quickshell`, `kitty`,
-`foot`, `satty`, `kde`, `firefox`, `hidden-apps`, `scripts`), each mirroring
-`$HOME`; `desktop/extras/<name>` (none right now) is where the desktop
-half of a `~/.dots` extra goes, linked by `extras.sh` on the desktop profile.
-The packages and flatpaks are in `.bootstrap/`.
+`foot`, `satty`, `firefox`, `hidden-apps`, `scripts`), each mirroring
+`$HOME`. The packages are in `.bootstrap/`; the only flatpaks are Firefox
+and Prism Launcher — everything else is a terminal program (`$mod+e` is
+yazi, not a GUI file manager).
 
 ## Boot and login
 
@@ -72,7 +72,7 @@ hidden.
 | `$mod+Space` / `$mod+d` | the island's run tab, the command center (either key) |
 | `$mod+q` | close window |
 | `$mod+v` | the island's clipboard tab (cliphist history) |
-| `$mod+e` | file manager (Dolphin) |
+| `$mod+e` | files (yazi, in kitty) |
 | `$mod+b` | browser (Firefox) |
 | `$mod+h/j/k/l`, arrows | focus; add Shift to move the window |
 | `$mod+1`–`0` | workspace; add Shift to send the window there |
@@ -91,14 +91,14 @@ hidden.
 | `$mod+Shift+c` | reload sway and restart quickshell |
 
 The command center is a search box and a short list: apps, most-used
-first, ranked by name/description/keywords ("pdf" finds Zathura). A
+first, ranked by name/description/keywords ("browser" finds Firefox). A
 leading character switches to a mode:
 
 | Prefix | Mode |
 | --- | --- |
 | `=` | calculator (`=2^10*3`, `sqrt`, `pi`); Enter copies the result |
 | `>` | shell command; Enter runs it in kitty, Shift+Enter in the background |
-| `/` | files under `~` via fd (empty: recently opened); Shift+Enter shows it in Dolphin |
+| `/` | files under `~` via fd (empty: recently opened); Shift+Enter shows it in yazi |
 | `?` | web search (or open an address) |
 | `@` | switch to an open window |
 | `~` | dev: tmux sessions (running and frozen), git projects, ssh hosts from `~/.ssh/config`; Enter opens one as a tmux session (`tmux-open`) in the terminal already showing tmux, or a new kitty |
@@ -423,15 +423,3 @@ symlink straight to it, not a file that sources it.
   `browser.download.autohideButton`) lives in `~/.rice/desktop/firefox/user.js`,
   copied alongside it, same idea as nvim's `dofile(...)` line living in
   `~/.dots` rather than here.
-- `kde/` — `kdeglobals`, a full KDE color scheme (view/window/header/
-  button/selection/tooltip groups) plus `Icons/Theme=breeze-dark`. KConfig
-  has no include directive, so same symlink deal as yazi:
-  `~/.rice/desktop/kde/.config/kdeglobals` points straight at it, stowed to
-  `~/.config/kdeglobals`. Themes the KDE flatpaks (Dolphin, Gwenview, Ark),
-  which all ship `--filesystem=xdg-config/kdeglobals:ro`. Outside a Plasma
-  session they only honor its colors with `QT_QPA_PLATFORMTHEME=kde`
-  (otherwise stock Breeze Dark) — `~/.rice/install.sh`'s
-  `install_kde_flatpak_theme` sets that as a per-app `flatpak override`.
-  Running KDE apps don't recolor live (a `KGlobalSettings.notifyChange`
-  D-Bus signal doesn't reach them); they pick up a theme switch on next
-  launch.

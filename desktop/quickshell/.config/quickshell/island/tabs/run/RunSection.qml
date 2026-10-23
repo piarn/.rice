@@ -1,5 +1,5 @@
 // The command center's mode dispatcher. Plain text searches apps by name,
-// description and keywords ("pdf" finds Zathura), most-launched first; a
+// description and keywords ("browser" finds Firefox), most-launched first; a
 // leading character forces a mode:
 //   =  calculator, Enter copies     >  shell command
 //   /  files (empty: recently opened)
@@ -81,9 +81,9 @@ Item {
             return results.length ? "enter copies" : "not a valid expression"
         case "run": return "enter in " + term + " · shift+enter in background"
         case "files":
-            if (rest === "") return (recentFiles.length ? "recent files" : "no recent files") + " · enter open · shift+enter show in Dolphin"
+            if (rest === "") return (recentFiles.length ? "recent files" : "no recent files") + " · enter open · shift+enter show in yazi"
             if (fdProc.running && foundFor !== rest) return "searching…"
-            return (results.length ? "" : "nothing matches · ") + "enter open · shift+enter show in Dolphin"
+            return (results.length ? "" : "nothing matches · ") + "enter open · shift+enter show in yazi"
         case "web": return "enter search"
         case "windows": return "enter focus"
         case "dev": return "enter opens a tmux session"
@@ -217,7 +217,7 @@ Item {
             subtitle: path.startsWith(home) ? "~" + path.slice(home.length) : path,
             glyph: f.dir ? "\u{e2c8}" : "\u{e873}",   // folder_open / description
             run: alt => Quickshell.execDetached(alt
-                ? ["flatpak", "run", "org.kde.dolphin", "--select", path]
+                ? ["kitty", "-e", "yazi", path]
                 : ["xdg-open", path]),
         }
     }

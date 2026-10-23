@@ -22,7 +22,7 @@ seat seat0 xcursor_theme Adwaita 24
 set $term kitty
 set $term_fast foot
 # File manager and browser (both flatpaks)
-set $files flatpak run org.kde.dolphin
+set $files $term -e yazi
 set $browser flatpak run org.mozilla.firefox
 # quickshell's IPC client (the distro package)
 set $qs $HOME/.local/bin/qs

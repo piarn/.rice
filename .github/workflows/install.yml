@@ -42,7 +42,7 @@ jobs:
 
       - uses: actions/checkout@v4
 
-      # the installer library (.bootstrap/lib.sh, extras/lib.sh): the
+      # the installer library (.bootstrap/lib.sh): the
       # same-named branch of .dotfiles when there is one, else master
       - name: ~/.dots
         run: |

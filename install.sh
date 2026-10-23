@@ -21,10 +21,8 @@ if [ ! -f "$DOTS_DIR/.bootstrap/lib.sh" ]; then
 fi
 # shellcheck source=/dev/null
 . "$DOTS_DIR/.bootstrap/lib.sh"
-# shellcheck source=/dev/null
-. "$DOTS_DIR/extras/lib.sh"
 
-DESKTOP_PACKAGES=(firefox foot hidden-apps kde kitty quickshell satty scripts sway)
+DESKTOP_PACKAGES=(firefox foot hidden-apps kitty quickshell satty scripts sway)
 
 # shellcheck disable=SC2034  # read by .bootstrap/lib.sh
 declare -A RELEASE_VERSIONS=([satty]=v0.22.0)
@@ -123,8 +121,7 @@ install_quickshell() {
 
 # Installs every app in .bootstrap/flatpaks.txt (one Flathub app id per
 # line) that isn't installed yet, system-wide like Fedora's own flatpak
-# setup, adding the Flathub remote first if it's missing. Runs before
-# stowing so install_kde_flatpak_theme finds the KDE apps it themes.
+# setup, adding the Flathub remote first if it's missing.
 install_flatpaks() {
     if ! command -v flatpak >/dev/null 2>&1; then
         echo "warning: flatpak not found; skipping .bootstrap/flatpaks.txt" >&2
@@ -233,21 +230,6 @@ install_login() {
             sudo systemctl disable getty@tty1.service >/dev/null 2>&1 || true
         fi
     fi
-}
-
-# The KDE flatpaks (Dolphin, Gwenview, Ark) already read the host's
-# ~/.config/kdeglobals (stowed from desktop/kde, a symlink into ~/.rice),
-# but outside a Plasma session Qt never loads KDE's platform theme, so they
-# ignore its colors. Forcing it per app makes them follow the palette.
-KDE_FLATPAKS=(org.kde.dolphin org.kde.gwenview org.kde.ark)
-
-install_kde_flatpak_theme() {
-    command -v flatpak >/dev/null 2>&1 || return 0
-    local app
-    for app in "${KDE_FLATPAKS[@]}"; do
-        flatpak info "$app" >/dev/null 2>&1 || continue
-        flatpak override --user --env=QT_QPA_PLATFORMTHEME=kde "$app"
-    done
 }
 
 # sway/outputs.conf is per-machine (gitignored) and normally written by
@@ -453,12 +435,8 @@ install_satty
 
 seed_outputs
 stow_packages "$DESKTOP_DIR" "${DESKTOP_PACKAGES[@]}"
-# Extras' desktop halves (desktop/extras); extras.sh links the ones
-# enabled on this machine now that the profile is desktop.
-"$DOTS_DIR/extras/extras.sh" restow
 prune_dangling_links
 reload_user_units
-install_kde_flatpak_theme
 if command -v swaymsg >/dev/null 2>&1 && swaymsg -t get_version >/dev/null 2>&1; then
     "$RICE_DIR/bin/apply-layout" --auto
 fi
