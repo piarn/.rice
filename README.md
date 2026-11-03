@@ -93,6 +93,15 @@ Sway older than 1.12 makes parts of the screen flicker on NVIDIA. On Fedora 44, 
 ships 1.11, `install.sh` runs `build-sway.sh` to rebuild Fedora's own 1.12 package. On
 other distros it only warns.
 
+**Video on Fedora:** Fedora's own ffmpeg can only pass H.264 to OpenH264, which plays
+just its simplest profile, so most videos (screen captures included) won't play in mpv
+and get no preview in yazi. RPM Fusion's ffmpeg has the codecs:
+
+```
+sudo dnf install https://mirrors.rpmfusion.org/free/fedora/rpmfusion-free-release-$(rpm -E %fedora).noarch.rpm
+sudo dnf swap ffmpeg-free ffmpeg --allowerasing
+```
+
 The driver itself is not installed by `install.sh`. On Fedora it's `akmod-nvidia` from
 RPM Fusion, and with Secure Boot on, its signing key has to be enrolled. A display
 manager's Sway entry runs plain `sway` and fails on NVIDIA, so disable the display
