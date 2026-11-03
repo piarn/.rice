@@ -76,6 +76,18 @@ Quickshell uses Qt's private APIs, so it has to be rebuilt whenever Qt changes. 
 upgrade` does this for you. **If you update with `dnf`, `apt` or `pacman` directly, run
 `~/.rice/build-quickshell.sh --if-stale` afterwards**, or quickshell may crash.
 
+### VPNs
+
+The network tab toggles Tailscale, NetBird and Mullvad, whichever are installed, and
+only one is up at a time: turning one on first turns the others off, because two
+tunnels fight over routes and firewalls. A new VPN is one `extras/<name>/Vpn.qml` that
+sets `upCommand` and `downCommand`, and it follows the same rule.
+
+- **Mullvad:** on Gentoo `install.sh` installs it from guru; elsewhere it comes from
+  [Mullvad's repository](https://mullvad.net/en/download/vpn/linux). Either way its
+  daemon needs `sudo systemctl enable --now mullvad-daemon` once.
+- **Tailscale:** `sudo tailscale set --operator=$USER` once, so the toggle needs no sudo.
+
 ### NVIDIA
 
 The tty1 login starts sway through `sway-session`, which logs to `~/.local/state/sway.log`.

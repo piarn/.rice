@@ -11,21 +11,11 @@ VpnProvider {
     name: "Tailscale"
     interfaces: ["tailscale0"]
 
-    // Only one of Tailscale and NetBird may be up: Tailscale's firewall drops
-    // NetBird's traffic because NetBird's range is inside 100.64.0.0/10.
-    function toggle() {
-        if (active) run("stopping", ["tailscale", "down"])
-        else run("starting", ["sh", "-c", "netbird down >/dev/null 2>&1; exec tailscale up"])
-    }
+    upCommand: ["tailscale", "up"]
+    downCommand: ["tailscale", "down"]
 
     function refresh() {
         if (!statusProc.running) statusProc.running = true
-    }
-
-    // Starting this one stops the other, so show that straight away.
-    onRunningChanged: {
-        const other = ExtrasState.vpn("NetBird")
-        if (!running && other) other.refresh()
     }
 
     function parse(text) {
