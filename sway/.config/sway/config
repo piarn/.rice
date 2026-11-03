@@ -30,14 +30,13 @@ output * bg #1e1e2e solid_color
 
 ### Output configuration
 #
-# Default wallpaper (more resolutions are available in /usr/share/backgrounds/sway/)
-# output * bg /usr/share/backgrounds/sway/Sway_Wallpaper_Blue_1920x1080.png fill
-#
-# Example configuration:
-#
-#   output HDMI-A-1 resolution 1920x1080 position 1920,0
-#
-# You can get the names of your outputs by running: swaymsg -t get_outputs
+# The ASUS's desk, left to right: ultrawide, the Dell (mounted upside down),
+# the laptop panel. Matched by make, model and serial, not by port: Thunderbolt
+# renumbers the DP ports on a replug, and other machines never match these.
+# `swaymsg -t get_outputs` shows a display's make, model and serial.
+output "ASUSTek COMPUTER INC ASUS XG49V 0x0002C82E" resolution 3840x1080 position 0,0
+output "Dell Inc. DELL S2721HS 3953P83" resolution 1920x1080 position 3840,0 transform 180
+output "BOE 0x0A0B Unknown" position 5760,0
 
 ### Idle configuration
 #
