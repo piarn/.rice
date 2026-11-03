@@ -35,6 +35,10 @@ ShellRoot {
     }
     Variants {
         model: Quickshell.screens
+        delegate: EdgeMargins {}
+    }
+    Variants {
+        model: Quickshell.screens
         delegate: Island { panel: sharedPanel }
     }
 
