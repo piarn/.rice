@@ -83,9 +83,11 @@ only one is up at a time: turning one on first turns the others off, because two
 tunnels fight over routes and firewalls. A new VPN is one `extras/<name>/Vpn.qml` that
 sets `upCommand` and `downCommand`, and it follows the same rule.
 
-- **Mullvad:** on Gentoo `install.sh` installs it from guru; elsewhere it comes from
-  [Mullvad's repository](https://mullvad.net/en/download/vpn/linux). Either way its
-  daemon needs `sudo systemctl enable --now mullvad-daemon` once.
+- **Mullvad:** only its daemon and CLI are used. On Gentoo `install.sh` installs
+  `net-vpn/mullvad-cli` from this repo's overlay: the official RPM without the app.
+  Elsewhere Mullvad's own package from [its repository](https://mullvad.net/en/download/vpn/linux)
+  includes the app, so hide its launcher entry. Either way the daemon needs
+  `sudo systemctl enable --now mullvad-daemon` once.
 - **Tailscale:** `sudo tailscale set --operator=$USER` once, so the toggle needs no sudo.
 
 ### NVIDIA
