@@ -9,6 +9,5 @@ com.discordapp.Discord
 # Prism's own ~/downloads, read-only, for mods fetched by hand.
 org.prismlauncher.PrismLauncher --filesystem=~/downloads:ro
 org.signal.Signal
-chat.rocket.RocketChat
 net.cozic.joplin_desktop
 com.super_productivity.SuperProductivity
