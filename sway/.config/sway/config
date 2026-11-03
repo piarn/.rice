@@ -30,13 +30,13 @@ output * bg #1e1e2e solid_color
 
 ### Output configuration
 #
-# The ASUS's desk, left to right: ultrawide, the Dell (mounted upside down),
-# the laptop panel. Matched by make, model and serial, not by port: Thunderbolt
-# renumbers the DP ports on a replug, and other machines never match these.
-# `swaymsg -t get_outputs` shows a display's make, model and serial.
-output "ASUSTek COMPUTER INC ASUS XG49V 0x0002C82E" resolution 3840x1080 position 0,0
-output "Dell Inc. DELL S2721HS 3953P83" resolution 1920x1080 position 3840,0 transform 180
-output "BOE 0x0A0B Unknown" position 5760,0
+# The ASUS's desk: the Dell (mounted upside down) centered above the ultrawide,
+# and the laptop panel off. Matched by make, model and serial, not by port:
+# Thunderbolt renumbers the DP ports on a replug, and other machines never match
+# these. `swaymsg -t get_outputs` shows a display's make, model and serial.
+output "Dell Inc. DELL S2721HS 3953P83" resolution 1920x1080 position 960,0 transform 180
+output "ASUSTek COMPUTER INC ASUS XG49V 0x0002C82E" resolution 3840x1080 position 0,1080
+output "BOE 0x0A0B Unknown" disable
 
 ### Idle configuration
 #
