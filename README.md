@@ -86,8 +86,17 @@ sets `upCommand` and `downCommand`, and it follows the same rule.
 - **Mullvad:** only its daemon and CLI are used. On Gentoo `install.sh` installs
   `net-vpn/mullvad-cli` from this repo's overlay: the official RPM without the app.
   Elsewhere Mullvad's own package from [its repository](https://mullvad.net/en/download/vpn/linux)
-  includes the app, so hide its launcher entry. Either way the daemon needs enabling
-  once, and the login has to wait until the daemon answers:
+  includes the app. On Fedora, `system/rpm-macros.mullvad-cli` makes rpm skip the app's
+  files on every install and upgrade (`%_netsharedpath`), keeping only the daemon and
+  CLI; install it before Mullvad, or reinstall Mullvad after it:
+
+  ```
+  sudo install -m644 ~/.rice/system/rpm-macros.mullvad-cli /etc/rpm/macros.mullvad-cli
+  sudo dnf reinstall mullvad-vpn
+  ```
+
+  Either way the daemon needs enabling once, and the login has to wait until the
+  daemon answers:
 
   ```
   sudo systemctl enable --now mullvad-daemon
