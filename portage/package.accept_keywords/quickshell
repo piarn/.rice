@@ -1,0 +1,5 @@
+gui-apps/quickshell ~amd64
+dev-cpp/cpptrace ~amd64
+dev-libs/libdwarf ~amd64
+gui-apps/wlsunset ~amd64
+app-misc/cliphist ~amd64

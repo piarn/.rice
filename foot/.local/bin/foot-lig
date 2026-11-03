@@ -1,0 +1,9 @@
+#!/bin/sh
+# foot with ligatures: a private patched build, separate from /usr/bin/foot.
+# If that build is missing or won't run, this opens stock foot instead, which
+# keeps its own config because it rejects the ligatures option.
+bin="$HOME/.local/opt/foot-ligatures/bin/foot"
+if "$bin" --version >/dev/null 2>&1; then
+    exec "$bin" --config="$HOME/.config/foot/foot-ligatures.ini" "$@"
+fi
+exec foot "$@"

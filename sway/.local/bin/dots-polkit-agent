@@ -1,0 +1,19 @@
+#!/bin/sh
+# Starts polkit's password prompt. Each distro files this binary somewhere else.
+# --check only reports whether one was found.
+for agent in \
+    /usr/libexec/polkit-gnome-authentication-agent-1 \
+    /usr/lib/polkit-gnome/polkit-gnome-authentication-agent-1 \
+    /usr/lib/policykit-1-gnome/polkit-gnome-authentication-agent-1 \
+    /usr/lib/x86_64-linux-gnu/polkit-gnome-authentication-agent-1 \
+    /usr/lib64/polkit-gnome/polkit-gnome-authentication-agent-1 \
+    /usr/libexec/polkit-mate-authentication-agent-1 \
+    /usr/lib/x86_64-linux-gnu/mate-polkit/polkit-mate-authentication-agent-1 \
+    /usr/bin/lxpolkit; do
+    if [ -x "$agent" ]; then
+        [ "${1:-}" = --check ] && exit 0
+        exec "$agent"
+    fi
+done
+[ "${1:-}" = --check ] || echo "dots-polkit-agent: no polkit agent found" >&2
+exit 1

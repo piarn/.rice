@@ -1,0 +1,6 @@
+[screencast]
+chooser_type=dmenu
+chooser_cmd=~/.local/bin/dots-share-picker
+# A window has no refresh rate of its own, so without this the backend offers
+# 0 fps for window shares, browsers reject it and the backend exits.
+max_fps=60

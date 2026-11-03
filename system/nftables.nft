@@ -1,0 +1,32 @@
+# Inbound default-drop, outbound open. Netbird keeps its own tables and adds them
+# at runtime, so they don't belong here. Change HOME_LAN to suit, or delete that
+# rule: on a foreign network using the same range the rule also matches, which is
+# why sshd accepts keys only (10-hardening.conf).
+define HOME_LAN = 192.168.0.0/24
+
+table inet filter
+delete table inet filter
+
+table inet filter {
+    chain input {
+        type filter hook input priority filter; policy drop;
+        iifname "wt0" counter accept
+        ct state established,related accept
+        ct state invalid drop
+        iif "lo" accept
+        meta l4proto { icmp, ipv6-icmp } accept
+        udp dport 68 accept comment "DHCP"
+        udp dport 546 accept comment "DHCPv6"
+        ip saddr $HOME_LAN tcp dport 22 accept comment "SSH from home LAN"
+    }
+
+    chain forward {
+        type filter hook forward priority filter; policy drop;
+        oifname "wt0" ct state established,related counter accept
+        iifname "wt0" counter accept
+    }
+
+    chain output {
+        type filter hook output priority filter; policy accept;
+    }
+}

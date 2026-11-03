@@ -1,0 +1,8 @@
+[Unit]
+Description=Bluetooth pairing agent for the network tab
+After=bluetooth.target
+
+[Service]
+ExecStart=%h/.local/bin/bluetooth-agent
+Restart=on-failure
+RestartSec=5

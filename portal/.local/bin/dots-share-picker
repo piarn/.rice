@@ -1,0 +1,21 @@
+#!/bin/sh
+# Picks what a screen share shows. The portal's default is a bare slurp overlay
+# with no prompt, so it looks like nothing happened and Esc fails the share.
+# Reads the portal's choices on stdin and prints one; printing nothing declines.
+export PATH="$HOME/.local/bin:$PATH"
+
+choices=$(cat)
+[ -n "$choices" ] || exit 0
+
+# Only one possible answer: the app has already asked, so don't ask again.
+if [ "$(printf '%s\n' "$choices" | wc -l)" -eq 1 ]; then
+    printf '%s\n' "$choices"
+    exit 0
+fi
+
+dir=$(mktemp -d) || exit 1
+trap 'rm -rf "$dir"' EXIT
+printf '%s\n' "$choices" >"$dir/choices"
+foot --app-id=dots-share-picker --title='Share screen' \
+    sh -c 'fzf --prompt="Share: " --reverse <"$1" >"$2"' _ "$dir/choices" "$dir/choice" 2>/dev/null
+cat "$dir/choice" 2>/dev/null

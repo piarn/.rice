@@ -1,0 +1,89 @@
+#!/bin/sh
+# Starts sway. The tty1 login runs this (shell/profile.d/50-sway.sh). On a plain
+# Intel or AMD machine it's sway plus a log. With NVIDIA's own driver loaded it
+# also picks the GPU, as the ASUS (Intel + RTX 3080 Ti) needs:
+#
+#   - sway refuses that driver without --unsupported-gpu.
+#   - One GPU per session. Rendering on one GPU and showing it on the other needs
+#     copies between them that fail: the laptop panel goes black. A display on an
+#     NVIDIA port means NVIDIA only; otherwise the integrated GPU only. Plugging
+#     such a display in mid-session needs a new login.
+#   - On NVIDIA, wlroots' Vulkan renderer. GLES2 offers screen capture only BGR888,
+#     which no PipeWire client (Discord, browsers) takes, so every share fails.
+#   - A software cursor: where the GPU's cursor plane overlaps a window that
+#     repaints only part of itself (canvas, WebGL), it flashes green or garbled.
+#   - sway before 1.12 aborts in its explicit-sync code, so that's turned off
+#     there. On NVIDIA that makes parts of the screen flicker, so install.sh
+#     builds 1.12 where the distro is older (build-sway.sh).
+#
+# The cards are looked up in /sys at every start, because cardN numbers can swap
+# between boots. If sway dies within a few seconds, it never really started (a
+# bad config, driver trouble), so it gets one retry with the distro's stock
+# config: a session to fix things from. The log is ~/.local/state/sway.log.
+#
+#   sway-session --dry-run    print what it would run, start nothing
+set -eu
+
+dry_run=0
+[ "${1:-}" != --dry-run ] || { dry_run=1; shift; }
+
+# The /dev/dri card bound to any of the given kernel drivers.
+card_for() {
+    for c in /sys/class/drm/card*; do
+        case ${c##*/} in *-*) continue ;; esac
+        drv=$(readlink "$c/device/driver" 2>/dev/null) || continue
+        for want; do
+            [ "${drv##*/}" != "$want" ] || { echo "/dev/dri/${c##*/}"; return 0; }
+        done
+    done
+    return 1
+}
+
+# True if a display is connected to one of that card's ports.
+has_display() {
+    for s in /sys/class/drm/"${1##*/}"-*/status; do
+        [ "$(cat "$s" 2>/dev/null)" != connected ] || return 0
+    done
+    return 1
+}
+
+if [ -d /sys/module/nvidia_drm ]; then
+    set -- --unsupported-gpu "$@"
+    export WLR_NO_HARDWARE_CURSORS=1
+    nvidia=$(card_for nvidia) || nvidia=
+    igpu=$(card_for i915 xe amdgpu) || igpu=
+    if [ -n "$nvidia" ] && has_display "$nvidia"; then
+        export WLR_DRM_DEVICES="$nvidia" WLR_RENDERER=vulkan
+    elif [ -n "$igpu" ]; then
+        export WLR_DRM_DEVICES="$igpu"
+    fi
+fi
+
+sway_version=$(sway --version 2>/dev/null | awk '{print $3}')
+if [ "$(printf '%s\n' 1.12 "${sway_version:-0}" | sort -V | head -n1)" != 1.12 ]; then
+    export WLR_RENDER_NO_EXPLICIT_SYNC=1
+fi
+
+summary="sway ${sway_version:-?} WLR_DRM_DEVICES=${WLR_DRM_DEVICES:-} WLR_RENDERER=${WLR_RENDERER:-} WLR_RENDER_NO_EXPLICIT_SYNC=${WLR_RENDER_NO_EXPLICIT_SYNC:-} WLR_NO_HARDWARE_CURSORS=${WLR_NO_HARDWARE_CURSORS:-} args: $*"
+if [ "$dry_run" = 1 ]; then
+    echo "$summary"
+    exit 0
+fi
+
+log="${XDG_STATE_HOME:-$HOME/.local/state}/sway.log"
+mkdir -p "${log%/*}"
+[ ! -f "$log" ] || mv -f "$log" "$log.old"
+echo "$summary" >"$log"
+
+started=$(date +%s)
+status=0
+sway "$@" 2>>"$log" || status=$?
+[ "$status" -ne 0 ] || exit 0
+safe_config=/etc/sway/config
+if [ $(($(date +%s) - started)) -ge 10 ] || [ ! -r "$safe_config" ]; then
+    exit "$status"
+fi
+echo "sway exited ($status) within 10s; retrying with $safe_config" >>"$log"
+# wlroots marks its Vulkan renderer experimental, so the retry uses GLES2
+unset WLR_RENDERER
+exec sway -c "$safe_config" "$@" 2>>"$log"

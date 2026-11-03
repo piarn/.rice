@@ -1,0 +1,282 @@
+# Default config for sway
+#
+# Copy this to ~/.config/sway/config and edit it to your liking.
+#
+# Read `man 5 sway` for a complete reference.
+
+### Variables
+#
+# Logo key. Use Mod1 for Alt.
+set $mod Mod4
+# Home row direction keys, like vim
+set $left h
+set $down j
+set $up k
+set $right l
+# Your preferred terminal emulator
+set $term ~/.local/bin/foot-lig
+# Your preferred application launcher
+set $menu qs ipc call commandcenter toggle
+
+### Colors: Catppuccin Mocha, mauve accent
+#                       border  bg      text    indicator child border
+client.focused          #cba6f7 #1e1e2e #cdd6f4 #f5e0dc   #cba6f7
+client.focused_inactive #45475a #1e1e2e #bac2de #45475a   #45475a
+client.unfocused        #313244 #1e1e2e #6c7086 #313244   #313244
+client.urgent           #fab387 #1e1e2e #fab387 #fab387   #fab387
+default_border pixel 2
+font pango:JetBrains Mono 11
+output * bg #1e1e2e solid_color
+
+### Output configuration
+#
+# Default wallpaper (more resolutions are available in /usr/share/backgrounds/sway/)
+# output * bg /usr/share/backgrounds/sway/Sway_Wallpaper_Blue_1920x1080.png fill
+#
+# Example configuration:
+#
+#   output HDMI-A-1 resolution 1920x1080 position 1920,0
+#
+# You can get the names of your outputs by running: swaymsg -t get_outputs
+
+### Idle configuration
+#
+# Example configuration:
+#
+# exec swayidle -w \
+#          timeout 300 'swaylock -f -c 000000' \
+#          timeout 600 'swaymsg "output * power off"' resume 'swaymsg "output * power on"' \
+#          before-sleep 'swaylock -f -c 000000'
+#
+# This will lock your screen after 300 seconds of inactivity, then turn off
+# your displays after another 300 seconds, and turn your screens back on when
+# resumed. It will also lock your screen before your computer goes to sleep.
+
+### Input configuration
+#
+# Example configuration:
+#
+#   input type:touchpad {
+#       dwt enabled
+#       tap enabled
+#       natural_scroll enabled
+#       middle_emulation enabled
+#   }
+#
+#   input type:keyboard {
+#       xkb_layout "eu"
+#   }
+#
+# You can also configure each device individually.
+# Read `man 5 sway-input` for more information about this section.
+
+### Key bindings
+#
+# One rule: $mod+<letter> is the everyday action, $mod+Shift the bigger
+# version (move, capture, system). Plain Alt is left to apps.
+#
+# Basics:
+#
+    # Start a terminal
+    bindsym $mod+Return exec $term
+    bindsym $mod+Shift+Return exec foot
+
+    # Close the focused window
+    bindsym $mod+q kill
+
+    # Start your launcher
+    bindsym $mod+d exec $menu
+    bindsym $mod+space exec $menu
+
+    # Files (yazi) and browser
+    bindsym $mod+e exec $term yazi
+    bindsym $mod+b exec ~/.local/bin/browser
+
+    # Drag floating windows by holding down $mod and left mouse button.
+    # Resize them with right mouse button + $mod.
+    # Despite the name, also works for non-floating windows.
+    # Change normal to inverse to use left mouse button for resizing and right
+    # mouse button for dragging.
+    floating_modifier $mod normal
+
+    # Reload the configuration file and restart quickshell. SIGKILL so this
+    # also gets out of a hung launcher holding the keyboard; exec_always
+    # below brings it back.
+    bindsym $mod+Shift+c exec pkill -KILL -x quickshell; reload
+
+    # Lock, and the session menu: lock, reload, suspend, logout, reboot, shutdown
+    bindsym $mod+Escape exec ~/.local/bin/dots-lock
+    bindsym $mod+Shift+Escape exec qs ipc call commandcenter open ":"
+
+    # Island tabs
+    bindsym $mod+n exec qs ipc call popup toggle network
+    bindsym $mod+Shift+n exec qs ipc call popup toggle system
+    # Clipboard history
+    bindsym $mod+v exec qs ipc call clipboard toggle
+
+    # Region screenshot to the clipboard (Print keys are further down)
+    bindsym $mod+Shift+s exec sh -c 'g=$(slurp) && grim -g "$g" - | wl-copy'
+#
+# Moving around:
+#
+    # Move your focus around
+    bindsym $mod+$left focus left
+    bindsym $mod+$down focus down
+    bindsym $mod+$up focus up
+    bindsym $mod+$right focus right
+    # Or use $mod+[up|down|left|right]
+    bindsym $mod+Left focus left
+    bindsym $mod+Down focus down
+    bindsym $mod+Up focus up
+    bindsym $mod+Right focus right
+
+    # Move the focused window with the same, but add Shift
+    bindsym $mod+Shift+$left move left
+    bindsym $mod+Shift+$down move down
+    bindsym $mod+Shift+$up move up
+    bindsym $mod+Shift+$right move right
+    # Ditto, with arrow keys
+    bindsym $mod+Shift+Left move left
+    bindsym $mod+Shift+Down move down
+    bindsym $mod+Shift+Up move up
+    bindsym $mod+Shift+Right move right
+#
+# Workspaces:
+#
+    # Switch to workspace
+    bindsym $mod+1 workspace number 1
+    bindsym $mod+2 workspace number 2
+    bindsym $mod+3 workspace number 3
+    bindsym $mod+4 workspace number 4
+    bindsym $mod+5 workspace number 5
+    bindsym $mod+6 workspace number 6
+    bindsym $mod+7 workspace number 7
+    bindsym $mod+8 workspace number 8
+    bindsym $mod+9 workspace number 9
+    bindsym $mod+0 workspace number 10
+    # Move focused container to workspace
+    bindsym $mod+Shift+1 move container to workspace number 1
+    bindsym $mod+Shift+2 move container to workspace number 2
+    bindsym $mod+Shift+3 move container to workspace number 3
+    bindsym $mod+Shift+4 move container to workspace number 4
+    bindsym $mod+Shift+5 move container to workspace number 5
+    bindsym $mod+Shift+6 move container to workspace number 6
+    bindsym $mod+Shift+7 move container to workspace number 7
+    bindsym $mod+Shift+8 move container to workspace number 8
+    bindsym $mod+Shift+9 move container to workspace number 9
+    bindsym $mod+Shift+0 move container to workspace number 10
+    # Note: workspaces can have any name you want, not just numbers.
+    # We just use 1-10 as the default.
+#
+# Layout stuff:
+#
+    # Flip whether the focused container splits side by side or top/bottom
+    bindsym $mod+t layout toggle split
+
+    # Toggle tabbed and tiled; wrap the focused window in its own tabbed group
+    bindsym $mod+w layout toggle tabbed split
+    bindsym $mod+Shift+w split v; layout tabbed
+
+    # Maximize within the workspace; real fullscreen
+    bindsym $mod+f resize set width 100 ppt; resize set height 100 ppt
+    bindsym $mod+Shift+f fullscreen
+
+    # Toggle the current focus between tiling and floating mode
+    bindsym $mod+Shift+t floating toggle
+
+    # Swap focus between the tiling area and the floating area
+    bindsym $mod+Tab focus mode_toggle
+
+    # Move focus to the parent container
+    bindsym $mod+a focus parent
+#
+# Scratchpad:
+#
+    # Sway has a "scratchpad", which is a bag of holding for windows.
+    # You can send windows there and get them back later.
+
+    # Move the currently focused window to the scratchpad
+    bindsym $mod+Shift+minus move scratchpad
+
+    # Show the next scratchpad window or hide the focused scratchpad window.
+    # If there are multiple scratchpad windows, this command cycles through them.
+    bindsym $mod+minus scratchpad show
+#
+# Resizing containers:
+#
+mode "resize" {
+    # left will shrink the containers width
+    # right will grow the containers width
+    # up will shrink the containers height
+    # down will grow the containers height
+    bindsym $left resize shrink width 10px
+    bindsym $down resize grow height 10px
+    bindsym $up resize shrink height 10px
+    bindsym $right resize grow width 10px
+
+    # Ditto, with arrow keys
+    bindsym Left resize shrink width 10px
+    bindsym Down resize grow height 10px
+    bindsym Up resize shrink height 10px
+    bindsym Right resize grow width 10px
+
+    # Return to default mode
+    bindsym Return mode "default"
+    bindsym Escape mode "default"
+}
+bindsym $mod+r mode "resize"
+#
+# Utilities:
+#
+    # Special keys to adjust volume via PipeWire (wpctl)
+    bindsym --locked XF86AudioMute exec wpctl set-mute @DEFAULT_AUDIO_SINK@ toggle
+    bindsym --locked XF86AudioLowerVolume exec wpctl set-volume @DEFAULT_AUDIO_SINK@ 5%-
+    bindsym --locked XF86AudioRaiseVolume exec wpctl set-volume -l 1.0 @DEFAULT_AUDIO_SINK@ 5%+
+    bindsym --locked XF86AudioMicMute exec wpctl set-mute @DEFAULT_AUDIO_SOURCE@ toggle
+
+    # Special keys to control media via playerctl
+    bindsym --locked XF86AudioPlay exec playerctl play-pause
+    bindsym --locked XF86AudioPause exec playerctl play-pause
+    bindsym --locked XF86AudioPrev exec playerctl previous
+    bindsym --locked XF86AudioNext exec playerctl next
+    bindsym --locked XF86AudioStop exec playerctl stop
+
+    # Brightness goes through quickshell, which also shows the OSD
+    bindsym --locked XF86MonBrightnessDown exec qs ipc call brightness down
+    bindsym --locked XF86MonBrightnessUp exec qs ipc call brightness up
+
+#
+# Status Bar:
+#
+# quickshell: the island (bar, launcher, tabs), toasts, OSD and lock screen. -n skips
+# spawning a duplicate, so exec_always can survive reloads.
+exec_always env QML2_IMPORT_PATH=$HOME/.config/quickshell/theme quickshell -n
+
+include /etc/sway/config.d/*
+
+input type:touchpad {
+    tap enabled
+    natural_scroll enabled
+    dwt enabled
+}
+
+### Session services
+# Let systemd/D-Bus services (portals, etc.) see the Wayland session
+exec dbus-update-activation-environment --systemd WAYLAND_DISPLAY XDG_CURRENT_DESKTOP SWAYSOCK DISPLAY && systemctl --user restart qs-watchdog bluetooth-agent dots-weather.timer
+exec swaymsg -t subscribe '["shutdown"]' && systemctl --user stop qs-watchdog bluetooth-agent dots-weather.timer
+exec wl-paste --watch cliphist store
+
+exec ~/.local/bin/dots-polkit-agent
+
+# Lock after 5 min idle, screen off after 10, always lock before suspend
+exec swayidle -w \
+    timeout 300 '~/.local/bin/dots-lock' \
+    timeout 600 'swaymsg "output * power off"' resume 'swaymsg "output * power on"' \
+    before-sleep '~/.local/bin/dots-lock'
+# Don't lock during fullscreen video
+for_window [app_id=".*"] inhibit_idle fullscreen
+for_window [app_id="dots-share-picker"] floating enable, resize set 700 300
+
+# Screenshots: Print = full screen, Shift+Print = select region (to clipboard)
+bindsym Print exec grim - | wl-copy
+bindsym Shift+Print exec grim -g "$(slurp)" - | wl-copy

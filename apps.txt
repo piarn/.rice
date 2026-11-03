@@ -1,0 +1,10 @@
+# Flatpak apps for ./install.sh --apps: opt-in, because a work machine won't want
+# most of them. One app per line, then any `flatpak override --user` options.
+#
+# LibreOffice: flathub grants it the whole home folder, SSH keys included. Files
+# chosen in the open dialog still work through the portal without that.
+org.libreoffice.LibreOffice --nofilesystem=host
+org.mozilla.thunderbird_esr
+com.discordapp.Discord
+# Prism's own ~/downloads, read-only, for mods fetched by hand.
+org.prismlauncher.PrismLauncher --filesystem=~/downloads:ro

@@ -1,0 +1,9 @@
+#!/bin/sh
+# AC: balanced + CPU boost; battery: power-saver + no boost
+if [ "$(cat /sys/class/power_supply/AC/online)" = 1 ]; then
+	profile=balanced boost=1
+else
+	profile=power-saver boost=0
+fi
+powerprofilesctl set "$profile"
+[ -w /sys/devices/system/cpu/cpufreq/boost ] && echo "$boost" > /sys/devices/system/cpu/cpufreq/boost

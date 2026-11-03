@@ -1,0 +1,3 @@
+sys-kernel/installkernel dracut uki systemd-boot
+sys-apps/systemd boot cryptsetup tpm ukify
+sys-kernel/linux-firmware savedconfig compress-zstd

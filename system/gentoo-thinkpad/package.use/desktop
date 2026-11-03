@@ -1,0 +1,8 @@
+media-video/pipewire sound-server pipewire-alsa bluetooth
+net-wireless/bluez -cups
+app-crypt/pinentry -qt6
+dev-qt/qtbase opengl
+gui-apps/quickshell X -hyprland
+dev-qt/qtbase X
+dev-cpp/cpptrace unwind
+dev-qt/* opengl
