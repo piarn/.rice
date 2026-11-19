@@ -1,11 +1,11 @@
-// One screen's launcher window: the run box ($mod+d) floating in the middle
-// of the screen, a quarter of the way down, so its search field stays put
-// while the list under it grows and shrinks. Adopts the shared Launcher the
-// way the island and the side panel adopt theirs.
+// One screen's console window: the console floating in the middle of the
+// screen, a quarter of the way down, so its top line stays put while the
+// page under it grows and shrinks. Adopts the shared Console the way the
+// island adopts its Panel.
 //
-// Holds the keyboard while open (it's a text box), sits on the overlay
-// layer, and a transparent catcher over every screen closes it on a click
-// outside, like the other surfaces.
+// Holds the keyboard while open, sits on the overlay layer, and a
+// transparent catcher over every screen closes it on a click outside — the
+// top row stays above that catcher, so its readout still switches pages.
 import Quickshell
 import Quickshell.Wayland
 import QtQuick
@@ -17,20 +17,21 @@ PanelWindow {
     id: win
 
     required property var modelData
-    required property Item launcher
+    required property Item panel
 
-    readonly property bool openHere: IslandState.launcherOpen && IslandState.screen === modelData
+    readonly property bool openHere: IslandState.consoleOpen && IslandState.screen === modelData
+    readonly property real screenHeight: modelData ? modelData.height : 1080
 
     screen: modelData
     visible: openHere
     // anchored to the top only, so it's centred left to right
     anchors.top: true
-    margins.top: Math.round((modelData ? modelData.height : 1080) * 0.24)
-    implicitWidth: 640
+    margins.top: Math.round(screenHeight * 0.22)
+    implicitWidth: Style.consoleWidth
     implicitHeight: frame.height
     exclusionMode: ExclusionMode.Ignore
     color: "transparent"
-    WlrLayershell.namespace: "quickshell-launcher"
+    WlrLayershell.namespace: "quickshell-console"
     WlrLayershell.layer: WlrLayer.Overlay
     WlrLayershell.keyboardFocus: openHere ? WlrKeyboardFocus.Exclusive : WlrKeyboardFocus.None
 
@@ -55,12 +56,12 @@ PanelWindow {
         }
     }
 
-    onOpenHereChanged: if (openHere) Qt.callLater(launcher.focusCurrent)
+    onOpenHereChanged: if (openHere) Qt.callLater(panel.focusCurrent)
 
     Rectangle {
         id: frame
         width: win.width
-        height: win.launcher.implicitHeight + 2 * Style.pad
+        height: win.panel.implicitHeight + 2 * Style.consolePad
         color: Colors.mantle
         radius: Style.radius
         border.width: Style.border
@@ -68,23 +69,30 @@ PanelWindow {
 
         Item {
             id: holder
-            x: Style.pad
-            y: Style.pad
-            width: parent.width - 2 * Style.pad
-            height: win.launcher.implicitHeight
+            x: Style.consolePad
+            y: Style.consolePad
+            width: parent.width - 2 * Style.consolePad
+            height: win.panel.implicitHeight
         }
     }
 
     Binding {
-        target: win.launcher
+        target: win.panel
         property: "parent"
         value: holder
         when: win.openHere
     }
     Binding {
-        target: win.launcher
+        target: win.panel
         property: "width"
         value: holder.width
+        when: win.openHere
+    }
+    Binding {
+        target: win.panel
+        property: "maxHeight"
+        // what's left of the screen below the console's top, minus its frame
+        value: win.screenHeight * 0.74 - 2 * Style.consolePad - 60
         when: win.openHere
     }
 }

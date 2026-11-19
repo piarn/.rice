@@ -109,10 +109,9 @@ output "BOE 0x0A0B Unknown" disable
     bindsym $mod+Escape exec ~/.local/bin/dots-lock
     bindsym $mod+Shift+Escape exec qs ipc call commandcenter open ":"
 
-    # Island tabs
+    # The console's pages ($mod+d is its run page): network, quick, clipboard
     bindsym $mod+n exec qs ipc call popup toggle network
-    bindsym $mod+Shift+n exec qs ipc call popup toggle system
-    # Clipboard history
+    bindsym $mod+Shift+n exec qs ipc call popup toggle quick
     bindsym $mod+v exec qs ipc call clipboard toggle
 
     # Region screenshot to the clipboard (Print keys are further down)

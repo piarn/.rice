@@ -15,6 +15,7 @@ import "../format.js" as Fmt
 Tab {
     id: menu
     name: "calendar"
+    spacing: 10
 
     property date today: new Date()
     property int year: today.getFullYear()

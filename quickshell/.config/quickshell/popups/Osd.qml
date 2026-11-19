@@ -1,8 +1,10 @@
-// Volume / mic / brightness OSD: a slim square-framed strip low in the
-// middle of the focused screen — glyph, 16 segments (the same bar as quick
-// settings' sliders), percentage. Click-through (empty input mask) and never takes
-// focus; fades out 1.5s after the last change. What it shows comes from
-// state/OsdState.qml.
+// Volume / mic / brightness OSD, in the console's readout style: a slim
+// card low in the middle of the focused screen —
+//
+//   VOLUME   ━━━━━━━━━━━━━━━━━━━━━──────────────   37
+//
+// Click-through (empty input mask), never takes focus, fades out 1.5s after
+// the last change. What it shows comes from state/OsdState.qml.
 import Quickshell
 import Quickshell.Wayland
 import QtQuick
@@ -13,8 +15,7 @@ import "../components"
 PanelWindow {
     id: root
 
-    readonly property int segments: Style.segments
-    readonly property int filled: OsdState.muted ? 0 : Math.round(Math.min(1, OsdState.value) * segments)
+    readonly property real level: OsdState.muted ? 0 : Math.max(0, Math.min(1, OsdState.value))
 
     visible: card.opacity > 0
     screen: OsdState.screen
@@ -25,72 +26,58 @@ PanelWindow {
     color: "transparent"
     anchors.bottom: true
     margins.bottom: screen ? Math.round(screen.height * 0.12) : 120
-    implicitWidth: 300
+    implicitWidth: 360
     implicitHeight: 40
     mask: Region {}
-
-    function glyph() {
-        const v = OsdState.value
-        if (OsdState.kind === "brightness") return v < 0.34 ? "\u{e1ad}" : v < 0.67 ? "\u{e1ae}" : "\u{e1ac}"
-        if (OsdState.kind === "mic") return OsdState.muted ? "\u{e02b}" : "\u{e31d}"
-        if (OsdState.muted) return "\u{e04f}"   // volume_off
-        if (v <= 0) return "\u{e04e}"           // volume_mute
-        return v < 0.34 ? "\u{e04d}" : v < 0.67 ? "\u{e79c}" : "\u{e050}"
-    }
 
     Rectangle {
         id: card
         anchors.fill: parent
         radius: Style.radius
-        color: Style.tint(Colors.mantle, 0.95)
+        color: Style.tint(Colors.mantle, 0.96)
         border.width: Style.border
         border.color: Colors.surface
         opacity: OsdState.shown ? 1 : 0
         Behavior on opacity { NumberAnimation { duration: OsdState.shown ? Style.fast : 300; easing.type: Easing.OutQuad } }
 
-        Icon {
-            id: glyph
+        MonoText {
+            id: label
             anchors.left: parent.left
-            anchors.leftMargin: 14
+            anchors.leftMargin: 16
             anchors.verticalCenter: parent.verticalCenter
-            width: 20
-            horizontalAlignment: Text.AlignHCenter
-            font.pixelSize: 18
-            color: OsdState.muted ? Colors.red : Colors.neon
-            text: root.glyph()
+            width: 92
+            font.letterSpacing: Style.labelSpacing
+            color: Colors.gray
+            text: (OsdState.kind || "volume").toUpperCase()
         }
 
-        Row {
-            id: bar
-            anchors.left: glyph.right
-            anchors.right: pct.left
-            anchors.leftMargin: 12
-            anchors.rightMargin: 12
+        Rectangle {
+            id: track
+            anchors.left: label.right
+            anchors.right: number.left
+            anchors.rightMargin: 14
             anchors.verticalCenter: parent.verticalCenter
-            spacing: 2
-            readonly property real cell: (width - spacing * (root.segments - 1)) / root.segments
+            height: 4
+            color: Style.tint(Colors.fg, 0.10)
 
-            Repeater {
-                model: root.segments
-
-                delegate: Rectangle {
-                    required property int index
-                    width: bar.cell
-                    height: 10
-                    color: index < root.filled ? (OsdState.muted ? Colors.red : Colors.neon) : Colors.dim
-                }
+            Rectangle {
+                width: track.width * root.level
+                height: parent.height
+                color: Colors.neon
+                opacity: 0.85
+                Behavior on width { NumberAnimation { duration: Style.fast } }
             }
         }
 
         MonoText {
-            id: pct
+            id: number
             anchors.right: parent.right
-            anchors.rightMargin: 14
+            anchors.rightMargin: 16
             anchors.verticalCenter: parent.verticalCenter
-            width: 36
+            width: 42
             horizontalAlignment: Text.AlignRight
             color: OsdState.muted ? Colors.red : Colors.fg
-            text: OsdState.muted ? "mute" : Math.round(Math.min(1, OsdState.value) * 100) + "%"
+            text: OsdState.muted ? "muted" : String(Math.round(Math.min(1, OsdState.value) * 100))
         }
     }
 }

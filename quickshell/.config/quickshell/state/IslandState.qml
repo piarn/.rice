@@ -1,10 +1,10 @@
-// Which tab is open, and on which screen ("" = nothing open). A tab lives
-// on one of three surfaces (island/routes.js): the right-edge control panel
-// (panel/SideWindow.qml), the grown island under the clock
-// (island/Island.qml), or the launcher in the middle of the screen
-// (launcher/LauncherWindow.qml); only one is open at a time. Names go
-// through routes.js, so the old popup and IPC names (system, quicksettings,
-// battery, commandcenter) still work.
+// Which page is open, and on which screen ("" = nothing open). A page
+// lives on one of two surfaces (island/routes.js): the console in the
+// middle of the screen (console/ConsoleWindow.qml: run, quick, sound,
+// network, bluetooth, notifications, clipboard) or the island under the
+// clock (island/Island.qml: the calendar); only one is open at a time.
+// Names go through routes.js, so the old popup and IPC names (system,
+// quicksettings, battery, commandcenter) still work.
 pragma Singleton
 import Quickshell
 import Quickshell.I3
@@ -20,8 +20,7 @@ QtObject {
     readonly property bool grown: tab !== ""
     readonly property string surface: Routes.surfaceOf(tab)
     readonly property bool islandOpen: surface === "island"
-    readonly property bool panelOpen: surface === "panel"
-    readonly property bool launcherOpen: surface === "launcher"
+    readonly property bool consoleOpen: surface === "console"
     // run and clipboard hold the keyboard for as long as they're open
     readonly property bool wantsKeyboard: Routes.wantsKeyboard(tab)
 
@@ -62,7 +61,8 @@ QtObject {
         tab = t
     }
 
-    // a tab handing keyboard focus back to the island itself (island/Panel.qml)
+    // a page handing keyboard focus back to its surface (console/Console.qml,
+    // island/Panel.qml), e.g. when a password form closes
     signal panelFocusRequested()
 
     function close() {

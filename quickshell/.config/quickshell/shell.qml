@@ -3,24 +3,24 @@
 // Colors are Catppuccin Mocha, in theme/quickshell/Colors.qml. Ported from
 // github.com/piarn/.rice at 4156a09, without the greeter and theme switcher.
 //
-// Layout: per screen three pieces along the top — the workspaces (top left),
-// the Island in the center (island/: collapsed it's the date and time; grown,
-// the tabbed Panel for calendar and clipboard, island/tabs/), the status
-// icons (top right) — plus a Spacer reserving their height; a SideWindow
-// under the right piece (panel/: the control panel — quick, sound, network,
-// bluetooth, notifications, panel/tabs/); and a LauncherWindow in the middle
-// of the screen (launcher/: the run box, $mod+d). Which tab is open where,
-// and so which surface shows, is IslandState (island/routes.js). state/
-// holds the pragma-Singleton status backends; popups/ the free-standing
-// surfaces (LockScreen, toasts, OSD); components/ shared UI pieces.
+// Style: "Console", a flight readout in one pixel font (components/Style.qml).
+//
+// Layout: per screen three pieces floating along the top — the workspaces
+// (top left), the clock (center; it grows into the calendar, island/), and
+// the status readout (top right) — plus a Spacer reserving their height;
+// and the ConsoleWindow in the middle of the screen (console/: $mod+d, the
+// one surface for everything else — run, quick, sound, network, bluetooth,
+// notifications, clipboard; console/pages/). Which page is open where is
+// IslandState (island/routes.js). state/ holds the pragma-Singleton status
+// backends; popups/ the free-standing surfaces (LockScreen, toasts, OSD);
+// components/ shared UI pieces.
 import Quickshell
 import Quickshell.Io
 import QtQuick
 import "./popups"
 import "./state"
 import "./island"
-import "./panel"
-import "./launcher"
+import "./console"
 
 ShellRoot {
     // No hot reload on file changes: reloading mid-edit has crashed
@@ -28,23 +28,18 @@ ShellRoot {
     // lock-failure screen. Apply changes with $mod+Shift+c instead.
     settings.watchFiles: false
 
-    // Every tab exists once, here; the open screen's Island, SideWindow or
-    // LauncherWindow adopts its surface's tabs and hands them back here when
+    // Every page exists once, here; the open screen's Island or
+    // ConsoleWindow adopts its surface's pages and hands them back here when
     // it closes.
     Item {
         visible: false
         Panel { id: sharedPanel }
-        SidePanel { id: sharedSidePanel }
-        Launcher { id: sharedLauncher }
+        Console { id: sharedConsole }
     }
 
     Variants {
         model: Quickshell.screens
-        delegate: SideWindow { panel: sharedSidePanel }
-    }
-    Variants {
-        model: Quickshell.screens
-        delegate: LauncherWindow { launcher: sharedLauncher }
+        delegate: ConsoleWindow { panel: sharedConsole }
     }
 
     Variants {
@@ -71,7 +66,7 @@ ShellRoot {
         delegate: Card {
             id: statusCard
             rightSide: true
-            StatusIcons { screen: statusCard.modelData }
+            StatusReadout { screen: statusCard.modelData }
         }
     }
 

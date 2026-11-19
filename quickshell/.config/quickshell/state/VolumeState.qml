@@ -205,6 +205,9 @@ Item {
         extrasSettle.restart()
     }
 
+    // the card behind the default output (for its codec)
+    function cardForSink() { return cardFor(Pipewire.defaultAudioSink) }
+
     // a bluetooth device's card, by its address (AA:BB:...)
     function cardForAddress(address) {
         return cards.find(c => c.address !== "" && c.address === address) || null

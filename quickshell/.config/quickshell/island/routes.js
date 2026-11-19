@@ -1,19 +1,20 @@
 .pragma library
-// Where every tab lives, and how names reach them. Three surfaces:
-//  - panel: the control panel on the right edge (panel/SideWindow.qml), for
-//    settings: quick, sound, network, bluetooth, notifications
-//  - island: the center of the top row grows under the clock: calendar,
-//    clipboard
-//  - launcher: the run box ($mod+d), in the middle of the screen
-//    (launcher/LauncherWindow.qml)
-// Plus the old popup/IPC names (system, quicksettings, battery,
-// commandcenter) so sway binds and scripts keep working. No QML types, so it
-// runs under node too.
+// Where every page lives, and how names reach them. Two surfaces:
+//  - console: the one centered surface ($mod+d; console/ConsoleWindow.qml)
+//    with every page — run, quick, sound, network, bluetooth,
+//    notifications, clipboard
+//  - island: the calendar, dropping from the clock
+// Plus the old popup/IPC names (system, quicksettings, battery, volume,
+// commandcenter, ...) so sway binds and scripts keep working. No QML types,
+// so it runs under node too.
 
-const PANEL_TABS = ["quick", "sound", "network", "bluetooth", "notifications"]
-const ISLAND_TABS = ["calendar", "clipboard"]
-const LAUNCHER_TABS = ["run"]
-const TABS = PANEL_TABS.concat(ISLAND_TABS, LAUNCHER_TABS)
+const CONSOLE_TABS = ["run", "quick", "sound", "network", "bluetooth", "notifications", "clipboard"]
+const ISLAND_TABS = ["calendar"]
+const TABS = CONSOLE_TABS.concat(ISLAND_TABS)
+
+// what the console's page row shows for each page
+const LABELS = { run: "run", quick: "quick", sound: "sound", network: "net",
+                 bluetooth: "bt", notifications: "notifs", clipboard: "clip" }
 
 const ALIASES = {
     system: "quick",
@@ -23,32 +24,33 @@ const ALIASES = {
     volume: "sound",
     mic: "sound",
     wifi: "network",
-    commandcenter: "run"
+    net: "network",
+    bt: "bluetooth",
+    commandcenter: "run",
+    launcher: "run"
 }
 
-// "" for a name that isn't a tab
+// "" for a name that isn't a page
 function tabFor(name) {
     return TABS.indexOf(name) >= 0 ? name : (ALIASES[name] || "")
 }
 
-// "panel", "island", "launcher", or "" for nothing open
+// "console", "island", or "" for nothing open
 function surfaceOf(tab) {
-    if (PANEL_TABS.indexOf(tab) >= 0) return "panel"
+    if (CONSOLE_TABS.indexOf(tab) >= 0) return "console"
     if (ISLAND_TABS.indexOf(tab) >= 0) return "island"
-    if (LAUNCHER_TABS.indexOf(tab) >= 0) return "launcher"
     return ""
 }
 
-// the tab `delta` places from `tab` on the same surface, wrapping
+// the page `delta` places from `tab` on the same surface, wrapping
 function step(tab, delta) {
-    const surface = surfaceOf(tab)
-    const list = surface === "island" ? ISLAND_TABS : surface === "launcher" ? LAUNCHER_TABS : PANEL_TABS
+    const list = surfaceOf(tab) === "island" ? ISLAND_TABS : CONSOLE_TABS
     const i = list.indexOf(tab)
     if (i < 0) return list[0]
     return list[(i + delta + list.length) % list.length]
 }
 
-// tabs you type into, which hold the keyboard for as long as they're open
+// pages you type into, which hold the keyboard for as long as they're open
 function wantsKeyboard(tab) {
     return tab === "run" || tab === "clipboard"
 }

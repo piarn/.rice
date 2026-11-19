@@ -1,4 +1,4 @@
-// Screen layout picker — the list under the display tile in the system tab
+// Screen layout picker — the list under the quick page's layout row
 // (island/tabs/SystemTab.qml), opened by the tile's ›. Lists every
 // ~/.rice/layouts/*.conf; clicking one applies it (apply-layout <name>,
 // which pins it). Layouts whose required outputs aren't connected are

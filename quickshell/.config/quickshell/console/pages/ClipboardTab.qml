@@ -1,4 +1,4 @@
-// The island's clipboard tab: history picker, toggled with `qs ipc call
+// The console's clipboard page: history picker, toggled with `qs ipc call
 // clipboard toggle` ($mod+v in sway). History comes from cliphist, which sway feeds
 // with `wl-paste --watch cliphist store`. Type to filter, ↑/↓ to move,
 // Enter copies the entry back to the clipboard, Delete removes it.
@@ -11,7 +11,7 @@ import QtQuick
 import quickshell
 import "../../components"
 import "../../state"
-import ".."
+import "../../island"
 import "run"
 import "clip.js" as Clip
 

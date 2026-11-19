@@ -1,5 +1,5 @@
 // One of the top row's corner pieces on one screen: the workspaces on the
-// left, the status icons on the right (shell.qml). No box: its one child
+// left, the status readout on the right (shell.qml). No box: its one child
 // floats on the wallpaper and sets the size. Like the island, it moves to
 // the overlay layer while anything is open, so it stays clickable above the
 // click-away catcher, and it never takes the keyboard.

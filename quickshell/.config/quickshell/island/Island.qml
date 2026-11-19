@@ -1,16 +1,15 @@
-// One screen's island: the card centered at the top. Collapsed it's just
-// the date and time (Clock); grown (calendar, run or clipboard open on this
-// screen) it widens to 600px, adopts the shared Panel and extends downward
-// over the windows below — the Spacer reserves only the collapsed height, so
-// nothing reflows. The workspaces and the status icons are cards of their
-// own in the top corners (Card), and the settings open in the side panel
-// (panel/SideWindow.qml).
+// One screen's island: the center of the top row. Collapsed it's just the
+// date and time (Clock), floating; grown (the calendar open on this screen)
+// it becomes a 600px card that adopts the shared Panel and extends downward
+// over the windows below — the Spacer reserves only the collapsed height,
+// so nothing reflows. The workspaces and the status readout float in the
+// top corners (Card); everything else opens in the console
+// (console/ConsoleWindow.qml).
 //
 // Keyboard focus (sway, as the old popups found it):
 //  - collapsed: none at all, so clicking a workspace or the clock never
 //    takes the keyboard from the window you're in
-//  - grown: on-demand, or exclusive while a tab types (run, clipboard, a
-//    password field); switching back from exclusive drops focus at once
+//  - grown: on demand (Esc closes); switching back drops focus at once
 //  - sway gives no reliable "clicked outside" for layer surfaces, so while
 //    grown a transparent catcher covers every screen and a click on it
 //    collapses the island (the click itself is swallowed, like rofi). The
@@ -30,8 +29,7 @@ PanelWindow {
     required property Item panel
 
     readonly property int islandWidth: 600
-    // only calendar, run and clipboard grow the island; the settings open in
-    // the side panel (panel/SideWindow.qml)
+    // only the calendar grows the island; everything else is the console
     readonly property bool grownHere: IslandState.islandOpen && IslandState.screen === modelData
 
     screen: modelData

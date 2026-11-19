@@ -41,6 +41,10 @@ Item {
     property bool active: false   // the command center is open
     property var devRows: []
     property var toolRows: []
+    // settings (SettingsSection): every quick setting, plus the home screen's
+    // live status line and quick toggles
+    property var settingsRows: []
+    property var homeRows: []
     signal openPopup(string popup)
 
     readonly property string home: Quickshell.env("HOME")
@@ -48,7 +52,7 @@ Item {
     readonly property string searchUrl: "https://duckduckgo.com/?q="
 
     readonly property var prefixes: ({ "=": "calc", ">": "run", "/": "files", "?": "web", "@": "windows",
-                                        "~": "dev", "!": "tools", ":": "session" })
+                                        "~": "dev", "!": "tools", ":": "session", ",": "settings" })
     readonly property string mode: prefixes[query.charAt(0)] ?? "apps"
     readonly property string rest: (mode === "apps" ? query : query.slice(1)).trim()
 
@@ -70,6 +74,7 @@ Item {
         case "dev": return devResults()
         case "tools": return toolResults()
         case "session": return sessionResults()
+        case "settings": return settingsResults()
         default: return defaultResults(rest)
         }
     }
@@ -88,8 +93,9 @@ Item {
         case "windows": return "enter focus"
         case "dev": return "enter opens a tmux session"
         case "tools": return "enter runs · toggles stay open"
+        case "settings": return "enter flips · ←→ a level or chip"
         case "session": return rest.match(/^layout\b/) ? "enter applies" : "enter acts · destructive actions need enter twice"
-        default: return "=calc  >run  /files  ?web  @windows  ~dev  !tools  :session"
+        default: return "=calc >run /files ?web @win ~dev !tools :session ,settings"
         }
     }
 
@@ -172,19 +178,21 @@ Item {
             }
         }
         add(devRows)
+        add(settingsRows)
         add(toolActionRows())
         add(sessionActionRows())
         add(windowActionRows())
         return out
     }
 
-    // Plain apps search, folding in dev/tools/session/window matches once
-    // a query narrows it (see extraMatches above). Nothing at all matches
-    // -> offer the same "search the web" escape hatch `?` gives, rather
-    // than a dead end.
+    // Plain apps search, folding in dev/tools/session/window/settings
+    // matches once a query narrows it (see extraMatches above). The empty
+    // query is the home screen: the live status line and quick toggles,
+    // then the apps. Nothing at all matches -> offer the same "search the
+    // web" escape hatch `?` gives, rather than a dead end.
     function defaultResults(q) {
         const appRows = appResults(q)
-        if (q === "") return appRows
+        if (q === "") return homeRows.concat(appRows)
         const merged = appRows.map(it => ({ s: it.s, it }))
             .concat(extraMatches(q))
             .sort((a, b) => b.s - a.s)
@@ -279,6 +287,14 @@ Item {
         return toolRows.filter(r => r.kind !== "header").map(it => it.kind === "page" ? Object.assign({}, it, {
             kind: "action", run: () => root.openPopup(it.group === "clipboard" ? "clipboard" : "notifications"),
         }) : it)
+    }
+
+    // `,`: settings only, in their authored order until a query ranks them
+    function settingsResults() {
+        return ranked(settingsRows, rest, it => [
+            { text: it.title, weight: 1, loose: true },
+            { text: it.aliases || "", weight: 0.6 },
+        ])
     }
 
     // Deliberately plain ranked(), not rankedByUsage(): tools stay in

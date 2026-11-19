@@ -1,31 +1,47 @@
-// [chevron] icon + slider + percentage — the volume/mic/brightness rows in
-// the system tab. The chevron (only drawn when `expandable`, but its space is
-// always kept so every row's icon lines up) emits expandClicked. Left-clicking the icon or middle-clicking anywhere on the
-// row emits toggled (mute for audio rows); the wheel over the slider emits
-// stepped(±delta).
+// A level in the readout: label (or an icon), a thin slider, the number,
+// and the dim key — lined up with ReadoutRow's columns:
+//
+//   volume   ━━━━━━━━━━━━━━━──────────────   37      v
+//
+// Click/drag/wheel on the slider sets it; clicking the label or icon, or a
+// middle click anywhere, emits toggled (mute for audio). The optional
+// chevron in front (`expandable`) emits expandClicked. In a page's keyboard
+// order (island/Tab.qml): Space/Enter toggle, h/l step it.
 import QtQuick
 import quickshell
 
 Item {
     id: root
 
+    property string label: ""
     property string icon: ""
     property real value: 0
     property bool muted: false
     property bool expandable: false
     property bool expanded: false
-    // expand_more by default (turned over while expanded); chevron_right
-    // where it opens something else instead
     property string expandGlyph: "\u{e5cf}"
-    // the number on the right; a percentage unless the owner says otherwise
-    property string valueText: Math.round(value * 100) + "%"
+    // the number on the right: 0–100, "muted" while muted, unless the owner
+    // says otherwise
+    property string valueText: muted ? "muted" : String(Math.round(value * 100))
+    property string key: ""
+    property bool selected: false
     signal moved(real v)
     signal stepped(real delta)
     signal toggled()
     signal expandClicked()
 
+    readonly property bool consoleRow: true
+    function activate() { toggled() }
+    function adjust(delta) { stepped(delta > 0 ? 0.05 : -0.05) }
+
     width: parent ? parent.width : 0
-    height: 22
+    height: Style.rowHeight
+
+    Rectangle {
+        anchors.fill: parent
+        color: root.selected ? Style.tint(Colors.fg, 0.07) : "transparent"
+    }
+    Marker { visible: root.selected }
 
     // Middle clicks only; left clicks/drags belong to the slider on top.
     MouseArea {
@@ -41,7 +57,7 @@ Item {
         width: 14
         visible: root.expandable
         font.pixelSize: 14
-        color: root.expanded || chevronMouse.containsMouse ? Colors.neon : Colors.gray2
+        color: root.expanded || chevronMouse.containsMouse ? Colors.fg : Colors.gray
         text: root.expandGlyph
         rotation: root.expanded ? 180 : 0
         Behavior on rotation { NumberAnimation { duration: Style.fast } }
@@ -56,16 +72,28 @@ Item {
         }
     }
 
-    Icon {
-        id: glyph
+    // the label (or icon): click mutes
+    Item {
+        id: lead
         anchors.left: parent.left
-        anchors.leftMargin: 20
+        anchors.leftMargin: root.expandable ? 20 : Style.inset
         anchors.verticalCenter: parent.verticalCenter
-        width: 22
-        font.pixelSize: 17
-        color: root.muted ? Colors.red : Colors.gray2
-        text: root.icon
+        width: root.label !== "" ? 88 : 22
+        height: parent.height
 
+        MonoText {
+            anchors.verticalCenter: parent.verticalCenter
+            visible: root.label !== ""
+            color: root.muted ? Colors.red : Colors.gray2
+            text: root.label
+        }
+        Icon {
+            anchors.verticalCenter: parent.verticalCenter
+            visible: root.label === ""
+            font.pixelSize: 16
+            color: root.muted ? Colors.red : Colors.gray2
+            text: root.icon
+        }
         MouseArea {
             anchors.fill: parent
             cursorShape: Qt.PointingHandCursor
@@ -74,10 +102,10 @@ Item {
     }
 
     LevelSlider {
-        anchors.left: glyph.right
-        anchors.right: pct.left
-        anchors.leftMargin: 10
-        anchors.rightMargin: 10
+        anchors.left: lead.right
+        anchors.right: number.left
+        anchors.leftMargin: 6
+        anchors.rightMargin: 12
         anchors.verticalCenter: parent.verticalCenter
         value: root.value
         muted: root.muted
@@ -86,13 +114,26 @@ Item {
     }
 
     MonoText {
-        id: pct
+        id: number
+        anchors.right: keyHint.left
+        anchors.rightMargin: 6
+        anchors.verticalCenter: parent.verticalCenter
+        width: 40
+        horizontalAlignment: Text.AlignRight
+        color: root.muted ? Colors.red : Colors.fg
+        text: root.valueText
+    }
+
+    // the same right edge as ReadoutRow: its light and › columns sit where
+    // the number is, so the key lines up
+    KeyHint {
+        id: keyHint
         anchors.right: parent.right
         anchors.rightMargin: Style.inset
         anchors.verticalCenter: parent.verticalCenter
-        width: 44
+        width: 10
         horizontalAlignment: Text.AlignRight
-        color: root.muted ? Colors.red : Colors.gray2
-        text: root.valueText
+        key: root.key
+        bright: root.selected
     }
 }

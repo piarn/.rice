@@ -63,13 +63,14 @@ Rectangle {
         text: row.kind === "status" ? row.v(row.item.text) : ""
     }
 
-    // quick toggles: flat ruled cells like quick settings' tiles
+    // quick toggles: a light and a word each; the picked one (←/→) is
+    // bright with the accent underline
     Row {
         visible: row.kind === "chips"
         anchors.left: parent.left
         anchors.leftMargin: 12
         anchors.verticalCenter: parent.verticalCenter
-        spacing: -1
+        spacing: 4
 
         Repeater {
             model: row.kind === "chips" ? row.item.chips : []
@@ -80,27 +81,32 @@ Rectangle {
                 required property int index
                 readonly property bool on: !!row.v(modelData.on)
                 readonly property bool picked: row.current && index === row.chip
-                width: chipText.implicitWidth + 24
-                height: 30
-                color: picked || chipMouse.containsMouse ? Colors.surface : Colors.black
-                border.width: Style.border
-                border.color: picked ? Colors.neon : Colors.dim
+                width: chipRow.implicitWidth + 20
+                height: 28
+                color: picked || chipMouse.containsMouse ? Style.tint(Colors.fg, 0.07) : "transparent"
 
-                Rectangle {
-                    visible: chipCell.on
-                    anchors.left: parent.left
-                    anchors.top: parent.top
-                    anchors.bottom: parent.bottom
-                    anchors.margins: Style.border
-                    width: Style.marker
-                    color: Colors.neon
-                }
-                MonoText {
-                    id: chipText
+                Row {
+                    id: chipRow
                     anchors.centerIn: parent
-                    font.bold: chipCell.on
-                    color: chipCell.on ? Colors.neon : Colors.gray2
-                    text: row.v(chipCell.modelData.title)
+                    spacing: 7
+                    Light {
+                        anchors.verticalCenter: parent.verticalCenter
+                        on: chipCell.on
+                    }
+                    MonoText {
+                        id: chipText
+                        anchors.verticalCenter: parent.verticalCenter
+                        color: chipCell.on || chipCell.picked ? Colors.fg : Colors.gray2
+                        text: row.v(chipCell.modelData.title)
+                    }
+                }
+                Rectangle {
+                    visible: chipCell.picked
+                    anchors.horizontalCenter: parent.horizontalCenter
+                    anchors.bottom: parent.bottom
+                    width: chipRow.implicitWidth
+                    height: 2
+                    color: Colors.neon
                 }
                 MouseArea {
                     id: chipMouse
@@ -125,7 +131,6 @@ Rectangle {
             anchors.bottom: parent.bottom
             anchors.bottomMargin: 5
             font.pixelSize: 11
-            font.bold: true
             color: Colors.acid
             text: row.v(row.item.title) || ""
         }
@@ -203,7 +208,6 @@ Rectangle {
             width: parent.width
             elide: Text.ElideRight
             font.pixelSize: Style.fontSize
-            font.bold: row.on && row.kind !== "action"
             color: row.current || row.on ? Colors.fg : Colors.gray2
             text: row.v(row.item.title) || ""
         }
@@ -265,18 +269,16 @@ Rectangle {
             color: Colors.gray2
             text: row.rightText
         }
-        MonoText {
+        // toggles and choices: the readout's light, ■ on / □ off
+        Item {
             anchors.verticalCenter: parent.verticalCenter
-            visible: row.kind === "toggle"
-            font.bold: row.on
-            color: row.on ? Colors.neon : Colors.gray
-            text: row.on ? "[on] " : "[off]"
-        }
-        MonoText {
-            anchors.verticalCenter: parent.verticalCenter
-            visible: row.kind === "choice" || row.kind === "theme"
-            color: row.on ? Colors.neon : Colors.gray
-            text: row.on ? "●" : "○"
+            visible: row.kind === "toggle" || row.kind === "choice" || row.kind === "theme"
+            width: 10
+            height: 10
+            Light {
+                anchors.centerIn: parent
+                on: row.on
+            }
         }
         MonoText {
             anchors.verticalCenter: parent.verticalCenter
@@ -298,9 +300,9 @@ Rectangle {
             visible: row.kind === "level"
             width: 40
             horizontalAlignment: Text.AlignRight
-            color: row.kind === "level" && row.v(row.item.muted) ? Colors.red : Colors.gray2
-            text: row.kind !== "level" ? "" : row.v(row.item.muted) ? "mute"
-                : Math.round(row.v(row.item.value) * 100) + "%"
+            color: row.kind === "level" && row.v(row.item.muted) ? Colors.red : Colors.fg
+            text: row.kind !== "level" ? "" : row.v(row.item.muted) ? "muted"
+                : String(Math.round(row.v(row.item.value) * 100))
         }
     }
 }
