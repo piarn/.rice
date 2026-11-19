@@ -1,8 +1,8 @@
-// Quick settings tile: icon + title + subtitle in a flat ruled cell. While
-// `active` it gets an accent marker down its left edge and accent text —
-// no filled bubble. Clicking the tile toggles; the optional › zone on the
-// right, split off by a rule, opens the feature's full popup (`detail`).
-// Laid out in a grid with spacing -1 so neighbouring rules overlap into one.
+// Quick tab tile: icon, title and subtitle on a quiet tile. While `active`
+// the icon turns the accent and a faint accent tint sits behind it; nothing
+// else changes colour. Clicking the tile toggles; the optional › on the
+// right opens the feature's own tab (`detail`). Laid out in a grid with a
+// gap.
 import QtQuick
 import quickshell
 
@@ -17,11 +17,9 @@ Rectangle {
     signal toggled()
     signal detail()
 
-    implicitHeight: 44
-    radius: Style.radius
-    color: mouse.containsMouse ? Colors.surface : Colors.black
-    border.width: Style.border
-    border.color: Colors.dim
+    implicitHeight: 52
+    radius: Style.round
+    color: Style.tint(Colors.fg, mouse.containsMouse ? 0.08 : 0.04)
 
     MouseArea {
         id: mouse
@@ -32,40 +30,35 @@ Rectangle {
     }
 
     Rectangle {
-        visible: root.active
+        id: badge
         anchors.left: parent.left
-        anchors.top: parent.top
-        anchors.bottom: parent.bottom
-        anchors.margins: Style.border
-        width: Style.marker
-        color: Colors.neon
-    }
-
-    Icon {
-        id: glyph
-        anchors.left: parent.left
-        anchors.leftMargin: 11
+        anchors.leftMargin: 10
         anchors.verticalCenter: parent.verticalCenter
-        width: 18
-        horizontalAlignment: Text.AlignHCenter
-        font.pixelSize: 16
-        color: root.active ? Colors.neon : Colors.gray2
-        text: root.icon
+        width: 30
+        height: 30
+        radius: Style.round
+        color: root.active ? Style.tint(Colors.neon, 0.18) : "transparent"
+
+        Icon {
+            anchors.centerIn: parent
+            font.pixelSize: 16
+            color: root.active ? Colors.neon : Colors.gray
+            text: root.icon
+        }
     }
 
     Column {
-        anchors.left: glyph.right
+        anchors.left: badge.right
         anchors.right: chevron.visible ? chevron.left : parent.right
-        anchors.leftMargin: 9
-        anchors.rightMargin: 6
+        anchors.leftMargin: 10
+        anchors.rightMargin: 8
         anchors.verticalCenter: parent.verticalCenter
-        spacing: 1
+        spacing: 2
 
         MonoText {
             width: parent.width
-            font.bold: root.active
             elide: Text.ElideRight
-            color: root.active ? Colors.neon : Colors.fg
+            color: root.active ? Colors.fg : Colors.gray2
             text: root.title.toLowerCase()
         }
         MonoText {
@@ -73,7 +66,7 @@ Rectangle {
             visible: text !== ""
             font.pixelSize: 11
             elide: Text.ElideRight
-            color: root.active ? Colors.gray2 : Colors.gray
+            color: Colors.gray
             text: root.subtitle
         }
     }
@@ -82,24 +75,18 @@ Rectangle {
         id: chevron
         visible: root.hasDetail
         anchors.right: parent.right
-        anchors.top: parent.top
-        anchors.bottom: parent.bottom
-        anchors.margins: Style.border
-        width: 24
-        color: chevronMouse.containsMouse ? Colors.dim : "transparent"
+        anchors.rightMargin: 4
+        anchors.verticalCenter: parent.verticalCenter
+        width: 22
+        height: parent.height - 12
+        radius: Style.round
+        color: chevronMouse.containsMouse ? Style.tint(Colors.fg, 0.10) : "transparent"
 
-        Rectangle {
-            anchors.left: parent.left
-            anchors.top: parent.top
-            anchors.bottom: parent.bottom
-            width: Style.border
-            color: Colors.dim
-        }
-
-        MonoText {
+        Icon {
             anchors.centerIn: parent
+            font.pixelSize: 16
             color: chevronMouse.containsMouse ? Colors.fg : Colors.gray2
-            text: "›"
+            text: "\u{e5cc}"   // chevron_right
         }
 
         MouseArea {

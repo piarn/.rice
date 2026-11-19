@@ -23,7 +23,7 @@ Column {
             readonly property bool usable: RiceState.usableLayouts.indexOf(modelData) >= 0
             width: root.width
             height: 28
-            color: mouse.containsMouse && row.usable ? Colors.surface : "transparent"
+            color: mouse.containsMouse && row.usable ? Style.tint(Colors.fg, 0.05) : "transparent"
 
             Marker { visible: row.active }
 
@@ -45,7 +45,7 @@ Column {
                 anchors.leftMargin: 10 + checkIcon.width
                 anchors.rightMargin: 6
                 anchors.verticalCenter: parent.verticalCenter
-                color: row.active ? Colors.neon : row.usable ? Colors.fg : Colors.gray
+                color: row.active ? Colors.fg : row.usable ? Colors.gray2 : Colors.gray
                 elide: Text.ElideRight
                 text: row.modelData + (row.usable ? "" : " · not connected")
             }

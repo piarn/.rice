@@ -3,7 +3,9 @@ import QtQuick
 import quickshell
 
 Text {
-    font.family: "JetBrains Mono"
-    font.pixelSize: 12
+    font.family: Style.font
+    // hinted, unsmoothed edges: a pixel font stays on its pixels
+    renderType: Text.NativeRendering
+    font.pixelSize: Style.fontSize
     color: Colors.fg
 }

@@ -102,12 +102,13 @@ Tab {
                         readonly property bool today: menu.isToday(modelData)
                         width: menu.cell
                         height: 22
-                        color: today ? Colors.neon : "transparent"
+                        radius: Style.round
+                        color: today ? Style.tint(Colors.neon, 0.20) : "transparent"
 
                         MonoText {
                             anchors.centerIn: parent
                             font.bold: parent.today
-                            color: parent.today ? Colors.black
+                            color: parent.today ? Colors.fg
                                 : !modelData.inMonth ? Colors.dim
                                 : parent.index >= 5 ? Colors.gray2 : Colors.fg
                             text: modelData.day

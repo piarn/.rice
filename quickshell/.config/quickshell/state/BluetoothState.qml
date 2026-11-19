@@ -16,25 +16,59 @@ Item {
     readonly property bool available: adapter !== null
     readonly property bool powered: adapter ? adapter.enabled : false
     readonly property bool scanning: adapter ? adapter.discovering : false
+    readonly property bool discoverable: adapter ? adapter.discoverable : false
+    readonly property bool pairable: adapter ? adapter.pairable : false
+    readonly property string adapterName: adapter ? adapter.name : ""
 
-    // Connected, then paired, then discovered-with-a-name. Unnamed
-    // discoveries (bluez aliases them to their address) are noise.
-    readonly property var devices: {
+    // the bluetooth tab's "nearby" toggle: unpaired devices a scan found
+    property bool showNearby: true
+
+    // Connected, then paired: the devices you own.
+    readonly property var paired: {
         if (!adapter) return []
         return adapter.devices.values
-            .filter(d => d.paired || d.connected || d.deviceName)
-            .sort((a, b) => (b.connected - a.connected) || (b.paired - a.paired) || a.name.localeCompare(b.name))
+            .filter(d => d.paired || d.connected)
+            .sort((a, b) => (b.connected - a.connected) || a.name.localeCompare(b.name))
     }
-    readonly property var connectedDevices: devices.filter(d => d.connected)
+    // Discovered and not paired, with a real name. Unnamed discoveries (bluez
+    // aliases them to their address) are noise.
+    readonly property var nearby: {
+        if (!adapter) return []
+        return adapter.devices.values
+            .filter(d => !d.paired && !d.connected && d.deviceName)
+            .sort((a, b) => a.name.localeCompare(b.name))
+    }
+    readonly property var devices: paired.concat(nearby)
+    readonly property var connectedDevices: paired.filter(d => d.connected)
 
     function togglePower() {
         if (adapter) adapter.enabled = !adapter.enabled
     }
+    function setPowered(on) {
+        if (adapter) adapter.enabled = on
+    }
+    function toggleDiscoverable() {
+        if (adapter) adapter.discoverable = !adapter.discoverable
+    }
+    function togglePairable() {
+        if (adapter) adapter.pairable = !adapter.pairable
+    }
+
+    // A scan runs for scanSeconds, showing what's left; stopScan ends it early.
+    readonly property int scanSeconds: 30
+    property int scanLeft: 0
 
     function scan() {
         if (!adapter || !adapter.enabled) return
         adapter.discovering = true
-        scanStop.restart()
+        scanLeft = scanSeconds
+        scanTick.restart()
+    }
+
+    function stopScan() {
+        scanTick.stop()
+        scanLeft = 0
+        if (adapter) adapter.discovering = false
     }
 
     // Trusted so it can reconnect on its own later; pairing itself goes
@@ -63,12 +97,17 @@ Item {
         if (i === "input-keyboard") return "\u{e312}"  // keyboard
         if (i === "input-gaming") return "\u{ea28}"    // sports_esports
         if (i === "phone") return "\u{e7ba}"           // smartphone
+        if (i.startsWith("computer")) return "\u{e30a}"   // computer
         return "\u{e1a7}"   // bluetooth
     }
 
     Timer {
-        id: scanStop
-        interval: 15000
-        onTriggered: if (root.adapter) root.adapter.discovering = false
+        id: scanTick
+        interval: 1000
+        repeat: true
+        onTriggered: {
+            root.scanLeft = Math.max(0, root.scanLeft - 1)
+            if (root.scanLeft === 0) root.stopScan()
+        }
     }
 }

@@ -42,9 +42,9 @@ PanelWindow {
         id: card
         anchors.fill: parent
         radius: Style.radius
-        color: Qt.rgba(Colors.black.r, Colors.black.g, Colors.black.b, 0.92)
+        color: Style.tint(Colors.mantle, 0.95)
         border.width: Style.border
-        border.color: Colors.dim
+        border.color: Colors.surface
         opacity: OsdState.shown ? 1 : 0
         Behavior on opacity { NumberAnimation { duration: OsdState.shown ? Style.fast : 300; easing.type: Easing.OutQuad } }
 

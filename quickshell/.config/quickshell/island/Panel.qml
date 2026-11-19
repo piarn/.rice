@@ -1,4 +1,6 @@
-// The grown island's contents: the tab row, then the open tab. Created once
+// The grown island's contents: the tab row, then the open tab (calendar,
+// clipboard; the settings are in panel/SidePanel.qml, the run box in
+// launcher/Launcher.qml). Created once
 // (shell.qml) so every tab — its state, its IPC handler — exists once;
 // whichever screen's Island is grown adopts it (island/Island.qml).
 //
@@ -19,10 +21,10 @@ FocusScope {
     // the tab area's cap, set by the Island adopting this (70% of its screen)
     property real maxHeight: 700
 
-    readonly property var tabs: [systemTab, calendarTab, notificationsTab, networkTab, runTab, clipboardTab]
+    readonly property var tabs: [calendarTab, clipboardTab]
     readonly property Item current: tabs.find(t => t.shown) || null
-    // run/clipboard, or a tab that's in a text field right now
-    readonly property bool needsKeyboard: IslandState.wantsKeyboard || (current !== null && current.needsKeyboard)
+    // clipboard, or a tab that's in a text field right now
+    readonly property bool needsKeyboard: (IslandState.islandOpen && IslandState.wantsKeyboard) || (current !== null && current.needsKeyboard)
 
     function focusCurrent() {
         if (current && current.initialFocus) current.initialFocus.forceActiveFocus()
@@ -31,8 +33,8 @@ FocusScope {
 
     Connections {
         target: IslandState
-        function onTabChanged() { if (IslandState.grown) Qt.callLater(panel.focusCurrent) }
-        function onPanelFocusRequested() { keys.forceActiveFocus() }
+        function onTabChanged() { if (IslandState.islandOpen) Qt.callLater(panel.focusCurrent) }
+        function onPanelFocusRequested() { if (IslandState.islandOpen) keys.forceActiveFocus() }
     }
 
     Item {
@@ -53,12 +55,12 @@ FocusScope {
 
     Shortcut {
         sequences: ["Ctrl+Tab"]
-        enabled: IslandState.grown
+        enabled: IslandState.islandOpen
         onActivated: IslandState.step(1)
     }
     Shortcut {
         sequences: ["Ctrl+Shift+Tab", "Ctrl+Backtab"]
-        enabled: IslandState.grown
+        enabled: IslandState.islandOpen
         onActivated: IslandState.step(-1)
     }
 
@@ -84,30 +86,35 @@ FocusScope {
                 property string hovered: ""
 
                 Repeater {
-                    model: Routes.TABS
+                    model: Routes.ISLAND_TABS
 
                     delegate: Rectangle {
                         required property string modelData
                         readonly property bool open: IslandState.tab === modelData
                         readonly property var glyphs: ({
-                            system: "\u{e429}",          // tune
                             calendar: "\u{ebcc}",        // calendar_month
-                            notifications: "\u{e7f4}",   // notifications
-                            network: "\u{e63e}",         // wifi
-                            run: "\u{e8b6}",             // search
                             clipboard: "\u{e14f}"        // content_paste
                         })
-                        width: 24
-                        height: 24
-                        color: open ? Colors.neon : tabMouse.containsMouse ? Colors.surface : "transparent"
+                        width: 28
+                        height: 28
+                        radius: Style.round
+                        color: tabMouse.containsMouse && !open ? Style.tint(Colors.fg, 0.06) : "transparent"
 
                         Icon {
                             anchors.centerIn: parent
                             font.pixelSize: 16
-                            color: parent.open ? Colors.black
-                                : modelData === "notifications" && NotificationState.notifications.length ? Colors.acid
-                                : tabMouse.containsMouse ? Colors.fg : Colors.gray2
+                            color: parent.open || tabMouse.containsMouse ? Colors.fg : Colors.gray
                             text: parent.glyphs[modelData]
+                        }
+
+                        // the open one: the accent underline
+                        Rectangle {
+                            visible: parent.open
+                            anchors.horizontalCenter: parent.horizontalCenter
+                            anchors.bottom: parent.bottom
+                            width: 12
+                            height: 2
+                            color: Colors.neon
                         }
 
                         MouseArea {
@@ -128,11 +135,7 @@ FocusScope {
                 anchors.verticalCenter: tabRow.verticalCenter
                 leftPadding: 10
                 color: tabRow.hovered ? Colors.fg : Colors.gray2
-                text: {
-                    const t = tabRow.hovered || IslandState.tab
-                    return t === "notifications" && NotificationState.notifications.length
-                        ? t + " · " + NotificationState.notifications.length : t
-                }
+                text: tabRow.hovered || IslandState.tab
             }
         }
 
@@ -152,11 +155,7 @@ FocusScope {
                 width: parent.width
                 implicitHeight: panel.current ? panel.current.implicitHeight : 0
 
-                SystemTab { id: systemTab; width: parent.width }
                 CalendarTab { id: calendarTab; width: parent.width }
-                NotificationsTab { id: notificationsTab; width: parent.width }
-                NetworkTab { id: networkTab; width: parent.width }
-                RunTab { id: runTab; width: parent.width }
                 ClipboardTab { id: clipboardTab; width: parent.width }
             }
         }

@@ -1,0 +1,98 @@
+#!/usr/bin/env python3
+"""Spiral ("dwindle") tiling for sway: every new window splits the focused
+one along its longer side, so windows go right, then down, then right ...
+into the corner, instead of all side by side.
+
+On every window focus it sets the focused window's split to vertical when
+it's taller than wide and horizontal otherwise; sway's split applies to the
+next window opened there. Tabbed and stacked containers, floating and
+fullscreen windows are left alone, and so is anything you split by hand
+until focus moves. Talks to sway's IPC socket directly (no packages, no
+process per event); one instance per session (lock file), and it exits
+with sway.
+"""
+import fcntl
+import json
+import os
+import socket
+import struct
+import sys
+
+MAGIC = b"i3-ipc"
+RUN_COMMAND, SUBSCRIBE, GET_TREE = 0, 2, 4
+HEADER = struct.Struct("=6sII")
+
+
+def send(sock, kind, payload=b""):
+    sock.sendall(HEADER.pack(MAGIC, len(payload), kind) + payload)
+
+
+def recv(sock):
+    head = b""
+    while len(head) < HEADER.size:
+        chunk = sock.recv(HEADER.size - len(head))
+        if not chunk:
+            raise ConnectionError("sway went away")
+        head += chunk
+    _, length, kind = HEADER.unpack(head)
+    body = b""
+    while len(body) < length:
+        chunk = sock.recv(length - len(body))
+        if not chunk:
+            raise ConnectionError("sway went away")
+        body += chunk
+    return kind, json.loads(body)
+
+
+def request(sock, kind, payload=b""):
+    send(sock, kind, payload)
+    return recv(sock)[1]
+
+
+def find_focused(node, parent=None):
+    if node.get("focused"):
+        return node, parent
+    for child in node.get("nodes", []) + node.get("floating_nodes", []):
+        found = find_focused(child, node)
+        if found[0]:
+            return found
+    return None, None
+
+
+def main():
+    path = os.environ.get("SWAYSOCK")
+    if not path:
+        sys.exit("sway-dwindle: SWAYSOCK isn't set")
+
+    lock = open(os.path.join(os.environ.get("XDG_RUNTIME_DIR", "/tmp"), "sway-dwindle.lock"), "w")
+    try:
+        fcntl.flock(lock, fcntl.LOCK_EX | fcntl.LOCK_NB)
+    except BlockingIOError:
+        return   # already running
+
+    events = socket.socket(socket.AF_UNIX)
+    events.connect(path)
+    commands = socket.socket(socket.AF_UNIX)
+    commands.connect(path)
+    request(events, SUBSCRIBE, b'["window"]')
+
+    while True:
+        _, event = recv(events)
+        if event.get("change") not in ("focus", "new", "move"):
+            continue
+        node, parent = find_focused(request(commands, GET_TREE))
+        if not node or not parent or node.get("type") != "con":
+            continue   # floating windows are floating_con
+        if node.get("fullscreen_mode") or parent.get("layout") in ("tabbed", "stacked"):
+            continue
+        rect = node.get("rect", {})
+        want = "splitv" if rect.get("height", 0) > rect.get("width", 0) else "splith"
+        if parent.get("layout") != want:
+            request(commands, RUN_COMMAND, want.encode())
+
+
+if __name__ == "__main__":
+    try:
+        main()
+    except (ConnectionError, KeyboardInterrupt):
+        pass

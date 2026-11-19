@@ -37,7 +37,8 @@ Rectangle {
     width: ListView.view ? ListView.view.width : 0
     readonly property bool plain: kind === "header" || kind === "status"
     height: kind === "header" ? 26 : kind === "theme" ? 68 : kind === "status" ? 26 : kind === "chips" ? 38 : 34
-    color: !plain && kind !== "chips" && (current || mouse.containsMouse) ? Colors.surface : "transparent"
+    radius: Style.round
+    color: !plain && kind !== "chips" && (current || mouse.containsMouse) ? Style.tint(Colors.fg, 0.05) : "transparent"
 
     MouseArea {
         id: mouse
@@ -201,9 +202,9 @@ Rectangle {
         MonoText {
             width: parent.width
             elide: Text.ElideRight
-            font.pixelSize: 14
+            font.pixelSize: Style.fontSize
             font.bold: row.on && row.kind !== "action"
-            color: row.current || row.on ? Colors.neon : Colors.fg
+            color: row.current || row.on ? Colors.fg : Colors.gray2
             text: row.v(row.item.title) || ""
         }
         MonoText {
@@ -211,7 +212,7 @@ Rectangle {
             visible: text !== ""
             elide: Text.ElideMiddle
             font.pixelSize: 11
-            color: Colors.gray2
+            color: Colors.gray
             text: row.subtitle
         }
         // palette strip: the roles every template renders from

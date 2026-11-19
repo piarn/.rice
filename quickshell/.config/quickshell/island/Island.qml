@@ -1,7 +1,10 @@
-// One screen's island: a fixed 600px card centered at the top. Collapsed
-// it's just the Strip; grown (IslandState.tab set, on this screen) it adopts
-// the shared Panel and extends downward over the windows below — the
-// Spacer reserves only the collapsed height, so nothing reflows.
+// One screen's island: the card centered at the top. Collapsed it's just
+// the date and time (Clock); grown (calendar, run or clipboard open on this
+// screen) it widens to 600px, adopts the shared Panel and extends downward
+// over the windows below — the Spacer reserves only the collapsed height, so
+// nothing reflows. The workspaces and the status icons are cards of their
+// own in the top corners (Card), and the settings open in the side panel
+// (panel/SideWindow.qml).
 //
 // Keyboard focus (sway, as the old popups found it):
 //  - collapsed: none at all, so clicking a workspace or the clock never
@@ -27,17 +30,21 @@ PanelWindow {
     required property Item panel
 
     readonly property int islandWidth: 600
-    readonly property bool grownHere: IslandState.grown && IslandState.screen === modelData
+    // only calendar, run and clipboard grow the island; the settings open in
+    // the side panel (panel/SideWindow.qml)
+    readonly property bool grownHere: IslandState.islandOpen && IslandState.screen === modelData
 
     screen: modelData
     anchors.top: true
     margins.top: 6
     exclusionMode: ExclusionMode.Ignore
     color: "transparent"
-    implicitWidth: islandWidth
+    implicitWidth: frame.width
     implicitHeight: frame.height
     WlrLayershell.namespace: "quickshell-island"
-    WlrLayershell.layer: grownHere ? WlrLayer.Overlay : WlrLayer.Top
+    // Above the click catcher (top layer) whenever anything is open, so the
+    // clock still works instead of just closing what's open.
+    WlrLayershell.layer: IslandState.grown ? WlrLayer.Overlay : WlrLayer.Top
     WlrLayershell.keyboardFocus: !grownHere ? WlrKeyboardFocus.None
         : panel.needsKeyboard ? WlrKeyboardFocus.Exclusive : WlrKeyboardFocus.OnDemand
 
@@ -69,16 +76,17 @@ PanelWindow {
         }
     }
 
+    // just the clock, floating, until it grows into a card
     Rectangle {
         id: frame
-        width: island.islandWidth
-        height: strip.height + (island.grownHere ? holder.height + 20 : 0) + 2 * Style.border
-        color: Colors.black
+        width: island.grownHere ? island.islandWidth : strip.implicitWidth + 2 * Style.border
+        height: strip.height + (island.grownHere ? holder.height + 2 * Style.pad : 0) + 2 * Style.border
+        color: island.grownHere ? Colors.mantle : "transparent"
         radius: Style.radius
-        border.width: Style.border
-        border.color: island.grownHere && island.panel.needsKeyboard ? Colors.neon : Colors.dim
+        border.width: island.grownHere ? Style.border : 0
+        border.color: island.panel.needsKeyboard ? Colors.neon : Colors.surface
 
-        Strip {
+        Clock {
             id: strip
             screen: island.modelData
             x: Style.border
@@ -86,18 +94,10 @@ PanelWindow {
             width: parent.width - 2 * Style.border
         }
 
-        Rectangle {
-            visible: island.grownHere
-            y: strip.y + strip.height
-            width: parent.width
-            height: Style.border
-            color: Colors.dim
-        }
-
         Item {
             id: holder
             x: Style.pad
-            y: strip.y + strip.height + 10
+            y: strip.y + strip.height + Style.pad / 2
             width: parent.width - 2 * Style.pad
             height: island.grownHere ? island.panel.implicitHeight : 0
         }

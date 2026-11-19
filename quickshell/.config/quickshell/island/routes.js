@@ -1,15 +1,28 @@
 .pragma library
-// Island tabs and how names reach them: the tab names themselves, plus the
-// old popup/IPC names (quicksettings, battery, bluetooth, commandcenter) so
-// sway binds and scripts keep working. No QML types, so
-// tests/test-island-routes.sh runs it under node.
+// Where every tab lives, and how names reach them. Three surfaces:
+//  - panel: the control panel on the right edge (panel/SideWindow.qml), for
+//    settings: quick, sound, network, bluetooth, notifications
+//  - island: the center of the top row grows under the clock: calendar,
+//    clipboard
+//  - launcher: the run box ($mod+d), in the middle of the screen
+//    (launcher/LauncherWindow.qml)
+// Plus the old popup/IPC names (system, quicksettings, battery,
+// commandcenter) so sway binds and scripts keep working. No QML types, so it
+// runs under node too.
 
-const TABS = ["system", "calendar", "notifications", "network", "run", "clipboard"]
+const PANEL_TABS = ["quick", "sound", "network", "bluetooth", "notifications"]
+const ISLAND_TABS = ["calendar", "clipboard"]
+const LAUNCHER_TABS = ["run"]
+const TABS = PANEL_TABS.concat(ISLAND_TABS, LAUNCHER_TABS)
 
 const ALIASES = {
-    quicksettings: "system",
-    battery: "system",
-    bluetooth: "network",
+    system: "quick",
+    quicksettings: "quick",
+    battery: "quick",
+    audio: "sound",
+    volume: "sound",
+    mic: "sound",
+    wifi: "network",
     commandcenter: "run"
 }
 
@@ -18,11 +31,21 @@ function tabFor(name) {
     return TABS.indexOf(name) >= 0 ? name : (ALIASES[name] || "")
 }
 
-// the tab `delta` places from `tab`, wrapping; the first tab from none
+// "panel", "island", "launcher", or "" for nothing open
+function surfaceOf(tab) {
+    if (PANEL_TABS.indexOf(tab) >= 0) return "panel"
+    if (ISLAND_TABS.indexOf(tab) >= 0) return "island"
+    if (LAUNCHER_TABS.indexOf(tab) >= 0) return "launcher"
+    return ""
+}
+
+// the tab `delta` places from `tab` on the same surface, wrapping
 function step(tab, delta) {
-    const i = TABS.indexOf(tab)
-    if (i < 0) return TABS[0]
-    return TABS[(i + delta + TABS.length) % TABS.length]
+    const surface = surfaceOf(tab)
+    const list = surface === "island" ? ISLAND_TABS : surface === "launcher" ? LAUNCHER_TABS : PANEL_TABS
+    const i = list.indexOf(tab)
+    if (i < 0) return list[0]
+    return list[(i + delta + list.length) % list.length]
 }
 
 // tabs you type into, which hold the keyboard for as long as they're open

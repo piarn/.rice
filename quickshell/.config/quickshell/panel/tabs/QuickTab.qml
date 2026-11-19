@@ -1,20 +1,19 @@
-// The island's system tab (quick settings): opened from the island's status
-// segments or $mod+n. Parts:
-//  - tray: the StatusNotifierItem icons apps register (Slack, nm-applet, …)
-//    — the bar has no tray of its own, like Windows' hidden-icons flyout.
+// The control panel's quick tab: everything at a glance, one click each.
+// Opened from the strip's tune icon, the battery, empty strip space or
+// $mod+Shift+n. Parts:
+//  - tiles: click toggles; the › on a tile opens that feature's own tab
+//    (wi-fi → network, bluetooth, silence → notifications, mic → sound).
+//    The display tile mirrors the laptop onto HDMI (the `present` layout)
+//    or back (`extend`) when HDMI is plugged in, and its › lists every
+//    screen layout. Screenshot, color picker and lock act at once and close
+//    the panel.
+//  - sliders: volume (› for the sound tab), mic, brightness, and the night
+//    light's warmth while it's on. Middle click mutes, wheel steps.
+//  - media controls for the MPRIS player that's playing (or was last)
+//  - tray: the StatusNotifierItem icons apps register (Slack, nm-applet, …).
 //    Left click activates (menu-only items open their menu), right click
 //    opens the menu, middle click is the secondary action, wheel scrolls.
-//  - toggles: network (what traffic goes over, VPNs included; click for
-//    the network popup), bluetooth, keep awake, night
-//    light, power profile, display; the › on a tile opens that feature's
-//    full popup (bluetooth's is a section of the network popup) — the
-//    display tile's instead expands the screen layout picker below the grid.
-//    Clicking the display tile mirrors the laptop onto HDMI (the `present`
-//    layout) or back to a second screen (`extend`) when HDMI is plugged in.
-//  - volume/mic/brightness sliders (middle click mutes, wheel steps); the
-//    chevron before volume/mic lists the output/input devices to pick from
-//  - media controls for the MPRIS player that's playing (or was last)
-//  - battery (with time left and power draw), lock and power
+//  - battery (with time left and power draw) and power
 import Quickshell
 import Quickshell.Services.Mpris
 import Quickshell.Services.SystemTray
@@ -24,30 +23,22 @@ import QtQuick
 import quickshell
 import "../../state"
 import "../../components"
-import ".."
+import "../../island"
 
 Tab {
     id: menu
-    name: "system"
+    name: "quick"
 
     property string hoveredTitle: ""
-    property string devicesShown: ""   // "" | "output" | "input"
     property bool layoutsShown: false
-    // Ruled grid: spacing -1 overlaps neighbouring tiles' rules into one.
-    readonly property int tileWidth: (innerWidth + 1) / 2
+    // two tiles a row, Style.gap apart
+    readonly property int tileWidth: (innerWidth - Style.gap) / 2
 
     onOpened: {
-        devicesShown = ""
         layoutsShown = false
         BrightnessState.refresh()
         RiceState.refresh()   // outputs may have been plugged in since
     }
-
-    function toggleDevices(kind) {
-        devicesShown = devicesShown === kind ? "" : kind
-    }
-
-    readonly property var activeVpns: NetworkState.activeVpns
 
     readonly property var primaryNet: NetworkState.primary
 
@@ -74,115 +65,30 @@ Tab {
         PowerProfiles.profile = order[(i + 1) % order.length]
     }
 
-    // tray
-    Item {
-        width: parent.width
-        height: trayLabel.implicitHeight
-
-        MonoText {
-            id: trayLabel
-            anchors.left: parent.left
-            color: Colors.gray
-            text: "tray"
-        }
-        MonoText {
-            anchors.right: parent.right
-            width: parent.width - trayLabel.implicitWidth - 12
-            horizontalAlignment: Text.AlignRight
-            elide: Text.ElideRight
-            color: Colors.gray2
-            text: menu.hoveredTitle
-        }
+    // close first, so the panel isn't in the screenshot or under the picker
+    function act(cmd) {
+        close()
+        Quickshell.execDetached(["sh", "-c", "sleep 0.2; " + cmd])
     }
 
-    MonoText {
-        visible: trayRepeater.count === 0
-        color: Colors.gray
-        text: "no tray apps running"
-    }
-
-    Flow {
-        width: parent.width
-        spacing: -1
-        visible: trayRepeater.count > 0
-
-        Repeater {
-            id: trayRepeater
-            model: SystemTray.items
-
-            delegate: Rectangle {
-                id: trayItem
-                required property var modelData
-                width: 34
-                height: 34
-                radius: Style.radius
-                color: trayMouse.containsMouse ? Colors.surface : Colors.black
-                border.width: Style.border
-                border.color: modelData.status === Status.NeedsAttention ? Colors.amber : Colors.dim
-
-                IconImage {
-                    anchors.centerIn: parent
-                    implicitSize: 20
-                    source: trayItem.modelData.icon
-                    opacity: trayItem.modelData.status === Status.Passive ? 0.5 : 1
-                }
-
-                function openMenu() {
-                    const p = trayItem.mapToItem(null, 0, trayItem.height + 4)
-                    trayItem.modelData.display(menu, p.x, p.y)
-                }
-
-                MouseArea {
-                    id: trayMouse
-                    anchors.fill: parent
-                    hoverEnabled: true
-                    cursorShape: Qt.PointingHandCursor
-                    acceptedButtons: Qt.LeftButton | Qt.RightButton | Qt.MiddleButton
-                    onContainsMouseChanged: menu.hoveredTitle = containsMouse
-                        ? (trayItem.modelData.tooltipTitle || trayItem.modelData.title || trayItem.modelData.id) : ""
-                    onClicked: (mouse) => {
-                        const item = trayItem.modelData
-                        if (mouse.button === Qt.RightButton) {
-                            if (item.hasMenu) trayItem.openMenu()
-                        } else if (mouse.button === Qt.MiddleButton) {
-                            item.secondaryActivate()
-                        } else if (item.onlyMenu && item.hasMenu) {
-                            trayItem.openMenu()
-                        } else {
-                            item.activate()
-                            menu.close()
-                        }
-                    }
-                    onWheel: (wheel) => trayItem.modelData.scroll(wheel.angleDelta.y, false)
-                }
-            }
-        }
-    }
-
-    Divider {}
-
-    // toggles
+    // tiles
     Grid {
         columns: 2
-        spacing: -1
+        spacing: Style.gap
 
-        // What traffic actually goes over; highlighted while a VPN is up.
-        // Wi-Fi on/off is in the network popup's header.
         ToggleTile {
             width: menu.tileWidth
-            icon: menu.activeVpns.length ? "\u{e62f}" : NetworkState.icon(menu.primaryNet)   // vpn_lock
-            title: !menu.primaryNet || !menu.primaryNet.connected ? "Offline"
-                : menu.primaryNet.type === "wifi" ? menu.primaryNet.connection
-                : menu.primaryNet.type === "wwan" ? "Mobile" : "Ethernet"
+            icon: NetworkState.wifiEnabled ? NetworkState.icon(menu.primaryNet && menu.primaryNet.type === "wifi" ? menu.primaryNet : null) : "\u{e648}"   // wifi_off
+            title: "Wi-Fi"
             subtitle: {
-                const p = menu.primaryNet
-                const link = !p || !p.connected ? (NetworkState.wifiEnabled ? "not connected" : "wi-fi off")
-                    : p.type === "wifi" ? "wi-fi " + p.signal + "%" : p.type === "wwan" ? "mobile" : "wired"
-                return [link].concat(menu.activeVpns).join(" · ")
+                if (!NetworkState.wifiEnabled) return "off"
+                const w = NetworkState.devices.find(d => d.type === "wifi" && d.connected)
+                const link = w ? w.connection + " · " + w.signal + "%" : "not connected"
+                return [link].concat(NetworkState.activeVpns.map(v => "vpn " + v)).join(" · ")
             }
-            active: menu.activeVpns.length > 0
+            active: NetworkState.wifiEnabled
             hasDetail: true
-            onToggled: menu.openPopup("network")
+            onToggled: NetworkState.setWifiEnabled(!NetworkState.wifiEnabled)
             onDetail: menu.openPopup("network")
         }
 
@@ -193,11 +99,44 @@ Tab {
             subtitle: !BluetoothState.available ? "no adapter"
                 : !BluetoothState.powered ? "off"
                 : BluetoothState.connectedDevices.length ? BluetoothState.connectedDevices.map(d => d.name).join(", ")
-                : "on"
+                : "on · nothing connected"
             active: BluetoothState.powered
             hasDetail: true
             onToggled: BluetoothState.togglePower()
-            onDetail: menu.openPopup("network")
+            onDetail: menu.openPopup("bluetooth")
+        }
+
+        ToggleTile {
+            width: menu.tileWidth
+            icon: "\u{e195}"   // airplanemode_active
+            title: "Airplane mode"
+            subtitle: NetworkState.airplane ? "every radio off" : "off"
+            active: NetworkState.airplane
+            onToggled: NetworkState.toggleAirplane()
+        }
+
+        ToggleTile {
+            width: menu.tileWidth
+            icon: NotificationState.dnd ? "\u{e7f6}" : "\u{e7f5}"   // notifications_off / notifications
+            title: "Silence"
+            subtitle: NotificationState.dnd ? "toasts hidden · critical only"
+                : NotificationState.notifications.length + " unread"
+            active: NotificationState.dnd
+            hasDetail: true
+            onToggled: NotificationState.toggleDnd()
+            onDetail: menu.openPopup("notifications")
+        }
+
+        ToggleTile {
+            width: menu.tileWidth
+            readonly property var audio: VolumeState.sourceAudio
+            icon: VolumeState.micIcon()
+            title: "Mute mic"
+            subtitle: !audio ? "no microphone" : audio.muted ? "muted" : "on · " + Math.round(audio.volume * 100) + "%"
+            active: audio !== null && audio.muted
+            hasDetail: true
+            onToggled: VolumeState.toggleMute(audio)
+            onDetail: menu.openPopup("sound")
         }
 
         ToggleTile {
@@ -235,14 +174,41 @@ Tab {
             title: "Display"
             subtitle: menu.mirroring ? "mirroring to hdmi"
                 : menu.canMirror ? RiceState.currentLayout + " · click to mirror"
-                : RiceState.currentLayout
-            active: menu.mirroring
+                : RiceState.currentLayout || "layouts"
+            active: menu.mirroring || menu.layoutsShown
             hasDetail: true
             onToggled: {
                 if (menu.canMirror) RiceState.applyLayout(menu.mirroring ? "extend" : "present")
                 else menu.layoutsShown = !menu.layoutsShown
             }
             onDetail: menu.layoutsShown = !menu.layoutsShown
+        }
+
+        ToggleTile {
+            width: menu.tileWidth
+            icon: "\u{ec08}"   // screenshot_region
+            title: "Screenshot"
+            subtitle: "region → clipboard"
+            onToggled: menu.act("g=$(slurp) && grim -g \"$g\" - | wl-copy")
+        }
+
+        ToggleTile {
+            width: menu.tileWidth
+            icon: "\u{e3b8}"   // colorize
+            title: "Color picker"
+            subtitle: "#hex → clipboard"
+            onToggled: menu.act("exec \"$HOME/.local/bin/color-pick\"")
+        }
+
+        ToggleTile {
+            width: menu.tileWidth
+            icon: "\u{e897}"   // lock
+            title: "Lock"
+            subtitle: "lock the screen now"
+            onToggled: {
+                menu.close()
+                Quickshell.execDetached([Quickshell.env("HOME") + "/.local/bin/dots-lock"])
+            }
         }
     }
 
@@ -252,7 +218,7 @@ Tab {
 
     Divider {}
 
-    // sliders — speaker and mic live here instead of on the bar
+    // sliders
     LevelRow {
         icon: VolumeState.speakerIcon()
         value: VolumeState.sinkAudio ? VolumeState.sinkAudio.volume : 0
@@ -261,12 +227,8 @@ Tab {
         onStepped: (d) => VolumeState.adjustVolume(d)
         onToggled: VolumeState.toggleMute(VolumeState.sinkAudio)
         expandable: true
-        expanded: menu.devicesShown === "output"
-        onExpandClicked: menu.toggleDevices("output")
-    }
-
-    AudioDeviceList {
-        visible: menu.devicesShown === "output"
+        expandGlyph: "\u{e5cc}"   // chevron_right: the sound tab
+        onExpandClicked: menu.openPopup("sound")
     }
 
     LevelRow {
@@ -278,13 +240,8 @@ Tab {
         onStepped: (d) => VolumeState.adjustMicVolume(d)
         onToggled: VolumeState.toggleMute(VolumeState.sourceAudio)
         expandable: true
-        expanded: menu.devicesShown === "input"
-        onExpandClicked: menu.toggleDevices("input")
-    }
-
-    AudioDeviceList {
-        visible: menu.devicesShown === "input"
-        input: true
+        expandGlyph: "\u{e5cc}"   // chevron_right: the sound tab
+        onExpandClicked: menu.openPopup("sound")
     }
 
     LevelRow {
@@ -293,6 +250,18 @@ Tab {
         value: BrightnessState.value
         onMoved: (v) => BrightnessState.set(v)
         onStepped: (d) => BrightnessState.set(BrightnessState.value + d)
+    }
+
+    // night light warmth: left is warmer
+    LevelRow {
+        visible: NightLightState.active
+        readonly property int span: NightLightState.maxTemperature - NightLightState.minTemperature
+        icon: "\u{f03d}"   // nightlight
+        value: (NightLightState.temperature - NightLightState.minTemperature) / span
+        valueText: NightLightState.temperature + "K"
+        onMoved: (v) => NightLightState.setTemperature(NightLightState.minTemperature + v * span)
+        onStepped: (d) => NightLightState.setTemperature(NightLightState.temperature + (d > 0 ? 100 : -100))
+        onToggled: NightLightState.active = false
     }
 
     // media
@@ -342,10 +311,10 @@ Tab {
 
                 delegate: Rectangle {
                     required property var modelData
-                    width: 30
-                    height: 30
-                    radius: Style.radius
-                    color: mediaMouse.containsMouse && modelData.enabled ? Colors.surface : "transparent"
+                    width: 32
+                    height: 32
+                    radius: Style.round
+                    color: mediaMouse.containsMouse && modelData.enabled ? Style.tint(Colors.fg, 0.06) : "transparent"
 
                     Icon {
                         anchors.centerIn: parent
@@ -368,14 +337,93 @@ Tab {
 
     Divider {}
 
+    // tray
+    SectionHeader {
+        title: "tray"
+
+        MonoText {
+            width: Math.min(implicitWidth, menu.innerWidth - 60)
+            elide: Text.ElideRight
+            color: Colors.gray2
+            text: menu.hoveredTitle
+        }
+    }
+
+    MonoText {
+        visible: trayRepeater.count === 0
+        leftPadding: Style.inset
+        color: Colors.gray
+        text: "no tray apps running"
+    }
+
+    Flow {
+        width: parent.width
+        spacing: 6
+        visible: trayRepeater.count > 0
+
+        Repeater {
+            id: trayRepeater
+            model: SystemTray.items
+
+            delegate: Rectangle {
+                id: trayItem
+                required property var modelData
+                width: 36
+                height: 36
+                radius: Style.round
+                color: Style.tint(Colors.fg, trayMouse.containsMouse ? 0.08 : 0.04)
+                border.width: modelData.status === Status.NeedsAttention ? Style.border : 0
+                border.color: Colors.amber
+
+                IconImage {
+                    anchors.centerIn: parent
+                    implicitSize: 20
+                    source: trayItem.modelData.icon
+                    opacity: trayItem.modelData.status === Status.Passive ? 0.5 : 1
+                }
+
+                function openMenu() {
+                    const p = trayItem.mapToItem(null, 0, trayItem.height + 4)
+                    trayItem.modelData.display(menu, p.x, p.y)
+                }
+
+                MouseArea {
+                    id: trayMouse
+                    anchors.fill: parent
+                    hoverEnabled: true
+                    cursorShape: Qt.PointingHandCursor
+                    acceptedButtons: Qt.LeftButton | Qt.RightButton | Qt.MiddleButton
+                    onContainsMouseChanged: menu.hoveredTitle = containsMouse
+                        ? (trayItem.modelData.tooltipTitle || trayItem.modelData.title || trayItem.modelData.id) : ""
+                    onClicked: (mouse) => {
+                        const item = trayItem.modelData
+                        if (mouse.button === Qt.RightButton) {
+                            if (item.hasMenu) trayItem.openMenu()
+                        } else if (mouse.button === Qt.MiddleButton) {
+                            item.secondaryActivate()
+                        } else if (item.onlyMenu && item.hasMenu) {
+                            trayItem.openMenu()
+                        } else {
+                            item.activate()
+                            menu.close()
+                        }
+                    }
+                    onWheel: (wheel) => trayItem.modelData.scroll(wheel.angleDelta.y, false)
+                }
+            }
+        }
+    }
+
+    Divider {}
+
     // footer
     Item {
         width: parent.width
-        height: lockBtn.implicitHeight
+        height: powerBtn.implicitHeight
 
         Row {
-            id: batteryRow
             anchors.left: parent.left
+            anchors.leftMargin: Style.inset
             anchors.verticalCenter: parent.verticalCenter
             spacing: 6
             visible: UPower.displayDevice.isLaptopBattery
@@ -407,23 +455,13 @@ Tab {
             }
         }
 
-        Row {
+        TextButton {
+            id: powerBtn
             anchors.right: parent.right
-            spacing: 12
-
-            TextButton {
-                id: lockBtn
-                label: "lock"
-                onClicked: {
-                    menu.close()
-                    Quickshell.execDetached([Quickshell.env("HOME") + "/.local/bin/dots-lock"])
-                }
-            }
-            TextButton {
-                label: "power"
-                baseColor: Colors.red
-                onClicked: IslandState.openRun(":")
-            }
+            anchors.rightMargin: Style.inset
+            label: "power"
+            baseColor: Colors.red
+            onClicked: IslandState.openRun(":")
         }
     }
 }

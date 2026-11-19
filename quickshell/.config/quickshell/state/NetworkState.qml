@@ -1,5 +1,5 @@
 // Shared network status, polled once here (not per-screen) and read by both
-// the island's Strip and its network tab (island/tabs/NetworkTab.qml) — pulled in via
+// the status icons (island/StatusIcons.qml) and the network tab (panel/tabs/NetworkTab.qml) — pulled in via
 // `import "./state"` / `import "../state"`; no IPC needed since it's the
 // same QML singleton either way.
 //
@@ -32,6 +32,65 @@ Item {
     property var wifiNetworks: [] // [{ssid, signal, security, active, known}]
     property var savedSsids: ({}) // ssid -> [uuid, ...]
     property bool wifiEnabled: true
+    property bool wwanEnabled: true
+
+    // Every radio off: wi-fi, mobile and bluetooth.
+    readonly property bool airplane: !wifiEnabled && !wwanEnabled && !BluetoothState.powered
+
+    function toggleAirplane() {
+        if (airplane) {
+            run("leaving airplane mode", ["nmcli", "radio", "all", "on"])
+            BluetoothState.setPowered(true)
+        } else {
+            run("airplane mode", ["nmcli", "radio", "all", "off"])
+            BluetoothState.setPowered(false)
+        }
+    }
+
+    // A device's full details for the network tab, loaded when its row is
+    // opened: device name -> {mac, mtu, speed, ip4: [], gateway, dns: [],
+    // ip6: [], autoconnect, wifi: {bssid, channel, freq, rate, security}}.
+    property var details: ({})
+    property string detailsFor: ""
+
+    function loadDetails(dev) {
+        detailsFor = dev.device
+        detailsProc.command = ["sh", "-c", `
+            dev=$1; uuid=$2
+            echo '#DEV'; nmcli -t -f GENERAL.HWADDR,GENERAL.MTU,IP4.ADDRESS,IP4.GATEWAY,IP4.DNS,IP6.ADDRESS,CAPABILITIES.SPEED device show "$dev" 2>/dev/null
+            echo '#AUTO'; [ -n "$uuid" ] && nmcli -g connection.autoconnect connection show uuid "$uuid" 2>/dev/null
+            echo '#WIFI'; nmcli -t -f IN-USE,BSSID,CHAN,FREQ,RATE,SECURITY device wifi list ifname "$dev" --rescan no 2>/dev/null | grep '^\\*'
+        `, "sh", dev.device, dev.uuid || ""]
+        detailsProc.running = true
+    }
+
+    function setAutoconnect(dev, on) {
+        if (!dev.uuid) return
+        run((on ? "enabling" : "disabling") + " autoconnect", ["nmcli", "connection", "modify", "uuid", dev.uuid, "connection.autoconnect", on ? "yes" : "no"])
+        detailsLater.restart()
+    }
+
+    // The saved wi-fi password of a connected profile, read on request
+    // (nmcli -s) and kept only while shown: uuid -> password.
+    property var passwords: ({})
+
+    function revealPassword(dev) {
+        if (!dev.uuid) return
+        passwordProc.uuid = dev.uuid
+        passwordProc.command = ["nmcli", "-s", "-g", "802-11-wireless-security.psk", "connection", "show", "uuid", dev.uuid]
+        passwordProc.running = true
+    }
+    function hidePassword(dev) {
+        const p = Object.assign({}, passwords)
+        delete p[dev.uuid]
+        passwords = p
+    }
+
+    // To the clipboard through stdin, so the text never sits in an argv.
+    function copy(text) {
+        copyProc.text = text
+        copyProc.running = true
+    }
 
     readonly property var primary: devices.find(d => d.primary) || devices.find(d => d.connected) || null
     readonly property var wifiDevice: devices.find(d => d.type === "wifi") || null
@@ -235,7 +294,7 @@ Item {
             echo '#DEV'; nmcli -t -f DEVICE,TYPE,STATE,CONNECTION,CON-UUID device status 2>/dev/null
             echo '#ROUTE'; ip -4 route show default 2>/dev/null
             echo '#ADDR'; ip -4 -o addr show 2>/dev/null
-            echo '#RADIO'; nmcli -t -f WIFI radio 2>/dev/null
+            echo '#RADIO'; nmcli -t -f WIFI,WWAN radio 2>/dev/null
             echo '#WIFI'; nmcli -t -f ACTIVE,SIGNAL,SECURITY,SSID device wifi list --rescan no 2>/dev/null
             echo '#CON'; nmcli -t -f NAME,UUID,TYPE,ACTIVE connection show 2>/dev/null
         `]
@@ -280,7 +339,9 @@ Item {
             if (m && !addrs[m[1]]) addrs[m[1]] = m[2]
         }
 
-        wifiEnabled = (sections.RADIO || [])[0] === "enabled"
+        const radio = ((sections.RADIO || [])[0] || "").split(":")
+        wifiEnabled = radio[0] === "enabled"
+        wwanEnabled = radio[1] === "enabled"
 
         const nets = {}
         let activeSignal = 0
@@ -368,6 +429,62 @@ Item {
             root.scanning = false
             root.refresh()
         }
+    }
+
+    Timer { id: detailsLater; interval: 600; onTriggered: { const d = root.devices.find(x => x.device === root.detailsFor); if (d) root.loadDetails(d) } }
+
+    Process {
+        id: detailsProc
+        stdout: StdioCollector {
+            onStreamFinished: {
+                const out = { ip4: [], dns: [], ip6: [], gateway: "", mac: "", mtu: "", speed: "", autoconnect: true, wifi: null }
+                let section = ""
+                for (const line of text.split("\n")) {
+                    if (line.startsWith("#")) { section = line.slice(1); continue }
+                    if (!line) continue
+                    if (section === "DEV") {
+                        const i = line.indexOf(":")
+                        const key = line.slice(0, i), val = line.slice(i + 1).replace(/\\:/g, ":")
+                        if (key === "GENERAL.HWADDR") out.mac = val
+                        else if (key === "GENERAL.MTU") out.mtu = val
+                        else if (key === "CAPABILITIES.SPEED") out.speed = val === "unknown" ? "" : val
+                        else if (key.startsWith("IP4.ADDRESS")) out.ip4.push(val)
+                        else if (key === "IP4.GATEWAY") out.gateway = val
+                        else if (key.startsWith("IP4.DNS")) out.dns.push(val)
+                        else if (key.startsWith("IP6.ADDRESS") && !val.startsWith("fe80")) out.ip6.push(val)
+                    } else if (section === "AUTO") {
+                        out.autoconnect = line.trim() !== "no"
+                    } else if (section === "WIFI") {
+                        const f = root.splitTerse(line)
+                        out.wifi = { bssid: f[1], channel: f[2], freq: f[3], rate: f[4], security: f[5] && f[5] !== "--" ? f[5] : "open" }
+                    }
+                }
+                const d = Object.assign({}, root.details)
+                d[root.detailsFor] = out
+                root.details = d
+            }
+        }
+    }
+
+    Process {
+        id: passwordProc
+        property string uuid: ""
+        stdout: StdioCollector {
+            onStreamFinished: {
+                const p = Object.assign({}, root.passwords)
+                p[passwordProc.uuid] = text.trim() || "(no saved password)"
+                root.passwords = p
+            }
+        }
+    }
+
+    Process {
+        id: copyProc
+        property string text: ""
+        command: ["wl-copy"]
+        stdinEnabled: true
+        onStarted: { write(text); stdinEnabled = false }
+        onExited: stdinEnabled = true
     }
 
     Process {

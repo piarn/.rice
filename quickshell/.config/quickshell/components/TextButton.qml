@@ -1,6 +1,8 @@
-// "[label]" text button with hover feedback — the bracketed-action style
-// every popup uses, minus the copy-pasted Text+MouseArea pair. Set the
-// inherited `enabled` to false to grey it out; the MouseArea follows it.
+// A small chip button: the label on a quiet neutral fill, a little brighter
+// on hover. Colour only where it means something: `baseColor` red for a
+// destructive or "off" action, amber for in-progress, grey for secondary;
+// the default action colour reads as plain text. Every tab's actions use it.
+// Set the inherited `enabled` to false to grey it out.
 import QtQuick
 import quickshell
 
@@ -10,15 +12,30 @@ Text {
     property color baseColor: Colors.acid
     signal clicked()
 
-    font.family: "JetBrains Mono"
-    font.pixelSize: 12
-    text: "[" + label + "]"
-    color: !enabled ? Colors.gray : mouse.containsMouse ? Colors.fg : baseColor
+    // the old pink "action" colour is just the normal text colour now
+    readonly property color tone: Qt.colorEqual(baseColor, Colors.acid) ? Colors.fg : baseColor
+
+    font.family: Style.font
+    // hinted, unsmoothed edges: a pixel font stays on its pixels
+    renderType: Text.NativeRendering
+    font.pixelSize: 11
+    text: label
+    leftPadding: 9
+    rightPadding: 9
+    topPadding: 4
+    bottomPadding: 4
+    color: !enabled ? Colors.gray : root.tone
+
+    Rectangle {
+        z: -1
+        anchors.fill: parent
+        radius: Style.round
+        color: Style.tint(Colors.fg, !root.enabled ? 0.03 : mouse.containsMouse ? 0.12 : 0.06)
+    }
 
     MouseArea {
         id: mouse
         anchors.fill: parent
-        anchors.margins: -3
         hoverEnabled: true
         cursorShape: Qt.PointingHandCursor
         onClicked: root.clicked()

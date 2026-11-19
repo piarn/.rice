@@ -14,6 +14,11 @@ Item {
     property bool muted: false
     property bool expandable: false
     property bool expanded: false
+    // expand_more by default (turned over while expanded); chevron_right
+    // where it opens something else instead
+    property string expandGlyph: "\u{e5cf}"
+    // the number on the right; a percentage unless the owner says otherwise
+    property string valueText: Math.round(value * 100) + "%"
     signal moved(real v)
     signal stepped(real delta)
     signal toggled()
@@ -37,7 +42,7 @@ Item {
         visible: root.expandable
         font.pixelSize: 14
         color: root.expanded || chevronMouse.containsMouse ? Colors.neon : Colors.gray2
-        text: "\u{e5cf}"   // expand_more (rotates to expand_less when expanded)
+        text: root.expandGlyph
         rotation: root.expanded ? 180 : 0
         Behavior on rotation { NumberAnimation { duration: Style.fast } }
 
@@ -58,7 +63,7 @@ Item {
         anchors.verticalCenter: parent.verticalCenter
         width: 22
         font.pixelSize: 17
-        color: root.muted ? Colors.red : Colors.neon
+        color: root.muted ? Colors.red : Colors.gray2
         text: root.icon
 
         MouseArea {
@@ -83,10 +88,11 @@ Item {
     MonoText {
         id: pct
         anchors.right: parent.right
+        anchors.rightMargin: Style.inset
         anchors.verticalCenter: parent.verticalCenter
-        width: 36
+        width: 44
         horizontalAlignment: Text.AlignRight
         color: root.muted ? Colors.red : Colors.gray2
-        text: Math.round(root.value * 100) + "%"
+        text: root.valueText
     }
 }

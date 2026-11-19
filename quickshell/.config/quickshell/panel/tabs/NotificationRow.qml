@@ -9,7 +9,7 @@ import QtQuick
 import quickshell
 import "../../state"
 import "../../components"
-import "../format.js" as Fmt
+import "../../island/format.js" as Fmt
 
 Rectangle {
     id: row
@@ -32,7 +32,7 @@ Rectangle {
 
     width: parent ? parent.width : 0
     implicitHeight: col.implicitHeight + 12
-    color: current || mouse.containsMouse ? Colors.surface : "transparent"
+    color: current || mouse.containsMouse ? Style.tint(Colors.fg, 0.05) : "transparent"
 
     Marker {
         visible: row.current || row.critical
@@ -86,7 +86,7 @@ Rectangle {
             width: parent.width
             elide: Text.ElideRight
             font.bold: true
-            color: row.current ? Colors.neon : Colors.fg
+            color: row.current ? Colors.fg : Colors.gray2
             text: row.notification.summary || row.notification.appName || "notification"
         }
         MonoText {

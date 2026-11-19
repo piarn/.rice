@@ -125,6 +125,27 @@ install_nerd_symbols() {
     fc-cache -f "$dir" >/dev/null 2>&1
 }
 
+# The shell's font (quickshell), a pixel monospace drawn on an 11px grid. No
+# distro packages it: the pinned release, checked against its hash.
+install_departure_mono() {
+    command -v fc-list >/dev/null 2>&1 || return 0
+    fc-list : family | grep -q "Departure Mono" && return 0
+    local dir="$HOME/.local/share/fonts/DepartureMono" tag=v1.500 ver=1.500
+    local sum=bf3e48059aeef4617ec585bdea81dcc3491c576b3e7a472f52faf40e09ee5c3a
+    local tmp
+    tmp=$(mktemp -d)
+    if curl -fsSL -o "$tmp/dm.zip" "https://github.com/rektdeckard/departure-mono/releases/download/$tag/DepartureMono-$ver.zip" \
+        && [ "$(sha256sum "$tmp/dm.zip" | cut -d' ' -f1)" = "$sum" ] \
+        && unzip -q -o "$tmp/dm.zip" -d "$tmp"; then
+        mkdir -p "$dir"
+        cp "$tmp/DepartureMono-$ver/DepartureMono-Regular.otf" "$tmp/DepartureMono-$ver/LICENSE" "$dir/"
+        fc-cache -f "$dir" >/dev/null 2>&1
+    else
+        warn "Departure Mono failed (download or checksum)"
+    fi
+    rm -rf "$tmp"
+}
+
 # Not a link, because it depends on the machine: asking the portal for a backend
 # that isn't installed makes every file dialog fail. Without termfilechooser the
 # GTK dialog stays; the README has how to build it.
@@ -261,6 +282,7 @@ link_packages "$RICE_DIR" "${PACKAGES[@]}"
 prune_dangling_links "$RICE_DIR"
 install_material_symbols
 install_nerd_symbols
+install_departure_mono
 report_desktop_gaps
 setup_portal
 setup_appearance

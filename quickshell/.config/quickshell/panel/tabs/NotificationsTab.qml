@@ -1,17 +1,17 @@
-// The island's notifications tab: every notification until dismissed
+// The control panel's notifications tab: every notification until dismissed
 // (toasts are just the on-screen subset, see NotificationToasts.qml),
 // grouped by app, newest first, as rows like the network tab's
 // (NotificationRow). The header holds silence (do-not-disturb: hides
 // toasts, critical ones still break through) and clear all; each app's
 // line clears just that app. Keys: ↑/↓ or j/k select, Enter runs the
-// default action, Delete dismisses. Opened from the island's ● or
+// default action, Delete dismisses. Opened from the strip's bell or
 // `qs ipc call popup toggle notifications`.
 import QtQuick
 import quickshell
 import "../../state"
 import "../../components"
-import ".."
-import "../format.js" as Fmt
+import "../../island"
+import "../../island/format.js" as Fmt
 
 Tab {
     id: menu
@@ -69,6 +69,7 @@ Tab {
 
     MonoText {
         visible: NotificationState.notifications.length === 0
+        leftPadding: Style.inset
         color: Colors.gray
         text: NotificationState.dnd ? "nothing here · silenced" : "nothing here"
     }
@@ -110,6 +111,7 @@ Tab {
 
     MonoText {
         visible: NotificationState.notifications.length > 0
+        leftPadding: Style.inset
         font.pixelSize: 11
         color: Colors.gray2
         text: "↑↓/jk select · enter open · del dismiss · click open"

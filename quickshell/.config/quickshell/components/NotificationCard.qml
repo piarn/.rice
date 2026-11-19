@@ -24,10 +24,10 @@ Rectangle {
     }
 
     implicitHeight: col.implicitHeight + 16
-    color: toast ? Colors.black : Colors.surface
-    border.width: Style.border
-    border.color: notification.urgency === NotificationUrgency.Critical ? Colors.red
-        : toast ? Colors.neon : Colors.dim
+    radius: toast ? Style.radius : Style.round
+    color: toast ? Colors.mantle : Style.tint(Colors.fg, 0.04)
+    border.width: toast || notification.urgency === NotificationUrgency.Critical ? Style.border : 0
+    border.color: notification.urgency === NotificationUrgency.Critical ? Colors.red : Colors.surface
 
     MouseArea {
         anchors.fill: parent
@@ -69,7 +69,7 @@ Rectangle {
                 anchors.right: close.left
                 anchors.rightMargin: 6
                 font.bold: true
-                font.pixelSize: 13
+                font.pixelSize: Style.fontSize
                 elide: Text.ElideRight
                 text: root.notification.summary || root.notification.appName || "notification"
             }

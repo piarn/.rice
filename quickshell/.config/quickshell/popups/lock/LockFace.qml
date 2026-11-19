@@ -64,7 +64,7 @@ Rectangle {
 
         MonoText {
             anchors.horizontalCenter: parent.horizontalCenter
-            font.pixelSize: 14
+            font.pixelSize: Style.fontSize
             font.letterSpacing: 2
             color: Colors.gray2
             text: Qt.formatDate(root.now, "dddd · d MMMM").toLowerCase()

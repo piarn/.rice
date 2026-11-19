@@ -6,6 +6,7 @@ import QtQuick
 
 QtObject {
     readonly property color black: "#1e1e2e"    // base
+    readonly property color mantle: "#181825"   // mantle: cards over the base wallpaper
     readonly property color surface: "#313244"  // surface0
     readonly property color fg: "#cdd6f4"       // text
     readonly property color white: "#f5e0dc"    // rosewater

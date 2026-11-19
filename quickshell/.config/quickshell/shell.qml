@@ -3,18 +3,24 @@
 // Colors are Catppuccin Mocha, in theme/quickshell/Colors.qml. Ported from
 // github.com/piarn/.rice at 4156a09, without the greeter and theme switcher.
 //
-// Layout: island/ is the shell's one surface — per screen a 600px Island
-// (collapsed: the Strip; grown: the tabbed Panel, island/tabs/) plus a
-// Spacer reserving its height; state/ holds the pragma-Singleton status
-// backends (IslandState: which tab is open where); popups/ holds the
-// free-standing surfaces (LockScreen, toasts, OSD); components/ holds
-// shared UI pieces.
+// Layout: per screen three pieces along the top — the workspaces (top left),
+// the Island in the center (island/: collapsed it's the date and time; grown,
+// the tabbed Panel for calendar and clipboard, island/tabs/), the status
+// icons (top right) — plus a Spacer reserving their height; a SideWindow
+// under the right piece (panel/: the control panel — quick, sound, network,
+// bluetooth, notifications, panel/tabs/); and a LauncherWindow in the middle
+// of the screen (launcher/: the run box, $mod+d). Which tab is open where,
+// and so which surface shows, is IslandState (island/routes.js). state/
+// holds the pragma-Singleton status backends; popups/ the free-standing
+// surfaces (LockScreen, toasts, OSD); components/ shared UI pieces.
 import Quickshell
 import Quickshell.Io
 import QtQuick
 import "./popups"
 import "./state"
 import "./island"
+import "./panel"
+import "./launcher"
 
 ShellRoot {
     // No hot reload on file changes: reloading mid-edit has crashed
@@ -22,11 +28,23 @@ ShellRoot {
     // lock-failure screen. Apply changes with $mod+Shift+c instead.
     settings.watchFiles: false
 
-    // Every tab exists once, here; the grown screen's Island adopts it and
-    // hands it back to this holder when it collapses.
+    // Every tab exists once, here; the open screen's Island, SideWindow or
+    // LauncherWindow adopts its surface's tabs and hands them back here when
+    // it closes.
     Item {
         visible: false
         Panel { id: sharedPanel }
+        SidePanel { id: sharedSidePanel }
+        Launcher { id: sharedLauncher }
+    }
+
+    Variants {
+        model: Quickshell.screens
+        delegate: SideWindow { panel: sharedSidePanel }
+    }
+    Variants {
+        model: Quickshell.screens
+        delegate: LauncherWindow { launcher: sharedLauncher }
     }
 
     Variants {
@@ -41,14 +59,29 @@ ShellRoot {
         model: Quickshell.screens
         delegate: Island { panel: sharedPanel }
     }
+    // the workspaces (top left) and status icons (top right), each a card
+    Variants {
+        model: Quickshell.screens
+        delegate: Card {
+            Workspaces {}
+        }
+    }
+    Variants {
+        model: Quickshell.screens
+        delegate: Card {
+            id: statusCard
+            rightSide: true
+            StatusIcons { screen: statusCard.modelData }
+        }
+    }
 
     NotificationToasts {}
     Osd {}
     LockScreen {}
 
-    // `qs ipc call popup toggle <name>` — an island tab (system, calendar,
-    // notifications, network, run, clipboard) or an old popup name
-    // (quicksettings/battery → system, bluetooth → network; see
+    // `qs ipc call popup toggle <name>` — a control panel tab (quick, sound,
+    // network, bluetooth, notifications), an island tab (calendar, run,
+    // clipboard) or an old name (system/quicksettings/battery → quick; see
     // island/routes.js). Opens on the focused monitor.
     IpcHandler {
         target: "popup"

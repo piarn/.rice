@@ -1,24 +1,27 @@
-// The island's network tab, opened from the system tab's network and
-// bluetooth tiles (or `qs ipc call popup toggle network|bluetooth`). [reload] re-reads NetworkManager's profiles from disk and
-// refreshes everything below. Sections:
+// The control panel's network tab, opened from the strip's network icon,
+// the quick tab's wi-fi tile, $mod+n or `qs ipc call popup toggle network`.
+// The header switches wi-fi and airplane mode (every radio, bluetooth too);
+// [reload] re-reads NetworkManager's profiles from disk and refreshes
+// everything below. Sections:
 //  - interfaces: every managed ethernet/wifi/wwan device, with the one
-//    holding the default route marked primary, [make primary] on the rest,
-//    and connect/disconnect per device
+//    holding the default route marked primary. Click a device for its
+//    details — addresses, gateway, DNS, MAC, link speed, the wi-fi channel
+//    and rate — and its actions: [make primary], autoconnect on/off, and
+//    for wi-fi the saved password ([show], [copy]).
 //  - vpn: NetworkManager vpn/wireguard profiles, plus any VPN provider
 //    extras (Mullvad, Tailscale, ...; see components/VpnProvider.qml) whose
 //    client is installed. Hidden when there are none
-//  - bluetooth: power, [scan] and devices (components/BluetoothSection.qml)
 //  - wi-fi: nearby networks, click to connect; asks for a password up front
 //    for secured networks with no saved profile instead of failing first
 // Enterprise (802.1X) networks take a username + password (PEAP/MSCHAPv2),
 // and [hidden] joins a network that doesn't broadcast its SSID. Anything
-// deeper (static IPs, DNS, certificates, WEP) goes to [settings], which
-// opens nmtui in foot.
+// deeper (static IPs, DNS servers, certificates, WEP) goes to [settings],
+// which opens nmtui in foot.
 import QtQuick
 import quickshell
 import "../../state"
 import "../../components"
-import ".."
+import "../../island"
 
 Tab {
     id: menu
@@ -37,6 +40,42 @@ Tab {
 
     // Provider whose detail panel is expanded in the vpn section.
     property string openVpn: ""
+
+    // the device (name) whose details are open
+    property string openDevice: ""
+
+    function toggleDevice(dev) {
+        if (openDevice === dev.device) {
+            openDevice = ""
+            return
+        }
+        openDevice = dev.device
+        NetworkState.loadDetails(dev)
+    }
+
+    // [label, value] pairs for an open device's details
+    function detailLines(dev, info) {
+        const lines = []
+        if (info.ip4.length) lines.push(["ipv4", info.ip4.join(", ")])
+        if (info.gateway) lines.push(["gateway", info.gateway])
+        if (info.dns.length) lines.push(["dns", info.dns.join(", ")])
+        if (info.ip6.length) lines.push(["ipv6", info.ip6.join(", ")])
+        if (info.wifi) {
+            lines.push(["wi-fi", ["ch " + info.wifi.channel, info.wifi.freq, info.wifi.rate].filter(s => s).join(" · ")])
+            lines.push(["security", info.wifi.security])
+            lines.push(["bssid", info.wifi.bssid])
+        }
+        if (info.speed) lines.push(["speed", info.speed])
+        if (info.mac) lines.push(["mac", info.mac + (info.mtu ? " · mtu " + info.mtu : "")])
+        if (dev.connection) lines.push(["profile", dev.connection])
+        return lines
+    }
+
+    // passwords are only shown until the panel closes
+    onShownChanged: if (!shown) {
+        openDevice = ""
+        NetworkState.passwords = ({})
+    }
     readonly property var vpnProviders: ExtrasState.vpns.filter(v => v.available)
     // A provider's own tunnel can surface as an NM connection (e.g.
     // wg0-mullvad) — it's already listed as the provider.
@@ -166,20 +205,29 @@ Tab {
 
         MonoText {
             anchors.left: parent.left
+            anchors.leftMargin: Style.inset
+            anchors.verticalCenter: parent.verticalCenter
             color: Colors.gray
             text: "interfaces"
         }
 
         Row {
             anchors.right: parent.right
-            spacing: 10
+            anchors.rightMargin: Style.inset
+            spacing: 8
 
             TextButton {
-                label: NetworkState.wifiEnabled ? "turn wi-fi off" : "turn wi-fi on"
+                label: NetworkState.wifiEnabled ? "wi-fi off" : "wi-fi on"
                 visible: NetworkState.wifiDevice !== null || !NetworkState.wifiEnabled
                 baseColor: NetworkState.wifiEnabled ? Colors.acid : Colors.red
                 enabled: !NetworkState.busy
                 onClicked: NetworkState.setWifiEnabled(!NetworkState.wifiEnabled)
+            }
+            TextButton {
+                label: NetworkState.airplane ? "airplane off" : "airplane"
+                baseColor: NetworkState.airplane ? Colors.amber : Colors.gray2
+                enabled: !NetworkState.busy
+                onClicked: NetworkState.toggleAirplane()
             }
             TextButton {
                 label: "reload"
@@ -211,15 +259,33 @@ Tab {
         Repeater {
             model: NetworkState.devices
 
-            delegate: Rectangle {
-                id: devRow
+            delegate: Column {
+                id: devItem
                 required property var modelData
+                readonly property bool open: menu.openDevice === modelData.device
+                readonly property var info: NetworkState.details[modelData.device] || null
+                width: menu.innerWidth
+                spacing: 4
+
+            Rectangle {
+                id: devRow
+                readonly property var modelData: devItem.modelData
                 readonly property bool usable: modelData.state !== "unavailable"
                 width: menu.innerWidth
                 height: devCol.implicitHeight + 10
-                color: modelData.connected ? Colors.surface : "transparent"
+                radius: Style.round
+                color: devMouse.containsMouse ? Style.tint(Colors.fg, 0.07) : modelData.connected ? Style.tint(Colors.fg, 0.04) : "transparent"
 
                 Marker { visible: devRow.modelData.primary }
+
+                // the row opens its details; the buttons on it still act
+                MouseArea {
+                    id: devMouse
+                    anchors.fill: parent
+                    hoverEnabled: true
+                    cursorShape: Qt.PointingHandCursor
+                    onClicked: menu.toggleDevice(devItem.modelData)
+                }
 
                 Icon {
                     id: devIcon
@@ -229,7 +295,7 @@ Tab {
                     width: 18
                     font.pixelSize: 16
                     color: !devRow.modelData.connected ? Colors.gray
-                        : devRow.modelData.primary ? Colors.neon : Colors.acid
+                        : devRow.modelData.primary ? Colors.neon : Colors.gray2
                     text: NetworkState.icon(devRow.modelData)
                 }
 
@@ -250,8 +316,7 @@ Tab {
                             id: devTitle
                             anchors.left: parent.left
                             width: Math.min(implicitWidth, parent.width - devName.implicitWidth - devActions.implicitWidth - 16)
-                            font.pixelSize: 13
-                            font.bold: devRow.modelData.primary
+                            font.pixelSize: Style.fontSize
                             elide: Text.ElideRight
                             color: devRow.modelData.connected ? Colors.fg : Colors.gray2
                             text: menu.deviceTitle(devRow.modelData)
@@ -276,15 +341,8 @@ Tab {
                                 anchors.verticalCenter: parent.verticalCenter
                                 visible: devRow.modelData.primary && menu.routedCount > 1
                                 font.pixelSize: 11
-                                font.bold: true
                                 color: Colors.neon
                                 text: "\u2605 primary"
-                            }
-                            TextButton {
-                                visible: devRow.modelData.connected && !devRow.modelData.primary && devRow.modelData.gateway !== ""
-                                label: "make primary"
-                                enabled: !NetworkState.busy
-                                onClicked: NetworkState.setPrimary(devRow.modelData)
                             }
                             TextButton {
                                 visible: devRow.usable
@@ -292,6 +350,11 @@ Tab {
                                 baseColor: devRow.modelData.connected ? Colors.gray2 : Colors.acid
                                 enabled: !NetworkState.busy
                                 onClicked: NetworkState.toggleDevice(devRow.modelData)
+                            }
+                            Icon {
+                                anchors.verticalCenter: parent.verticalCenter
+                                color: Colors.gray2
+                                text: devItem.open ? "\u{e5ce}" : "\u{e5cf}"   // expand_less / expand_more
                             }
                         }
                     }
@@ -305,11 +368,107 @@ Tab {
                     }
                 }
             }
+
+            // details, loaded when opened
+            Column {
+                visible: devItem.open
+                width: parent.width
+                leftPadding: 34
+                spacing: 3
+
+                MonoText {
+                    visible: devItem.info === null
+                    font.pixelSize: 11
+                    color: Colors.gray
+                    text: "loading…"
+                }
+
+                Repeater {
+                    model: devItem.info ? menu.detailLines(devItem.modelData, devItem.info) : []
+
+                    delegate: Row {
+                        required property var modelData
+                        spacing: 8
+
+                        MonoText {
+                            width: 64
+                            font.pixelSize: 11
+                            color: Colors.gray
+                            text: modelData[0]
+                        }
+                        MonoText {
+                            width: menu.innerWidth - 34 - 72
+                            font.pixelSize: 11
+                            wrapMode: Text.WrapAnywhere
+                            color: Colors.fg
+                            text: modelData[1]
+                        }
+                    }
+                }
+
+                // the saved wi-fi password, once asked for
+                Row {
+                    visible: devItem.modelData.uuid !== "" && NetworkState.passwords[devItem.modelData.uuid] !== undefined
+                    spacing: 8
+
+                    MonoText {
+                        width: 64
+                        font.pixelSize: 11
+                        color: Colors.gray
+                        text: "password"
+                    }
+                    MonoText {
+                        font.pixelSize: 11
+                        color: Colors.amber
+                        text: NetworkState.passwords[devItem.modelData.uuid] || ""
+                    }
+                }
+
+                Flow {
+                    width: parent.width - parent.leftPadding
+                    spacing: 12
+                    topPadding: 2
+
+                    TextButton {
+                        visible: devItem.modelData.connected && !devItem.modelData.primary && devItem.modelData.gateway !== ""
+                        label: "make primary"
+                        enabled: !NetworkState.busy
+                        onClicked: NetworkState.setPrimary(devItem.modelData)
+                    }
+                    TextButton {
+                        visible: devItem.modelData.uuid !== "" && devItem.info !== null
+                        label: devItem.info && devItem.info.autoconnect ? "autoconnect on" : "autoconnect off"
+                        baseColor: devItem.info && devItem.info.autoconnect ? Colors.acid : Colors.gray2
+                        enabled: !NetworkState.busy
+                        onClicked: NetworkState.setAutoconnect(devItem.modelData, !devItem.info.autoconnect)
+                    }
+                    TextButton {
+                        readonly property bool shown: NetworkState.passwords[devItem.modelData.uuid] !== undefined
+                        visible: devItem.modelData.type === "wifi" && devItem.modelData.uuid !== ""
+                        label: shown ? "hide password" : "show password"
+                        baseColor: Colors.gray2
+                        onClicked: shown ? NetworkState.hidePassword(devItem.modelData) : NetworkState.revealPassword(devItem.modelData)
+                    }
+                    TextButton {
+                        visible: devItem.modelData.type === "wifi" && !!NetworkState.passwords[devItem.modelData.uuid]
+                        label: "copy password"
+                        baseColor: Colors.gray2
+                        onClicked: NetworkState.copy(NetworkState.passwords[devItem.modelData.uuid])
+                    }
+                    TextButton {
+                        visible: devItem.info !== null && devItem.info.ip4.length > 0
+                        label: "copy ip"
+                        baseColor: Colors.gray2
+                        onClicked: NetworkState.copy(devItem.info.ip4[0].split("/")[0])
+                    }
+                }
+            }
+            }
         }
     }
 
     // vpn
-    Rectangle { width: parent.width; height: 1; color: Colors.dim; visible: vpnCol.visible }
+    Rectangle { width: parent.width; height: 1; color: Colors.surface; visible: vpnCol.visible }
 
     Column {
         id: vpnCol
@@ -318,6 +477,7 @@ Tab {
         visible: menu.nmVpns.length > 0 || menu.vpnProviders.length > 0
 
         MonoText {
+            leftPadding: Style.inset
             color: Colors.gray
             text: "vpn"
         }
@@ -344,7 +504,7 @@ Tab {
                     }
                     MonoText {
                         width: parent.width - 30
-                        font.pixelSize: 13
+                        font.pixelSize: Style.fontSize
                         elide: Text.ElideRight
                         color: vpnRow.modelData.active ? Colors.fg : Colors.gray2
                         text: vpnRow.modelData.name + "  " + vpnRow.modelData.type
@@ -380,7 +540,8 @@ Tab {
                 Rectangle {
                     width: parent.width
                     height: provCol.implicitHeight + 10
-                    color: provRow.vpn.active ? Colors.surface : "transparent"
+                    radius: Style.round
+                    color: provRow.vpn.active ? Style.tint(Colors.fg, 0.04) : "transparent"
 
                     Icon {
                         id: provIcon
@@ -406,7 +567,7 @@ Tab {
                             spacing: 6
                             MonoText {
                                 id: provName
-                                font.pixelSize: 13
+                                font.pixelSize: Style.fontSize
                                 color: provRow.vpn.active ? Colors.fg : Colors.gray2
                                 text: provRow.vpn.name
                             }
@@ -414,7 +575,7 @@ Tab {
                                 anchors.baseline: provName.baseline
                                 font.pixelSize: 11
                                 color: provRow.vpn.busy || provRow.vpn.warning ? Colors.amber
-                                    : provRow.vpn.active ? Colors.neon : Colors.gray
+                                    : provRow.vpn.active ? Colors.fg : Colors.gray
                                 text: provRow.vpn.status
                             }
                         }
@@ -439,7 +600,7 @@ Tab {
                     Row {
                         id: provActions
                         anchors.right: parent.right
-                        anchors.rightMargin: 4
+                        anchors.rightMargin: Style.inset
                         anchors.verticalCenter: parent.verticalCenter
                         spacing: 6
 
@@ -457,7 +618,7 @@ Tab {
                             anchors.verticalCenter: parent.verticalCenter
                             width: 22
                             height: 22
-                            color: chevMouse.containsMouse ? Colors.dim : "transparent"
+                            color: chevMouse.containsMouse ? Style.tint(Colors.fg, 0.08) : "transparent"
 
                             Icon {
                                 anchors.centerIn: parent
@@ -486,17 +647,8 @@ Tab {
         }
     }
 
-    // bluetooth
-    Rectangle { width: parent.width; height: 1; color: Colors.dim; visible: btSection.visible }
-
-    BluetoothSection {
-        id: btSection
-        width: parent.width
-        visible: BluetoothState.available
-    }
-
     // wi-fi
-    Rectangle { width: parent.width; height: 1; color: Colors.dim; visible: wifiCol.visible }
+    Rectangle { width: parent.width; height: 1; color: Colors.surface; visible: wifiCol.visible }
 
     Column {
         id: wifiCol
@@ -510,13 +662,16 @@ Tab {
 
             MonoText {
                 anchors.left: parent.left
+                anchors.leftMargin: Style.inset
+                anchors.verticalCenter: parent.verticalCenter
                 color: Colors.gray
                 text: !NetworkState.wifiEnabled ? "wi-fi is off"
                     : NetworkState.scanning ? "wi-fi · scanning…" : "wi-fi networks"
             }
             Row {
                 anchors.right: parent.right
-                spacing: 10
+                anchors.rightMargin: Style.inset
+                spacing: 8
                 visible: NetworkState.wifiEnabled
 
                 TextButton {
@@ -537,10 +692,11 @@ Tab {
         // hundreds): space-separated words, all must appear in the SSID.
         Rectangle {
             width: parent.width
-            height: 24
+            height: 28
+            radius: Style.round
             visible: NetworkState.wifiEnabled
-            color: Colors.surface
-            border.color: searchInput.activeFocus ? Colors.neon : Colors.dim
+            color: Style.tint(Colors.fg, 0.05)
+            border.color: searchInput.activeFocus ? Colors.neon : "transparent"
             border.width: 1
 
             Icon {
@@ -560,8 +716,8 @@ Tab {
                 anchors.leftMargin: 6
                 anchors.rightMargin: 6
                 anchors.verticalCenter: parent.verticalCenter
-                font.family: "JetBrains Mono"
-                font.pixelSize: 12
+                font.family: Style.font
+                font.pixelSize: Style.fontSize
                 color: Colors.fg
                 clip: true
                 onActiveFocusChanged: if (activeFocus) menu.searching = true
@@ -618,7 +774,7 @@ Tab {
         ListView {
             id: netList
             width: parent.width
-            height: Math.min(contentHeight, 8 * 30)
+            height: Math.min(contentHeight, 14 * 30)
             visible: count > 0
             spacing: 2
             clip: true
@@ -638,7 +794,8 @@ Tab {
                 required property var modelData
                 width: ListView.view.width
                 height: 28
-                color: netMouse.containsMouse ? Colors.surface : "transparent"
+                radius: Style.round
+                color: netMouse.containsMouse ? Style.tint(Colors.fg, 0.05) : "transparent"
 
                 Marker { visible: netRow.modelData.active }
 
@@ -666,9 +823,9 @@ Tab {
                     anchors.leftMargin: 8
                     anchors.rightMargin: 8
                     anchors.verticalCenter: parent.verticalCenter
-                    font.pixelSize: 13
+                    font.pixelSize: Style.fontSize
                     elide: Text.ElideRight
-                    color: netRow.modelData.active ? Colors.neon : Colors.fg
+                    color: netRow.modelData.active ? Colors.fg : Colors.gray2
                     text: netRow.modelData.ssid
                 }
 

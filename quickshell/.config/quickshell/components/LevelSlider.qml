@@ -1,5 +1,5 @@
-// Hand-rolled drag/click level bar (0..1), drawn as Style.segments blocks —
-// the same 16 steps as the volume OSD, so the two read as one control. No
+// Hand-rolled drag/click level slider (0..1): a thin track, the filled
+// part in the accent (red while muted), and a square knob. No
 // QtQuick.Controls elsewhere in this shell, so a themed Slider would mean
 // fighting its default style. Emits moved(v) while dragging and
 // stepped(±step) on the wheel; the owner writes it wherever it belongs
@@ -18,44 +18,49 @@ Item {
     property real step: 0.05
 
     implicitWidth: 160
-    implicitHeight: 10
+    implicitHeight: 14
 
     // While dragging, draw where the pointer is rather than the bound value,
     // which trails behind whatever process applies the change.
     property real dragValue: 0
     readonly property real shown: Math.max(0, Math.min(1, mouse.pressed ? dragValue : value))
+    readonly property color fill: root.muted ? Colors.red : Colors.neon
 
-    Row {
-        id: row
-        anchors.fill: parent
-        spacing: 2
-        readonly property real cell: (width - spacing * (Style.segments - 1)) / Style.segments
+    // a thin track, filled in the accent; the knob only shows while hovered
+    // or dragged, so a column of sliders reads as quiet lines
+    Rectangle {
+        id: track
+        anchors.verticalCenter: parent.verticalCenter
+        width: parent.width
+        height: 4
+        radius: Style.round
+        color: Style.tint(Colors.fg, 0.10)
 
-        Repeater {
-            model: Style.segments
-
-            delegate: Rectangle {
-                required property int index
-                // How much of this segment the level covers, 0..1 — the
-                // last lit one fills partially so 35% doesn't read as 37.5%.
-                readonly property real lit: Math.max(0, Math.min(1, root.shown * Style.segments - index))
-                width: row.cell
-                height: row.height
-                color: Colors.dim
-
-                Rectangle {
-                    width: parent.width * parent.lit
-                    height: parent.height
-                    color: root.muted ? Colors.red : Colors.neon
-                }
-            }
+        Rectangle {
+            width: track.width * root.shown
+            height: parent.height
+            radius: Style.round
+            color: root.fill
+            opacity: 0.85
         }
+    }
+
+    Rectangle {
+        id: knob
+        visible: mouse.containsMouse || mouse.pressed
+        width: 10
+        height: 10
+        radius: Style.round
+        x: Math.max(0, Math.min(root.width - width, root.width * root.shown - width / 2))
+        anchors.verticalCenter: parent.verticalCenter
+        color: Colors.fg
     }
 
     MouseArea {
         id: mouse
         anchors.fill: parent
         anchors.margins: -6
+        hoverEnabled: true
         cursorShape: Qt.PointingHandCursor
         function emit(x) {
             root.dragValue = Math.max(0, Math.min(1, (x - 6) / root.width))

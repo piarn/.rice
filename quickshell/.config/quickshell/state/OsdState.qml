@@ -44,9 +44,9 @@ Item {
         arm.restart()
     }
 
-    // The quick settings sliders already show the level.
+    // The quick and sound tabs' sliders already show the level.
     function suppressed() {
-        return !armed || IslandState.tab === "system"
+        return !armed || IslandState.tab === "quick" || IslandState.tab === "sound"
     }
 
     Connections {

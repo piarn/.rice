@@ -16,15 +16,18 @@ Item {
     MonoText {
         id: label
         anchors.left: parent.left
+        anchors.leftMargin: Style.inset
         anchors.verticalCenter: parent.verticalCenter
         color: Colors.gray
         text: header.title + (header.count !== "" ? " · " + header.count : "")
     }
 
+    // lines up with the rows' buttons below (Style.inset)
     Row {
         id: actionRow
         anchors.right: parent.right
+        anchors.rightMargin: Style.inset
         anchors.verticalCenter: parent.verticalCenter
-        spacing: 12
+        spacing: 8
     }
 }

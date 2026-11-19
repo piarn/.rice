@@ -1,8 +1,10 @@
-// Which island tab is open, and on which screen ("" = collapsed). Replaces
-// the old per-popup PopupState: every popup is an island tab now (see
-// island/Island.qml). Names go through island/routes.js, so the old popup
-// and IPC names (quicksettings, battery, bluetooth, commandcenter) still
-// work.
+// Which tab is open, and on which screen ("" = nothing open). A tab lives
+// on one of three surfaces (island/routes.js): the right-edge control panel
+// (panel/SideWindow.qml), the grown island under the clock
+// (island/Island.qml), or the launcher in the middle of the screen
+// (launcher/LauncherWindow.qml); only one is open at a time. Names go
+// through routes.js, so the old popup and IPC names (system, quicksettings,
+// battery, commandcenter) still work.
 pragma Singleton
 import Quickshell
 import Quickshell.I3
@@ -14,7 +16,12 @@ QtObject {
 
     property string tab: ""
     property var screen: null
+    // anything open, on any surface (island/routes.js)
     readonly property bool grown: tab !== ""
+    readonly property string surface: Routes.surfaceOf(tab)
+    readonly property bool islandOpen: surface === "island"
+    readonly property bool panelOpen: surface === "panel"
+    readonly property bool launcherOpen: surface === "launcher"
     // run and clipboard hold the keyboard for as long as they're open
     readonly property bool wantsKeyboard: Routes.wantsKeyboard(tab)
 

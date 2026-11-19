@@ -1,4 +1,5 @@
-// The island's run tab, the command center ($mod+d / $mod+Space): a search
+// The run box, the command center ($mod+d / $mod+Space), shown by the
+// launcher in the middle of the screen (launcher/LauncherWindow.qml): a search
 // box and a short list — apps, most-used first, and the prefix modes (=calc
 // >run /files ?web @windows ~dev !tools :session). Rows and the
 // mode-dispatch logic live in run/RunSection.qml, run/ResultRow.qml;
@@ -82,9 +83,9 @@ Tab {
     Rectangle {
         width: parent.width
         height: 34
-        color: Colors.black
-        border.width: Style.border
-        border.color: Colors.dim
+        radius: Style.round
+        color: Style.tint(Colors.fg, 0.05)
+        border.width: 0
 
         TextInput {
             id: input
@@ -93,8 +94,8 @@ Tab {
             anchors.rightMargin: modeLabel.visible ? modeLabel.width + 20 : 10
             verticalAlignment: TextInput.AlignVCenter
             color: Colors.neon
-            font.family: "JetBrains Mono"
-            font.pixelSize: 14
+            font.family: Style.font
+            font.pixelSize: Style.fontSize
             clip: true
             onTextChanged: { cc.selected = 0; cc.armed = -1 }
 

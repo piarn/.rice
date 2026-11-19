@@ -15,20 +15,20 @@ Rectangle {
     signal escaped()
 
     implicitWidth: 200
-    implicitHeight: 24
-    radius: Style.radius
-    color: Colors.surface
-    border.color: field.activeFocus ? Colors.neon : Colors.dim
+    implicitHeight: 28
+    radius: Style.round
+    color: Style.tint(Colors.fg, 0.05)
+    border.color: field.activeFocus ? Colors.neon : "transparent"
     border.width: 1
 
     TextInput {
         id: field
         anchors.fill: parent
-        anchors.leftMargin: 6
-        anchors.rightMargin: 6
+        anchors.leftMargin: 10
+        anchors.rightMargin: 10
         verticalAlignment: TextInput.AlignVCenter
-        font.family: "JetBrains Mono"
-        font.pixelSize: 12
+        font.family: Style.font
+        font.pixelSize: Style.fontSize
         color: Colors.fg
         clip: true
         echoMode: root.password ? TextInput.Password : TextInput.Normal
@@ -39,7 +39,7 @@ Rectangle {
 
     MonoText {
         anchors.left: parent.left
-        anchors.leftMargin: 6
+        anchors.leftMargin: 10
         anchors.verticalCenter: parent.verticalCenter
         visible: field.text === ""
         color: Colors.gray
