@@ -24,7 +24,7 @@ Item {
     }
 
     readonly property var wifi: NetworkState.devices.find(d => d.type === "wifi" && d.connected) || null
-    readonly property var outCard: VolumeState.cardForSink()
+    readonly property var outCard: active ? VolumeState.cardForSink() : null
 
     // the home screen's one live line: what the machine is doing now
     readonly property var statusRow: ({
@@ -42,57 +42,61 @@ Item {
     readonly property var chipsRow: ({
         kind: "chips",
         chips: [
-            { title: "wi-fi", on: () => NetworkState.wifiEnabled, run: () => NetworkState.setWifiEnabled(!NetworkState.wifiEnabled) },
-            { title: "bt", on: () => BluetoothState.powered, run: () => BluetoothState.togglePower() },
-            { title: "mic", on: () => VolumeState.sourceAudio !== null && !VolumeState.sourceAudio.muted, run: () => VolumeState.toggleMute(VolumeState.sourceAudio) },
-            { title: "silence", on: () => NotificationState.dnd, run: () => NotificationState.toggleDnd() },
-            { title: "night", on: () => NightLightState.active, run: () => { if (NightLightState.available) NightLightState.active = !NightLightState.active } },
-            { title: "awake", on: () => IdleState.inhibit, run: () => IdleState.inhibit = !IdleState.inhibit },
+            { title: "Wi-Fi", on: () => NetworkState.wifiEnabled, run: () => NetworkState.setWifiEnabled(!NetworkState.wifiEnabled) },
+            { title: "Bluetooth", on: () => BluetoothState.powered, run: () => BluetoothState.togglePower() },
+            { title: "Microphone", on: () => VolumeState.sourceAudio !== null && !VolumeState.sourceAudio.muted, run: () => VolumeState.toggleMute(VolumeState.sourceAudio) },
+            { title: "Silence", on: () => NotificationState.dnd, run: () => NotificationState.toggleDnd() },
+            { title: "Night", on: () => NightLightState.active, run: () => { if (NightLightState.available) NightLightState.active = !NightLightState.active } },
+            { title: "Awake", on: () => IdleState.inhibit, run: () => IdleState.inhibit = !IdleState.inhibit },
         ]
     })
 
+    // only built while run is shown: closed, it tracks nothing
+    property bool active: false
+
     // every setting, for the search (and `,`)
     readonly property var rows: {
+        if (!active) return []
         const out = [
-            { kind: "toggle", group: "settings", key: "set:wifi", title: "wi-fi", glyph: "\u{e63e}",
+            { kind: "toggle", group: "settings", key: "set:wifi", title: "Wi-Fi", glyph: "\u{e63e}",
               aliases: "wifi wireless network radio internet",
               on: () => NetworkState.wifiEnabled,
               subtitle: () => !NetworkState.wifiEnabled ? "off" : root.wifi ? root.wifi.connection + " · " + root.wifi.signal + "%" : "not connected",
               run: () => NetworkState.setWifiEnabled(!NetworkState.wifiEnabled) },
-            { kind: "toggle", group: "settings", key: "set:bt", title: "bluetooth", glyph: "\u{e1a7}",
+            { kind: "toggle", group: "settings", key: "set:bt", title: "Bluetooth", glyph: "\u{e1a7}",
               aliases: "bt headphones headset pair",
               on: () => BluetoothState.powered,
               subtitle: () => !BluetoothState.powered ? "off" : BluetoothState.connectedDevices.map(d => d.name).join(", ") || "on",
               run: () => BluetoothState.togglePower() },
-            { kind: "toggle", group: "settings", key: "set:airplane", title: "airplane mode", glyph: "\u{e195}",
+            { kind: "toggle", group: "settings", key: "set:airplane", title: "Airplane mode", glyph: "\u{e195}",
               aliases: "flight radios offline",
               on: () => NetworkState.airplane, subtitle: "every radio off",
               run: () => NetworkState.toggleAirplane() },
-            { kind: "level", group: "settings", key: "set:volume", title: "volume", glyph: "\u{e050}",
+            { kind: "level", group: "settings", key: "set:volume", title: "Volume", glyph: "\u{e050}",
               aliases: "vol sound audio speaker loud",
               value: () => VolumeState.sinkAudio ? VolumeState.sinkAudio.volume : 0,
               muted: () => VolumeState.sinkAudio ? VolumeState.sinkAudio.muted : false,
               set: (v) => VolumeState.setVolume(false, v), adjust: (d) => VolumeState.adjustVolume(d),
               run: () => VolumeState.toggleMute(VolumeState.sinkAudio) },
-            { kind: "level", group: "settings", key: "set:mic", title: "microphone", glyph: "\u{e31d}",
+            { kind: "level", group: "settings", key: "set:mic", title: "Microphone", glyph: "\u{e31d}",
               aliases: "mic input mute record",
               value: () => VolumeState.sourceAudio ? VolumeState.sourceAudio.volume : 0,
               muted: () => VolumeState.sourceAudio ? VolumeState.sourceAudio.muted : false,
               set: (v) => VolumeState.setVolume(true, v), adjust: (d) => VolumeState.adjustMicVolume(d),
               run: () => VolumeState.toggleMute(VolumeState.sourceAudio) },
-            { kind: "toggle", group: "settings", key: "set:dnd", title: "silence notifications", glyph: "\u{e7f6}",
+            { kind: "toggle", group: "settings", key: "set:dnd", title: "Silence notifications", glyph: "\u{e7f6}",
               aliases: "dnd do not disturb quiet notifications",
               on: () => NotificationState.dnd, subtitle: () => NotificationState.dnd ? "critical only" : "off",
               run: () => NotificationState.toggleDnd() },
-            { kind: "toggle", group: "settings", key: "set:awake", title: "keep awake", glyph: "\u{efef}",
+            { kind: "toggle", group: "settings", key: "set:awake", title: "Keep awake", glyph: "\u{efef}",
               aliases: "caffeine idle inhibit lock",
               on: () => IdleState.inhibit, subtitle: () => IdleState.inhibit ? "no idle lock" : "off",
               run: () => IdleState.inhibit = !IdleState.inhibit },
-            { kind: "toggle", group: "settings", key: "set:night", title: "night light", glyph: "\u{f03d}",
+            { kind: "toggle", group: "settings", key: "set:night", title: "Night light", glyph: "\u{f03d}",
               aliases: "warm blue light redshift wlsunset",
               on: () => NightLightState.active, subtitle: () => NightLightState.active ? NightLightState.temperature + "K" : "off",
               run: () => { if (NightLightState.available) NightLightState.active = !NightLightState.active } },
-            { kind: "level", group: "settings", key: "set:warmth", title: "night light warmth", glyph: "\u{f03d}",
+            { kind: "level", group: "settings", key: "set:warmth", title: "Night light warmth", glyph: "\u{f03d}",
               aliases: "temperature kelvin warm",
               value: () => (NightLightState.temperature - NightLightState.minTemperature) / (NightLightState.maxTemperature - NightLightState.minTemperature),
               set: (v) => NightLightState.setTemperature(NightLightState.minTemperature + v * (NightLightState.maxTemperature - NightLightState.minTemperature)),
@@ -100,7 +104,7 @@ Item {
               run: () => NightLightState.active = !NightLightState.active },
         ]
         if (BrightnessState.available) out.push(
-            { kind: "level", group: "settings", key: "set:brightness", title: "brightness", glyph: "\u{e1ac}",
+            { kind: "level", group: "settings", key: "set:brightness", title: "Brightness", glyph: "\u{e1ac}",
               aliases: "screen backlight display dim",
               value: () => BrightnessState.value,
               set: (v) => BrightnessState.set(v), adjust: (d) => BrightnessState.set(BrightnessState.value + d) })
@@ -109,30 +113,30 @@ Item {
         const profiles = [PowerProfile.PowerSaver, PowerProfile.Balanced]
         if (PowerProfiles.hasPerformanceProfile) profiles.push(PowerProfile.Performance)
         for (const p of profiles) out.push(
-            { kind: "choice", group: "power mode", key: "set:power", title: "power mode: " + profileName(p), glyph: "\u{eaf6}",
+            { kind: "choice", group: "power mode", key: "set:power", title: "Power mode: " + profileName(p), glyph: "\u{eaf6}",
               aliases: "power profile battery performance saver",
               on: () => PowerProfiles.profile === p, run: () => PowerProfiles.profile = p })
 
         // outputs and inputs: one choice each, on the default
         for (const s of VolumeState.sinks) out.push(
-            { kind: "choice", group: "output", key: "set:output", title: "output: " + VolumeState.nodeName(s), glyph: "\u{e32d}",
+            { kind: "choice", group: "output", key: "set:output", title: "Output: " + VolumeState.nodeName(s), glyph: "\u{e32d}",
               aliases: "out sound device speaker headphones audio",
               on: () => Pipewire.defaultAudioSink === s, run: () => VolumeState.setSink(s) })
         for (const s of VolumeState.sources) out.push(
-            { kind: "choice", group: "input", key: "set:input", title: "input: " + VolumeState.nodeName(s), glyph: "\u{e31d}",
+            { kind: "choice", group: "input", key: "set:input", title: "Input: " + VolumeState.nodeName(s), glyph: "\u{e31d}",
               aliases: "in mic microphone device",
               on: () => Pipewire.defaultAudioSource === s, run: () => VolumeState.setSource(s) })
 
         // the headset's codecs, when the output is bluetooth
         for (const mode of ["music", "call"]) for (const c of VolumeState.codecs(outCard, mode)) out.push(
-            { kind: "choice", group: "codec", key: "set:codec", title: "codec: " + c.codec + (mode === "call" ? " (call)" : ""), glyph: "\u{e60f}",
+            { kind: "choice", group: "codec", key: "set:codec", title: "Codec: " + c.codec + (mode === "call" ? " (call)" : ""), glyph: "\u{e60f}",
               aliases: "bluetooth codec aac aptx sbc ldac quality headset",
               on: () => VolumeState.activeCodec(root.outCard) === c.codec + (mode === "call" ? " (call)" : ""),
               run: () => VolumeState.setProfile(root.outCard, c.profile) })
 
         // screen layouts
         for (const l of RiceState.layouts) out.push(
-            { kind: "choice", group: "layout", key: "set:layout", title: "layout: " + l, glyph: "\u{e30c}",
+            { kind: "choice", group: "layout", key: "set:layout", title: "Layout: " + l, glyph: "\u{e30c}",
               aliases: "display screen monitor mirror hdmi",
               on: () => RiceState.currentLayout === l, run: () => RiceState.applyLayout(l) })
 

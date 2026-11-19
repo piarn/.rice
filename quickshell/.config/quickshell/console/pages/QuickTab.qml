@@ -98,11 +98,11 @@ Tab {
     }
 
     // ---- NETWORK
-    SectionHeader { title: "network"; topGap: 0 }
+    SectionHeader { topGap: 0 }
 
     ReadoutRow {
         id: wifiRow
-        label: "wi-fi"
+        label: "Wi-Fi"
         value: !NetworkState.wifiEnabled ? "off"
             : menu.wifi ? menu.wifi.connection + " · " + menu.wifi.signal + "%" : "not connected"
         valueColor: NetworkState.wifiEnabled && !menu.wifi ? Colors.amber : Colors.fg
@@ -115,7 +115,7 @@ Tab {
     }
     ReadoutRow {
         id: btRow
-        label: "bluetooth"
+        label: "Bluetooth"
         dim: !BluetoothState.available
         value: !BluetoothState.available ? "no adapter" : !BluetoothState.powered ? "off"
             : BluetoothState.connectedDevices.length ? BluetoothState.connectedDevices.map(d => d.name).join(", ") : "on"
@@ -128,7 +128,7 @@ Tab {
     }
     ReadoutRow {
         id: airRow
-        label: "airplane"
+        label: "Airplane"
         value: NetworkState.airplane ? "every radio off" : "off"
         valueColor: NetworkState.airplane ? Colors.amber : Colors.gray2
         light: NetworkState.airplane
@@ -139,7 +139,7 @@ Tab {
     ReadoutRow {
         id: vpnRow
         visible: NetworkState.vpns.length > 0 || ExtrasState.vpns.some(v => v.available)
-        label: "vpn"
+        label: "VPN"
         value: NetworkState.activeVpns.length ? NetworkState.activeVpns.join(", ") : "none"
         valueColor: NetworkState.activeVpns.length ? Colors.fg : Colors.gray2
         opens: true
@@ -148,11 +148,11 @@ Tab {
     }
 
     // ---- AUDIO
-    SectionHeader { title: "audio" }
+    SectionHeader {}
 
     LevelRow {
         id: volRow
-        label: "volume"
+        label: "Volume"
         key: "v"
         value: VolumeState.sinkAudio ? VolumeState.sinkAudio.volume : 0
         muted: VolumeState.sinkAudio ? VolumeState.sinkAudio.muted : false
@@ -164,7 +164,7 @@ Tab {
     LevelRow {
         id: micRow
         visible: VolumeState.sourceAudio !== null
-        label: "mic"
+        label: "Microphone"
         key: "m"
         value: VolumeState.sourceAudio ? VolumeState.sourceAudio.volume : 0
         muted: VolumeState.sourceAudio ? VolumeState.sourceAudio.muted : false
@@ -175,7 +175,7 @@ Tab {
     }
     ReadoutRow {
         id: outRow
-        label: "output"
+        label: "Output"
         value: {
             const codec = VolumeState.activeCodec(VolumeState.cardForSink())
             return (VolumeState.sinkName || "none") + (codec ? " · " + codec : "")
@@ -187,12 +187,12 @@ Tab {
     }
 
     // ---- DISPLAY
-    SectionHeader { title: "display" }
+    SectionHeader {}
 
     LevelRow {
         id: brightRow
         visible: BrightnessState.available
-        label: "brightness"
+        label: "Brightness"
         value: BrightnessState.value
         selected: menu.selectedRow === brightRow
         onMoved: (v) => BrightnessState.set(v)
@@ -200,7 +200,7 @@ Tab {
     }
     ReadoutRow {
         id: nightRow
-        label: "night light"
+        label: "Night light"
         dim: !NightLightState.available
         value: !NightLightState.available ? "install wlsunset" : NightLightState.active ? NightLightState.temperature + "K" : "off"
         light: NightLightState.active
@@ -212,7 +212,7 @@ Tab {
         id: warmRow
         visible: NightLightState.active
         readonly property int span: NightLightState.maxTemperature - NightLightState.minTemperature
-        label: "warmth"
+        label: "Warmth"
         value: (NightLightState.temperature - NightLightState.minTemperature) / span
         valueText: NightLightState.temperature + "K"
         selected: menu.selectedRow === warmRow
@@ -222,7 +222,7 @@ Tab {
     }
     ReadoutRow {
         id: layoutRow
-        label: "layout"
+        label: "Layout"
         value: menu.mirroring ? "mirroring to hdmi" : RiceState.currentLayout || "—"
         light: menu.canMirror ? menu.mirroring : undefined
         opens: true
@@ -237,11 +237,11 @@ Tab {
     }
 
     // ---- SYSTEM
-    SectionHeader { title: "system" }
+    SectionHeader {}
 
     ReadoutRow {
         id: dndRow
-        label: "silence"
+        label: "Silence"
         value: NotificationState.dnd ? "critical only" : NotificationState.notifications.length + " unread"
         light: NotificationState.dnd
         opens: true
@@ -252,7 +252,7 @@ Tab {
     }
     ReadoutRow {
         id: awakeRow
-        label: "keep awake"
+        label: "Keep awake"
         value: IdleState.inhibit ? "no idle lock" : "off"
         light: IdleState.inhibit
         key: "i"
@@ -261,7 +261,7 @@ Tab {
     }
     ReadoutRow {
         id: powerRow
-        label: "power mode"
+        label: "Power mode"
         value: menu.profileName(PowerProfiles.profile)
         key: "p"
         selected: menu.selectedRow === powerRow
@@ -270,7 +270,7 @@ Tab {
     ReadoutRow {
         id: batteryRow
         visible: UPower.displayDevice.isLaptopBattery
-        label: "battery"
+        label: "Battery"
         value: menu.batteryText()
         valueColor: UPower.displayDevice.percentage <= 0.15 ? Colors.red
             : UPower.displayDevice.percentage <= 0.3 ? Colors.amber : Colors.fg
@@ -280,16 +280,16 @@ Tab {
     // ---- PLAYING
     SectionHeader {
         visible: menu.player !== null
-        title: "playing"
+        title: "Playing"
 
         TextButton {
-            label: "prev"
+            label: "Prev"
             baseColor: Colors.gray2
             enabled: menu.player !== null && menu.player.canGoPrevious
             onClicked: menu.player.previous()
         }
         TextButton {
-            label: "next"
+            label: "Next"
             baseColor: Colors.gray2
             enabled: menu.player !== null && menu.player.canGoNext
             onClicked: menu.player.next()
@@ -307,29 +307,26 @@ Tab {
     }
 
     // ---- TOOLS
-    SectionHeader {
-        title: "tools"
-        Item { width: 1; height: 1 }
-    }
+    SectionHeader {}
 
     Flow {
         width: parent.width
         leftPadding: Style.inset
         rightPadding: Style.inset
-        spacing: 6
+        spacing: 18
 
         TextButton {
-            label: "screenshot"
+            label: "Screenshot"
             baseColor: Colors.gray2
             onClicked: menu.act("g=$(slurp) && grim -g \"$g\" - | wl-copy")
         }
         TextButton {
-            label: "color picker"
+            label: "Color picker"
             baseColor: Colors.gray2
             onClicked: menu.act("exec \"$HOME/.local/bin/color-pick\"")
         }
         TextButton {
-            label: "lock"
+            label: "Lock"
             baseColor: Colors.gray2
             onClicked: {
                 menu.close()
@@ -337,7 +334,7 @@ Tab {
             }
         }
         TextButton {
-            label: "power…"
+            label: "Power…"
             baseColor: Colors.red
             onClicked: IslandState.openRun(":")
         }

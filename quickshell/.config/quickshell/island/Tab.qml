@@ -5,7 +5,7 @@
 // Keys while the page itself has focus (no text field), console-style:
 //   j/k or ↓/↑   move between the page's readout rows (anything with
 //                `consoleRow: true` — ReadoutRow, LevelRow — in order)
-//   Space/Enter  activate the selected row
+//   Space        toggle the selected row; Enter opens what it opens
 //   h/l or ←/→   step the selected row (sliders)
 //   letters      the page's `hotkeys` ({"w": () => ..., ...}), shown on
 //                the rows as dim key hints
@@ -47,6 +47,11 @@ Column {
         return out
     }
 
+    // [key, label] for the console's `?` list: every row with a key
+    function keyList() {
+        return rows().filter(r => r.key).map(r => [r.key, r.label])
+    }
+
     function moveSelection(delta) {
         const list = rows()
         if (!list.length) return
@@ -61,8 +66,14 @@ Column {
         if (event.modifiers & (Qt.ControlModifier | Qt.AltModifier)) return false
         if (k === Qt.Key_J || k === Qt.Key_Down) { moveSelection(1); return true }
         if (k === Qt.Key_K || k === Qt.Key_Up) { moveSelection(-1); return true }
-        if (selectedRow && (k === Qt.Key_Space || k === Qt.Key_Return || k === Qt.Key_Enter)) {
+        if (selectedRow && k === Qt.Key_Space) {
             selectedRow.activate()
+            return true
+        }
+        // Enter opens what a row opens (and toggles one that opens nothing)
+        if (selectedRow && (k === Qt.Key_Return || k === Qt.Key_Enter)) {
+            if (selectedRow.secondary) selectedRow.secondary()
+            else selectedRow.activate()
             return true
         }
         if (selectedRow && (k === Qt.Key_H || k === Qt.Key_Left)) { selectedRow.adjust(-1); return true }
@@ -81,4 +92,6 @@ Column {
     visible: shown
     spacing: 4
     onShownChanged: if (!shown) selectedRow = null; else opened()
+    // a page built lazily (console/Console.qml) is created already shown
+    Component.onCompleted: if (shown) opened()
 }

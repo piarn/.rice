@@ -87,6 +87,6 @@ Column {
         }
     }
 
-    CodecRow { label: "music"; items: root.music }
-    CodecRow { label: "call"; items: root.call }
+    CodecRow { label: "Music"; items: root.music }
+    CodecRow { label: "Call"; items: root.call }
 }

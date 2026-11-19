@@ -84,12 +84,12 @@ Tab {
     Timer { id: disarm; interval: 3000; onTriggered: menu.clearArmed = false }
 
     SectionHeader {
-        title: "clipboard"
+        title: "Clipboard"
         count: String(menu.entries.length)
 
         TextButton {
             visible: menu.entries.length > 0
-            label: menu.clearArmed ? "clear all? click again" : "clear"
+            label: menu.clearArmed ? "Clear all? Click again" : "Clear"
             baseColor: menu.clearArmed ? Colors.red : Colors.acid
             onClicked: {
                 if (!menu.clearArmed) {

@@ -88,21 +88,21 @@ Tab {
 
             ReadoutRow {
                 indent: 30
-                label: "address"
+                label: "Address"
                 value: row.dev.address
                 valueColor: Colors.gray2
             }
             ReadoutRow {
                 visible: row.dev.batteryAvailable
                 indent: 30
-                label: "battery"
+                label: "Battery"
                 value: Math.round(row.dev.battery * 100) + "%"
             }
             ReadoutRow {
                 id: codecRow
                 visible: row.card !== null && VolumeState.codecs(row.card, "music").length > 0
                 indent: 30
-                label: "codec"
+                label: "Codec"
                 value: VolumeState.activeCodec(row.card) || "off"
                 opens: true
                 selected: menu.selectedRow === codecRow
@@ -119,7 +119,7 @@ Tab {
             ReadoutRow {
                 id: trustRow
                 indent: 30
-                label: "trusted"
+                label: "Trusted"
                 value: row.dev.trusted ? "reconnects on its own" : "no"
                 valueColor: Colors.gray2
                 light: row.dev.trusted
@@ -129,7 +129,7 @@ Tab {
             ReadoutRow {
                 id: blockRow
                 indent: 30
-                label: "blocked"
+                label: "Blocked"
                 value: row.dev.blocked ? "yes" : "no"
                 valueColor: row.dev.blocked ? Colors.red : Colors.gray2
                 light: row.dev.blocked
@@ -139,7 +139,7 @@ Tab {
             ReadoutRow {
                 id: wakeRow
                 indent: 30
-                label: "wakes the laptop"
+                label: "Wakes the laptop"
                 value: row.dev.wakeAllowed ? "yes" : "no"
                 valueColor: Colors.gray2
                 light: row.dev.wakeAllowed
@@ -155,7 +155,7 @@ Tab {
                     anchors.left: parent.left
                     anchors.leftMargin: Style.inset + 30
                     anchors.verticalCenter: parent.verticalCenter
-                    label: "forget this device"
+                    label: "Forget this device"
                     baseColor: Colors.red
                     enabled: !BluetoothState.busy(row.dev)
                     onClicked: {
@@ -175,7 +175,7 @@ Tab {
 
     ReadoutRow {
         id: powerRow
-        label: "power"
+        label: "Power"
         dim: !BluetoothState.available
         value: !BluetoothState.available ? "no adapter" : BluetoothState.powered ? "on" : "off"
         light: BluetoothState.powered
@@ -186,7 +186,7 @@ Tab {
     ReadoutRow {
         id: discRow
         visible: BluetoothState.powered
-        label: "discoverable"
+        label: "Discoverable"
         value: BluetoothState.discoverable ? "others can find this laptop" : "hidden"
         valueColor: Colors.gray2
         light: BluetoothState.discoverable
@@ -197,7 +197,7 @@ Tab {
     ReadoutRow {
         id: pairRow
         visible: BluetoothState.powered
-        label: "pairable"
+        label: "Pairable"
         value: BluetoothState.pairable ? "accepts new pairings" : "no"
         valueColor: Colors.gray2
         light: BluetoothState.pairable
@@ -208,7 +208,7 @@ Tab {
     ReadoutRow {
         id: nearRow
         visible: BluetoothState.powered
-        label: "show nearby"
+        label: "Show nearby"
         value: BluetoothState.showNearby ? "on" : "off"
         valueColor: Colors.gray2
         light: BluetoothState.showNearby
@@ -220,7 +220,7 @@ Tab {
     // ---- PAIRED
     SectionHeader {
         visible: BluetoothState.powered
-        title: "paired"
+        title: "Paired"
         count: String(BluetoothState.paired.length)
     }
 
@@ -243,7 +243,7 @@ Tab {
         count: BluetoothState.showNearby && BluetoothState.nearby.length ? String(BluetoothState.nearby.length) : ""
 
         TextButton {
-            label: BluetoothState.scanning ? "stop" : "scan  s"
+            label: BluetoothState.scanning ? "Stop" : "Scan"
             baseColor: BluetoothState.scanning ? Colors.amber : Colors.acid
             onClicked: BluetoothState.scanning ? BluetoothState.stopScan() : BluetoothState.scan()
         }
@@ -261,7 +261,7 @@ Tab {
             width: (parent.width - 2 * Style.inset) * BluetoothState.scanLeft / BluetoothState.scanSeconds
             height: 2
             color: Colors.neon
-            Behavior on width { NumberAnimation { duration: 900 } }
+            Behavior on width { NumberAnimation { duration: 1000 } }  // a smooth countdown across 1s ticks
         }
     }
 

@@ -517,13 +517,15 @@ Item {
     Timer { id: respawn; interval: 5000; onTriggered: monitorProc.running = true }
     Timer { id: debounce; interval: 400; onTriggered: root.refresh() }
 
+    // nmcli monitor catches state changes; this is for signal strength, so
+    // fast only while a page shows it
     Timer {
-        interval: IslandState.tab === "network" ? 3000 : 15000
+        interval: IslandState.consoleOpen && (IslandState.tab === "network" || IslandState.tab === "quick") ? 3000 : 30000
         running: true
         repeat: true
         triggeredOnStart: true
         onTriggered: root.refresh()
     }
 
-    Component.onCompleted: scan()
+    // no scan at startup: the network page scans when it opens
 }

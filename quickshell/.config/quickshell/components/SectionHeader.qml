@@ -1,8 +1,7 @@
-// A readout section's title: spaced capitals in grey, a faint rule running
-// to the right, and the section's actions (TextButtons, as children) at the
-// end of the rule. The space above it is the section gap.
-//
-//   NETWORK · 2 ─────────────────────────────── reload  settings
+// A group's label on a Quiet page: small grey text above the group, with
+// its actions (TextButtons, as children) on the right. No rule: the space
+// above it (Style.groupGap) is what separates groups. Leave `title` empty
+// for a group that needs no name.
 import QtQuick
 import quickshell
 
@@ -14,37 +13,28 @@ Item {
     default property alias actions: actionRow.data
 
     width: parent ? parent.width : 0
-    implicitHeight: Math.max(label.implicitHeight, actionRow.implicitHeight) + topGap
-    // the section gap, on top; 0 for the first section of a page
-    property int topGap: Style.sectionGap - 10
+    // the gap above; 0 for a page's first group
+    property int topGap: Style.groupGap - 6
+    // untitled and without actions it is just the space between groups
+    readonly property bool named: title !== "" || actionRow.children.length > 0
+    implicitHeight: (named ? Math.max(label.implicitHeight, actionRow.implicitHeight, 18) : 0) + topGap
 
     MonoText {
         id: label
         anchors.left: parent.left
         anchors.leftMargin: Style.inset
         anchors.bottom: parent.bottom
-        anchors.bottomMargin: (Math.max(label.implicitHeight, actionRow.implicitHeight) - label.implicitHeight) / 2
-        font.letterSpacing: Style.labelSpacing
+        anchors.bottomMargin: 2
         color: Colors.gray
-        text: header.title.toUpperCase() + (header.count !== "" ? " · " + header.count : "")
+        text: header.title !== "" ? header.title.charAt(0).toUpperCase() + header.title.slice(1)
+            + (header.count !== "" ? "  " + header.count : "") : ""
     }
 
-    Rectangle {
-        anchors.left: label.right
-        anchors.right: actionRow.left
-        anchors.leftMargin: 10
-        anchors.rightMargin: actionRow.width > 0 ? 10 : 0
-        anchors.verticalCenter: label.verticalCenter
-        height: 1
-        color: Colors.surface
-    }
-
-    // lines up with the rows' last column below (Style.inset)
     Row {
         id: actionRow
         anchors.right: parent.right
         anchors.rightMargin: Style.inset
         anchors.verticalCenter: label.verticalCenter
-        spacing: 6
+        spacing: 14
     }
 }

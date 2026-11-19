@@ -100,10 +100,12 @@ output "BOE 0x0A0B Unknown" disable
     # mouse button for dragging.
     floating_modifier $mod normal
 
-    # Reload the configuration file and restart quickshell. SIGKILL so this
-    # also gets out of a hung launcher holding the keyboard; exec_always
-    # below brings it back.
-    bindsym $mod+Shift+c exec pkill -KILL -x quickshell; reload
+    # Restart just quickshell (fast: no swaybg or exec_always rerun). SIGKILL
+    # so this also gets out of a hung console holding the keyboard; waits
+    # for it to go, since -n won't start a second one.
+    bindsym $mod+Shift+c exec sh -c 'pkill -KILL -x quickshell; while pgrep -x quickshell >/dev/null; do sleep 0.02; done; QML2_IMPORT_PATH=$HOME/.config/quickshell/theme exec quickshell -n'
+    # Reload sway's config too (and quickshell with it, via exec_always).
+    bindsym $mod+Shift+r exec pkill -KILL -x quickshell; reload
 
     # Lock, and the session menu: lock, reload, suspend, logout, reboot, shutdown
     bindsym $mod+Escape exec ~/.local/bin/dots-lock

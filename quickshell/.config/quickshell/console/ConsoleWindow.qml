@@ -28,7 +28,7 @@ PanelWindow {
     anchors.top: true
     margins.top: Math.round(screenHeight * 0.22)
     implicitWidth: Style.consoleWidth
-    implicitHeight: frame.height
+    implicitHeight: frame.height + 8
     exclusionMode: ExclusionMode.Ignore
     color: "transparent"
     WlrLayershell.namespace: "quickshell-console"
@@ -56,7 +56,14 @@ PanelWindow {
         }
     }
 
-    onOpenHereChanged: if (openHere) Qt.callLater(panel.focusCurrent)
+    onOpenHereChanged: if (openHere) { appear.restart(); Qt.callLater(panel.focusCurrent) }
+
+    // opening: a fade and an 8px rise; closing is instant
+    ParallelAnimation {
+        id: appear
+        NumberAnimation { target: frame; property: "opacity"; from: 0; to: 1; duration: Style.medium; easing.type: Easing.OutCubic }
+        NumberAnimation { target: frame; property: "y"; from: 8; to: 0; duration: Style.medium; easing.type: Easing.OutCubic }
+    }
 
     Rectangle {
         id: frame

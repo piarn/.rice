@@ -52,17 +52,17 @@ Tab {
     }
 
     SectionHeader {
-        title: "notifications"
+        title: "Notifications"
         count: String(NotificationState.notifications.length)
 
         TextButton {
-            label: NotificationState.dnd ? "silenced" : "silence"
+            label: NotificationState.dnd ? "Silenced" : "Silence"
             baseColor: NotificationState.dnd ? Colors.red : Colors.acid
             onClicked: NotificationState.toggleDnd()
         }
         TextButton {
             visible: NotificationState.notifications.length > 0
-            label: "clear all"
+            label: "Clear all"
             onClicked: NotificationState.clearAll()
         }
     }
@@ -90,7 +90,7 @@ Tab {
                 count: group.modelData.items.length > 1 ? String(group.modelData.items.length) : ""
 
                 TextButton {
-                    label: "clear"
+                    label: "Clear"
                     onClicked: { for (const n of group.modelData.items.slice()) NotificationState.dismiss(n) }
                 }
             }

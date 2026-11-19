@@ -1,9 +1,8 @@
-// Hand-rolled drag/click level slider (0..1): a thin track, the filled
-// part in the accent (red while muted), and a square knob. No
-// QtQuick.Controls elsewhere in this shell, so a themed Slider would mean
-// fighting its default style. Emits moved(v) while dragging and
-// stepped(±step) on the wheel; the owner writes it wherever it belongs
-// (wpctl, backlight).
+// Hand-rolled drag/click level slider (0..1): a 2px line, the filled part
+// in the accent (red while muted), no knob. The fill glides to a new value
+// (Style.fast) except while dragged, when it follows the pointer exactly.
+// Emits moved(v) while dragging and stepped(±step) on the wheel; the owner
+// writes it wherever it belongs (wpctl, backlight).
 import QtQuick
 import quickshell
 
@@ -24,36 +23,23 @@ Item {
     // which trails behind whatever process applies the change.
     property real dragValue: 0
     readonly property real shown: Math.max(0, Math.min(1, mouse.pressed ? dragValue : value))
-    readonly property color fill: root.muted ? Colors.red : Colors.neon
 
-    // a thin track, filled in the accent; the knob only shows while hovered
-    // or dragged, so a column of sliders reads as quiet lines
     Rectangle {
         id: track
         anchors.verticalCenter: parent.verticalCenter
         width: parent.width
-        height: 4
-        radius: Style.round
-        color: Style.tint(Colors.fg, 0.10)
+        height: 2
+        color: Style.tint(Colors.fg, mouse.containsMouse ? 0.16 : 0.10)
 
         Rectangle {
-            width: track.width * root.shown
             height: parent.height
-            radius: Style.round
-            color: root.fill
-            opacity: 0.85
+            width: track.width * root.shown
+            color: root.muted ? Colors.red : Colors.neon
+            Behavior on width {
+                enabled: !mouse.pressed
+                NumberAnimation { duration: Style.fast; easing.type: Easing.OutCubic }
+            }
         }
-    }
-
-    Rectangle {
-        id: knob
-        visible: mouse.containsMouse || mouse.pressed
-        width: 10
-        height: 10
-        radius: Style.round
-        x: Math.max(0, Math.min(root.width - width, root.width * root.shown - width / 2))
-        anchors.verticalCenter: parent.verticalCenter
-        color: Colors.fg
     }
 
     MouseArea {

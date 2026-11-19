@@ -207,17 +207,17 @@ Tab {
 
     // ---- RADIOS
     SectionHeader {
-        title: "radios"
+        title: "Radios"
         topGap: 0
 
         TextButton {
-            label: "reload"
+            label: "Reload"
             baseColor: Colors.gray2
             enabled: !NetworkState.busy
             onClicked: menu.reloadAll()
         }
         TextButton {
-            label: "settings"
+            label: "Settings"
             baseColor: Colors.gray2
             onClicked: {
                 NetworkState.openEditor()
@@ -228,7 +228,7 @@ Tab {
 
     ReadoutRow {
         id: wifiRadio
-        label: "wi-fi"
+        label: "Wi-Fi"
         value: NetworkState.wifiEnabled ? "on" : "off"
         valueColor: NetworkState.wifiEnabled ? Colors.fg : Colors.gray2
         light: NetworkState.wifiEnabled
@@ -239,7 +239,7 @@ Tab {
     }
     ReadoutRow {
         id: airRadio
-        label: "airplane"
+        label: "Airplane"
         value: NetworkState.airplane ? "every radio off" : "off"
         valueColor: NetworkState.airplane ? Colors.amber : Colors.gray2
         light: NetworkState.airplane
@@ -251,7 +251,7 @@ Tab {
 
     // ---- INTERFACES
     SectionHeader {
-        title: "interfaces"
+        title: "Interfaces"
         count: String(NetworkState.devices.length)
     }
 
@@ -297,7 +297,7 @@ Tab {
                 ReadoutRow {
                     visible: devItem.info === null
                     indent: 30
-                    label: "loading…"
+                    label: "Loading…"
                     dim: true
                 }
 
@@ -316,7 +316,7 @@ Tab {
                     id: autoRow
                     visible: devItem.dev.uuid !== "" && devItem.info !== null
                     indent: 30
-                    label: "autoconnect"
+                    label: "Autoconnect"
                     value: devItem.info && devItem.info.autoconnect ? "on" : "off"
                     valueColor: Colors.gray2
                     light: devItem.info !== null && devItem.info.autoconnect
@@ -327,7 +327,7 @@ Tab {
                     id: pwRow
                     visible: devItem.dev.type === "wifi" && devItem.dev.uuid !== ""
                     indent: 30
-                    label: "password"
+                    label: "Password"
                     value: devItem.hasPassword ? NetworkState.passwords[devItem.dev.uuid] : "hidden"
                     valueColor: devItem.hasPassword ? Colors.amber : Colors.gray
                     opens: true
@@ -341,23 +341,23 @@ Tab {
                     rightPadding: Style.inset
                     topPadding: 4
                     bottomPadding: 4
-                    spacing: 6
+                    spacing: 18
 
                     TextButton {
                         visible: devItem.dev.connected && !devItem.dev.primary && devItem.dev.gateway !== ""
-                        label: "make primary"
+                        label: "Make primary"
                         enabled: !NetworkState.busy
                         onClicked: NetworkState.setPrimary(devItem.dev)
                     }
                     TextButton {
                         visible: devItem.info !== null && devItem.info.ip4.length > 0
-                        label: "copy ip"
+                        label: "Copy ip"
                         baseColor: Colors.gray2
                         onClicked: NetworkState.copy(devItem.info.ip4[0].split("/")[0])
                     }
                     TextButton {
                         visible: devItem.dev.type === "wifi" && !!NetworkState.passwords[devItem.dev.uuid]
-                        label: "copy password"
+                        label: "Copy password"
                         baseColor: Colors.gray2
                         onClicked: NetworkState.copy(NetworkState.passwords[devItem.dev.uuid])
                     }
@@ -369,7 +369,7 @@ Tab {
     // ---- VPN
     SectionHeader {
         visible: menu.nmVpns.length > 0 || menu.vpnProviders.length > 0
-        title: "vpn"
+        title: "VPN"
     }
 
     Repeater {
@@ -442,13 +442,13 @@ Tab {
 
         TextButton {
             visible: NetworkState.wifiEnabled
-            label: "hidden"
+            label: "Hidden"
             baseColor: Colors.gray2
             onClicked: menu.openHidden()
         }
         TextButton {
             visible: NetworkState.wifiEnabled
-            label: "rescan  r"
+            label: "Rescan"
             baseColor: Colors.gray2
             enabled: !NetworkState.scanning
             onClicked: NetworkState.scan()
@@ -572,7 +572,7 @@ Tab {
                     anchors.left: parent.left
                     anchors.leftMargin: Style.inset + 30
                     anchors.verticalCenter: parent.verticalCenter
-                    label: "forget " + netItem.modelData.ssid
+                    label: "Forget " + netItem.modelData.ssid
                     baseColor: Colors.red
                     enabled: !NetworkState.busy
                     onClicked: {
@@ -629,7 +629,7 @@ Tab {
         }
 
         Row {
-            spacing: 8
+            spacing: 18
 
             InputField {
                 id: pwField
@@ -640,12 +640,12 @@ Tab {
             }
             TextButton {
                 anchors.verticalCenter: parent.verticalCenter
-                label: "connect"
+                label: "Connect"
                 onClicked: menu.submitCredentials()
             }
             TextButton {
                 anchors.verticalCenter: parent.verticalCenter
-                label: "cancel"
+                label: "Cancel"
                 baseColor: Colors.gray2
                 onClicked: menu.cancelPassword()
             }

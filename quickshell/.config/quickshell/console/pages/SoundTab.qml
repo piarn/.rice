@@ -96,7 +96,7 @@ Tab {
             id: codecRow
             visible: dev.btCard !== null && VolumeState.codecs(dev.btCard, "music").length > 0
             indent: 30
-            label: "codec"
+            label: "Codec"
             value: VolumeState.activeCodec(dev.btCard) || "off"
             opens: true
             selected: menu.selectedRow === codecRow
@@ -171,12 +171,12 @@ Tab {
 
     // ---- OUTPUT
     SectionHeader {
-        title: "output"
+        title: "Output"
         count: String(VolumeState.sinks.length)
         topGap: 0
 
         TextButton {
-            label: "mixer"
+            label: "Mixer"
             baseColor: Colors.gray2
             onClicked: {
                 menu.close()
@@ -199,7 +199,7 @@ Tab {
 
     // ---- INPUT
     SectionHeader {
-        title: "input"
+        title: "Input"
         count: String(VolumeState.sources.length)
     }
 
@@ -217,7 +217,7 @@ Tab {
 
     // ---- APPS
     SectionHeader {
-        title: "apps"
+        title: "Apps"
         count: VolumeState.playback.length ? String(VolumeState.playback.length) : ""
     }
 
@@ -236,7 +236,7 @@ Tab {
     // ---- RECORDING: apps using a mic
     SectionHeader {
         visible: VolumeState.recording.length > 0
-        title: "recording"
+        title: "Recording"
         count: String(VolumeState.recording.length)
     }
 
@@ -248,7 +248,7 @@ Tab {
     // ---- PROFILES
     SectionHeader {
         visible: menu.wiredCards.length > 0
-        title: "profiles"
+        title: "Profiles"
     }
 
     Repeater {

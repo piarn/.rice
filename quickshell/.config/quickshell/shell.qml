@@ -3,11 +3,12 @@
 // Colors are Catppuccin Mocha, in theme/quickshell/Colors.qml. Ported from
 // github.com/piarn/.rice at 4156a09, without the greeter and theme switcher.
 //
-// Style: "Console", a flight readout in one pixel font (components/Style.qml).
+// Style: "Quiet" — text in two columns, space instead of lines and symbols,
+// one pixel font (components/Style.qml).
 //
-// Layout: per screen three pieces floating along the top — the workspaces
-// (top left), the clock (center; it grows into the calendar, island/), and
-// the status readout (top right) — plus a Spacer reserving their height;
+// Layout: per screen one top row (island/TopRow.qml) with three pieces
+// floating on it — the workspaces, the clock (it grows into the calendar)
+// and the status readout — reserving its height;
 // and the ConsoleWindow in the middle of the screen (console/: $mod+d, the
 // one surface for everything else — run, quick, sound, network, bluetooth,
 // notifications, clipboard; console/pages/). Which page is open where is
@@ -42,32 +43,15 @@ ShellRoot {
         delegate: ConsoleWindow { panel: sharedConsole }
     }
 
+    // the top row: workspaces, clock (and calendar), readout — one window
     Variants {
         model: Quickshell.screens
-        delegate: Spacer {}
+        delegate: TopRow { panel: sharedPanel }
     }
+    // only the screens that crop their edges get anything here
     Variants {
         model: Quickshell.screens
         delegate: EdgeMargins {}
-    }
-    Variants {
-        model: Quickshell.screens
-        delegate: Island { panel: sharedPanel }
-    }
-    // the workspaces (top left) and status icons (top right), each a card
-    Variants {
-        model: Quickshell.screens
-        delegate: Card {
-            Workspaces {}
-        }
-    }
-    Variants {
-        model: Quickshell.screens
-        delegate: Card {
-            id: statusCard
-            rightSide: true
-            StatusReadout { screen: statusCard.modelData }
-        }
     }
 
     NotificationToasts {}

@@ -1,14 +1,18 @@
 // The console: the one surface in the middle of the screen ($mod+d). A row
-// of pages — run, quick, sound, net, bt, notifs, clip — then the open page,
-// scrolling past the screen's cap. Created once (shell.qml) so every page,
-// its state and its IPC handler exist once; whichever screen's
-// ConsoleWindow is open adopts it.
+// of page names — run, quick, sound, network, bluetooth, notifications,
+// clipboard — then the open page, scrolling past the screen's cap. Created
+// once (shell.qml); whichever screen's ConsoleWindow is open adopts it.
+//
+// Pages are built the first time they open and kept after that, so opening
+// the console costs only the page you look at. run and clipboard are built
+// up front: they own IPC handlers (commandcenter, clipboard).
 //
 // Keys:
 //   1–7, Tab / Shift+Tab   change page (Alt+1–7 or Ctrl+Tab from a text box)
-//   the page's own keys    j/k, Space, h/l, letters (island/Tab.qml)
+//   the page's own keys    j/k, Space, Enter, h/l, letters (island/Tab.qml)
+//   ?                      the page's keys
 //   any other letter       jumps to run and types it: search from any page
-//   Esc                    drops the selection, then closes
+//   Esc                    drops the selection or the key list, then closes
 import QtQuick
 import quickshell
 import "../state"
@@ -21,13 +25,15 @@ FocusScope {
 
     // the page area's cap, set by the ConsoleWindow adopting this
     property real maxHeight: 700
+    property bool showKeys: false
 
-    readonly property var pages: [runPage, quickPage, soundPage, networkPage, bluetoothPage, notificationsPage, clipboardPage]
+    readonly property var pages: [runPage, quickLoader.item, soundLoader.item, networkLoader.item,
+                                  bluetoothLoader.item, notificationsLoader.item, clipboardPage].filter(p => p)
     readonly property Item current: pages.find(p => p.shown) || null
     // a text box most of the time, and page keys the rest: always the keyboard
     readonly property bool needsKeyboard: true
 
-    implicitHeight: header.height + 21 + flick.height
+    implicitHeight: header.height + 18 + flick.height
 
     function focusCurrent() {
         if (current && current.initialFocus) current.initialFocus.forceActiveFocus()
@@ -38,11 +44,18 @@ FocusScope {
         if (i >= 0 && i < Routes.CONSOLE_TABS.length) IslandState.open(Routes.CONSOLE_TABS[i], IslandState.screen)
     }
 
+    // the global keys, after the page's own in the ? list
+    readonly property var globalKeys: [["1–7  tab", "change page"], ["j  k", "move"], ["space", "toggle"],
+                                       ["enter", "open"], ["h  l", "adjust a level"], ["a–z", "search"], ["esc", "back, close"]]
+
     Connections {
         target: IslandState
         function onTabChanged() {
             if (!IslandState.consoleOpen) return
+            root.showKeys = false
             flick.contentY = 0
+            // the new page fades in; the old one is already gone
+            pageFade.restart()
             Qt.callLater(root.focusCurrent)
         }
         function onPanelFocusRequested() { if (IslandState.consoleOpen) keys.forceActiveFocus() }
@@ -68,6 +81,8 @@ FocusScope {
         Keys.onPressed: (event) => {
             const k = event.key
             const mods = event.modifiers & (Qt.ControlModifier | Qt.AltModifier)
+            if (event.text === "?") { root.showKeys = !root.showKeys; event.accepted = true; return }
+            if (root.showKeys && k === Qt.Key_Escape) { root.showKeys = false; event.accepted = true; return }
             if (root.current && root.current.handleKey(event)) {
                 event.accepted = true
                 return
@@ -103,119 +118,118 @@ FocusScope {
         }
     }
 
-    // the page row: a faint number and the name; the open one bright with
-    // the accent underline
-    Item {
+    // the page names: the open one white, the rest grey
+    Row {
         id: header
-        width: parent.width
-        height: 24
+        x: Style.inset
+        height: 22
+        spacing: 18
 
-        Row {
-            anchors.left: parent.left
-            anchors.leftMargin: Style.inset
-            anchors.verticalCenter: parent.verticalCenter
-            spacing: 16
+        Repeater {
+            model: Routes.CONSOLE_TABS
 
-            Repeater {
-                model: Routes.CONSOLE_TABS
+            delegate: MonoText {
+                id: pageName
+                required property string modelData
+                readonly property bool open: IslandState.tab === modelData
+                readonly property int unread: modelData === "notifications" ? NotificationState.notifications.length : 0
+                anchors.verticalCenter: parent.verticalCenter
+                color: open || pageMouse.containsMouse ? Colors.fg : Colors.gray
+                Behavior on color { ColorAnimation { duration: Style.fast } }
+                text: modelData + (unread ? " " + unread : "")
 
-                delegate: Item {
-                    id: pageButton
-                    required property string modelData
-                    required property int index
-                    readonly property bool open: IslandState.tab === modelData
-                    readonly property int unread: modelData === "notifications" ? NotificationState.notifications.length : 0
-                    width: pageRow.implicitWidth
-                    height: 24
-
-                    Row {
-                        id: pageRow
-                        anchors.verticalCenter: parent.verticalCenter
-                        spacing: 5
-
-                        MonoText {
-                            color: Colors.dim
-                            text: String(pageButton.index + 1)
-                        }
-                        MonoText {
-                            id: pageName
-                            color: pageButton.open || pageMouse.containsMouse ? Colors.fg
-                                : pageButton.unread ? Colors.gray2 : Colors.gray
-                            text: Routes.LABELS[pageButton.modelData] + (pageButton.unread ? " " + pageButton.unread : "")
-                        }
-                    }
-
-                    Rectangle {
-                        anchors.left: pageRow.left
-                        anchors.right: pageRow.right
-                        anchors.bottom: parent.bottom
-                        height: 2
-                        color: Colors.neon
-                        visible: pageButton.open
-                    }
-
-                    MouseArea {
-                        id: pageMouse
-                        anchors.fill: parent
-                        anchors.margins: -4
-                        hoverEnabled: true
-                        cursorShape: Qt.PointingHandCursor
-                        onClicked: IslandState.open(pageButton.modelData, IslandState.screen)
-                    }
+                MouseArea {
+                    id: pageMouse
+                    anchors.fill: parent
+                    anchors.margins: -6
+                    hoverEnabled: true
+                    cursorShape: Qt.PointingHandCursor
+                    onClicked: IslandState.open(pageName.modelData, IslandState.screen)
                 }
             }
         }
-
-        MonoText {
-            anchors.right: parent.right
-            anchors.rightMargin: Style.inset
-            anchors.verticalCenter: parent.verticalCenter
-            color: escMouse.containsMouse ? Colors.fg : Colors.dim
-            text: "esc"
-
-            MouseArea {
-                id: escMouse
-                anchors.fill: parent
-                anchors.margins: -4
-                hoverEnabled: true
-                cursorShape: Qt.PointingHandCursor
-                onClicked: IslandState.close()
-            }
-        }
-    }
-
-    Rectangle {
-        id: rule
-        anchors.top: header.bottom
-        anchors.topMargin: 10
-        width: parent.width
-        height: 1
-        color: Colors.surface
     }
 
     Flickable {
         id: flick
-        anchors.top: rule.bottom
-        anchors.topMargin: 10
+        anchors.top: header.bottom
+        anchors.topMargin: 18
         width: parent.width
-        height: Math.min(content.implicitHeight, root.maxHeight)
-        contentHeight: content.implicitHeight
+        height: Math.min(root.showKeys ? keyList.implicitHeight : content.implicitHeight, root.maxHeight)
+        contentHeight: root.showKeys ? keyList.implicitHeight : content.implicitHeight
         interactive: contentHeight > height
         clip: true
         boundsBehavior: Flickable.StopAtBounds
 
         Item {
             id: content
+            visible: !root.showKeys
             width: flick.width - (flick.interactive ? 8 : 0)
             implicitHeight: root.current ? root.current.implicitHeight : 0
 
+            NumberAnimation {
+                id: pageFade
+                target: content
+                property: "opacity"
+                from: 0
+                to: 1
+                duration: 90
+                easing.type: Easing.OutQuad
+            }
+
             RunTab { id: runPage; width: parent.width }
-            QuickTab { id: quickPage; width: parent.width }
-            SoundTab { id: soundPage; width: parent.width }
-            NetworkTab { id: networkPage; width: parent.width }
-            BluetoothTab { id: bluetoothPage; width: parent.width }
-            NotificationsTab { id: notificationsPage; width: parent.width }
             ClipboardTab { id: clipboardPage; width: parent.width }
+
+            // built on first open, kept after
+            component LazyPage: Loader {
+                id: lazy
+                property string page: ""
+                width: parent.width
+                // a latch, not a binding: once on, it stays on
+                active: false
+                function check() { if (!active && IslandState.tab === page) active = true }
+                Component.onCompleted: check()
+                property Connections watch: Connections {
+                    target: IslandState
+                    function onTabChanged() { lazy.check() }
+                }
+            }
+            LazyPage { id: quickLoader; page: "quick"; sourceComponent: Component { QuickTab {} } }
+            LazyPage { id: soundLoader; page: "sound"; sourceComponent: Component { SoundTab {} } }
+            LazyPage { id: networkLoader; page: "network"; sourceComponent: Component { NetworkTab {} } }
+            LazyPage { id: bluetoothLoader; page: "bluetooth"; sourceComponent: Component { BluetoothTab {} } }
+            LazyPage { id: notificationsLoader; page: "notifications"; sourceComponent: Component { NotificationsTab {} } }
+        }
+
+        // ?: the page's keys, then the console's
+        Column {
+            id: keyList
+            visible: root.showKeys
+            width: flick.width
+
+            Repeater {
+                model: root.showKeys ? (root.current ? root.current.keyList() : []).concat(root.globalKeys) : []
+
+                delegate: Item {
+                    required property var modelData
+                    width: keyList.width
+                    height: Style.rowHeight
+
+                    MonoText {
+                        x: Style.inset
+                        anchors.verticalCenter: parent.verticalCenter
+                        width: 90
+                        color: Colors.fg
+                        text: modelData[0]
+                    }
+                    MonoText {
+                        x: Style.inset + 100
+                        anchors.verticalCenter: parent.verticalCenter
+                        color: Colors.gray2
+                        text: modelData[1]
+                    }
+                }
+            }
         }
 
         Rectangle {

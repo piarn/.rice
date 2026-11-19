@@ -29,7 +29,7 @@ Tab {
 
     DevSection { id: dev }
     ToolsSection { id: tools; onOpenPopup: (name) => cc.popup(name) }
-    SettingsSection { id: settings; onOpenPage: (page) => cc.popup(page) }
+    SettingsSection { id: settings; active: cc.shown; onOpenPage: (page) => cc.popup(page) }
     RunSection {
         id: run
         query: input.text
@@ -107,6 +107,8 @@ Tab {
     }
 
     onOpened: {
+        // the codec settings need the cards, read once (quick and sound refresh them)
+        if (!VolumeState.cards.length) VolumeState.refreshExtras()
         input.text = IslandState.runPrefix
         IslandState.runPrefix = ""
         selected = firstSelectable()

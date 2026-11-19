@@ -63,9 +63,9 @@ Item {
     readonly property var rows: {
         const out = []
         const s = sessionRows(), p = projectRows(), h = hostRows()
-        if (s.length) out.push({ kind: "header", title: "sessions" }, ...s)
-        if (p.length) out.push({ kind: "header", title: "projects" }, ...p)
-        if (h.length) out.push({ kind: "header", title: "ssh" }, ...h)
+        if (s.length) out.push({ kind: "header", title: "Sessions" }, ...s)
+        if (p.length) out.push({ kind: "header", title: "Projects" }, ...p)
+        if (h.length) out.push({ kind: "header", title: "Ssh" }, ...h)
         return out
     }
 

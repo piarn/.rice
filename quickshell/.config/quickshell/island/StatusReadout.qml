@@ -57,15 +57,7 @@ Item {
             anchors.topMargin: 2
             anchors.bottomMargin: 2
             color: segMouse.containsMouse ? Style.tint(Colors.fg, 0.06) : "transparent"
-        }
-        Rectangle {
-            visible: seg.active
-            anchors.horizontalCenter: parent.horizontalCenter
-            anchors.bottom: parent.bottom
-            anchors.bottomMargin: 2
-            width: segRow.implicitWidth
-            height: 2
-            color: Colors.neon
+            Behavior on color { ColorAnimation { duration: Style.fast } }
         }
 
         Row {

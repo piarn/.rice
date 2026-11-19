@@ -31,7 +31,7 @@ PanelWindow {
     WlrLayershell.keyboardFocus: WlrKeyboardFocus.None
     exclusionMode: ExclusionMode.Normal
     color: "transparent"
-    // top-centered; the exclusive zone (island/Spacer.qml) puts it just
+    // top-centered; the exclusive zone (island/TopRow.qml) puts it just
     // under the collapsed island
     anchors.top: true
     margins.top: 4

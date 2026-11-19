@@ -49,7 +49,6 @@ Rectangle {
         onClicked: (m) => row.clicked(m.modifiers & Qt.ShiftModifier)
     }
 
-    Marker { visible: row.current && row.kind !== "chips" }
 
     MonoText {
         visible: row.kind === "status"
@@ -63,14 +62,14 @@ Rectangle {
         text: row.kind === "status" ? row.v(row.item.text) : ""
     }
 
-    // quick toggles: a light and a word each; the picked one (←/→) is
-    // bright with the accent underline
+    // quick toggles: plain words, white while on, dim while off; the picked
+    // one (←/→) gets the faint tint
     Row {
         visible: row.kind === "chips"
         anchors.left: parent.left
-        anchors.leftMargin: 12
+        anchors.leftMargin: 2
         anchors.verticalCenter: parent.verticalCenter
-        spacing: 4
+        spacing: 2
 
         Repeater {
             model: row.kind === "chips" ? row.item.chips : []
@@ -81,32 +80,16 @@ Rectangle {
                 required property int index
                 readonly property bool on: !!row.v(modelData.on)
                 readonly property bool picked: row.current && index === row.chip
-                width: chipRow.implicitWidth + 20
+                width: chipText.implicitWidth + 20
                 height: 28
-                color: picked || chipMouse.containsMouse ? Style.tint(Colors.fg, 0.07) : "transparent"
+                color: picked ? Style.tint(Colors.fg, 0.07) : chipMouse.containsMouse ? Style.tint(Colors.fg, 0.04) : "transparent"
+                Behavior on color { ColorAnimation { duration: Style.fast } }
 
-                Row {
-                    id: chipRow
+                MonoText {
+                    id: chipText
                     anchors.centerIn: parent
-                    spacing: 7
-                    Light {
-                        anchors.verticalCenter: parent.verticalCenter
-                        on: chipCell.on
-                    }
-                    MonoText {
-                        id: chipText
-                        anchors.verticalCenter: parent.verticalCenter
-                        color: chipCell.on || chipCell.picked ? Colors.fg : Colors.gray2
-                        text: row.v(chipCell.modelData.title)
-                    }
-                }
-                Rectangle {
-                    visible: chipCell.picked
-                    anchors.horizontalCenter: parent.horizontalCenter
-                    anchors.bottom: parent.bottom
-                    width: chipRow.implicitWidth
-                    height: 2
-                    color: Colors.neon
+                    color: chipCell.on ? Colors.fg : Colors.gray
+                    text: row.v(chipCell.modelData.title)
                 }
                 MouseArea {
                     id: chipMouse
@@ -175,7 +158,7 @@ Rectangle {
             anchors.centerIn: parent
             visible: !row.item.icon && !row.item.swatch && row.kind !== "theme"
             font.pixelSize: 18
-            color: row.on || row.current ? Colors.neon : Colors.gray2
+            color: row.on || row.current ? Colors.fg : Colors.gray
             text: row.v(row.item.glyph) || ""
         }
         Image {
@@ -269,16 +252,12 @@ Rectangle {
             color: Colors.gray2
             text: row.rightText
         }
-        // toggles and choices: the readout's light, ■ on / □ off
-        Item {
+        // toggles: On (white) / Off (dim); choices: the current one says so
+        MonoText {
             anchors.verticalCenter: parent.verticalCenter
-            visible: row.kind === "toggle" || row.kind === "choice" || row.kind === "theme"
-            width: 10
-            height: 10
-            Light {
-                anchors.centerIn: parent
-                on: row.on
-            }
+            visible: row.kind === "toggle" || ((row.kind === "choice" || row.kind === "theme") && row.on)
+            color: row.on ? Colors.fg : Colors.gray
+            text: row.kind === "toggle" ? (row.on ? "On" : "Off") : "Current"
         }
         MonoText {
             anchors.verticalCenter: parent.verticalCenter

@@ -47,16 +47,6 @@ Item {
                     text: modelData
                 }
 
-                // where you are: the accent underline
-                Rectangle {
-                    anchors.horizontalCenter: parent.horizontalCenter
-                    anchors.bottom: parent.bottom
-                    width: parent.focused ? 12 : 0
-                    height: 2
-                    color: Colors.neon
-                    Behavior on width { NumberAnimation { duration: 120; easing.type: Easing.OutCubic } }
-                }
-
                 MouseArea {
                     id: wsMouse
                     anchors.fill: parent

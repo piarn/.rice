@@ -34,9 +34,10 @@ Rectangle {
     implicitHeight: col.implicitHeight + 12
     color: current || mouse.containsMouse ? Style.tint(Colors.fg, 0.05) : "transparent"
 
+    // only a critical notification gets a mark: red
     Marker {
-        visible: row.current || row.critical
-        color: row.critical ? Colors.red : Colors.neon
+        visible: row.critical
+        color: Colors.red
     }
 
     MouseArea {
@@ -118,7 +119,7 @@ Rectangle {
         anchors.right: parent.right
         anchors.rightMargin: 8
         y: 6
-        spacing: 8
+        spacing: 14
 
         MonoText {
             color: Colors.gray
@@ -126,7 +127,7 @@ Rectangle {
         }
         TextButton {
             opacity: row.current || mouse.containsMouse ? 1 : 0
-            label: "x"
+            label: "X"
             onClicked: NotificationState.dismiss(row.notification)
         }
     }

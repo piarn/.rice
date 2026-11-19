@@ -264,7 +264,7 @@ Item {
         function onConnectedDevicesChanged() { extrasSettle.restart() }
     }
 
-    Component.onCompleted: refreshExtras()
+    // no read at startup: quick and sound read the cards when they open
 
     Process {
         id: extrasProc

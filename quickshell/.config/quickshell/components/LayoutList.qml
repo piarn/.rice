@@ -25,7 +25,6 @@ Column {
             height: 28
             color: mouse.containsMouse && row.usable ? Style.tint(Colors.fg, 0.05) : "transparent"
 
-            Marker { visible: row.active }
 
             Icon {
                 id: checkIcon

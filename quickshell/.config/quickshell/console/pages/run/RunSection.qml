@@ -308,17 +308,17 @@ Item {
     }
 
     readonly property var sessionActions: [
-        { title: "lock", glyph: "\u{e899}", aliases: "screen",
+        { title: "Lock", glyph: "\u{e899}", aliases: "screen",
           cmd: [Quickshell.env("HOME") + "/.local/bin/dots-lock"] },
-        { title: "reload", glyph: "\u{e5d5}", aliases: "restart refresh sway quickshell tmux config",
+        { title: "Reload", glyph: "\u{e5d5}", aliases: "restart refresh sway quickshell tmux config",
           cmd: ["sh", "-c", "pkill -KILL -x quickshell; swaymsg reload"] },
-        { title: "suspend", glyph: "\u{f159}", aliases: "sleep",
+        { title: "Suspend", glyph: "\u{f159}", aliases: "sleep",
           cmd: ["systemctl", "suspend"] },
-        { title: "logout", glyph: "\u{e9ba}", aliases: "exit quit sway",
+        { title: "Logout", glyph: "\u{e9ba}", aliases: "exit quit sway",
           cmd: ["swaymsg", "exit"], confirm: true },
-        { title: "reboot", glyph: "\u{f053}", aliases: "restart",
+        { title: "Reboot", glyph: "\u{f053}", aliases: "restart",
           cmd: ["systemctl", "reboot"], confirm: true },
-        { title: "shutdown", glyph: "\u{f8c7}", aliases: "poweroff off halt",
+        { title: "Shutdown", glyph: "\u{f8c7}", aliases: "poweroff off halt",
           cmd: ["systemctl", "poweroff"], confirm: true },
     ]
 
