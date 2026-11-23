@@ -207,7 +207,11 @@ tty1 login: sway goes through `sway-session`.
 | `F1` / `F2` | power off / reboot |
 | `F3`, `Ctrl+←/→` | session |
 
-Needs `gui-libs/greetd` (Gentoo). `install.sh --stage DIR` only assembles the config, for
+Needs `gui-libs/greetd` (Gentoo) or `greetd greetd-selinux` (Fedora). Where quickshell
+is built into `~/.local/opt`, it copies it to `/usr/local/bin/quickshell` (which
+`build-quickshell.sh` keeps current), plus Departure Mono from `~/.local/share/fonts`, since
+the greetd user can't read your home; with SELinux on, it labels `/var/lib/qs-greeter`
+`xdm_var_lib_t`. `install.sh --stage DIR` only assembles the config, for
 a preview (`QML2_IMPORT_PATH=DIR/theme qs -p DIR`, `Esc` quits). If it doesn't come up,
 `Ctrl+Alt+F2`, log in, and `greeter/install.sh --remove` brings back the tty1 login.
 

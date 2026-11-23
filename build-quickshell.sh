@@ -167,6 +167,11 @@ build() {
     ln -sf "$PREFIX/bin/quickshell" "$BIN_DIR/qs"
     echo "$VERSION $(linked_qt)" >"$STAMP"
     rm -rf "$WORK"
+    # greeter/install.sh's copy for the login screen must match this Qt too.
+    if [ -f /usr/local/bin/quickshell ] && ! cmp -s "$PREFIX/bin/quickshell" /usr/local/bin/quickshell; then
+        sudo install -m 755 "$PREFIX/bin/quickshell" /usr/local/bin/quickshell \
+            || say "warning: couldn't update the login screen's /usr/local/bin/quickshell; rerun greeter/install.sh"
+    fi
     "$PREFIX/bin/quickshell" --version
 }
 

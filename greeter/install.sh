@@ -9,7 +9,8 @@
 #                                    QML2_IMPORT_PATH=DIR/theme)
 #   greeter/install.sh --remove      back to the tty1 login (works from tty2)
 #
-# greetd itself comes from the distro: emerge gui-libs/greetd on Gentoo.
+# greetd itself comes from the distro: emerge gui-libs/greetd on Gentoo,
+# dnf install greetd greetd-selinux on Fedora.
 set -euo pipefail
 here="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 shell="$here/../quickshell/.config/quickshell"
@@ -47,14 +48,30 @@ case ${1:-} in
 *) sed -n '2,12p' "$0" >&2; exit 2 ;;
 esac
 
-command -v greetd >/dev/null 2>&1 || { echo "error: greetd isn't installed (Gentoo: emerge gui-libs/greetd)" >&2; exit 1; }
+command -v greetd >/dev/null 2>&1 || { echo "error: greetd isn't installed (Gentoo: emerge gui-libs/greetd; Fedora: dnf install greetd greetd-selinux)" >&2; exit 1; }
 getent passwd greetd >/dev/null || { echo "error: no greetd user (Gentoo: acct-user/greetd)" >&2; exit 1; }
 command -v qs >/dev/null 2>&1 || { echo "error: quickshell isn't installed" >&2; exit 1; }
+
+# The greetd user can't read $HOME, so quickshell built by build-quickshell.sh
+# and fonts in ~/.local/share/fonts get a system-wide copy.
+qs_bin=$(readlink -f "$(command -v qs)")
+qs_copy=""
+case $qs_bin in "$HOME"/*) qs_copy=/usr/local/bin/quickshell ;; esac
+font_dir=$(dirname "$(fc-match -f '%{file}' 'Departure Mono:style=Regular' 2>/dev/null)")
+case $font_dir in "$HOME"/*) ;; *) font_dir="" ;; esac
+selinux=0
+if command -v selinuxenabled >/dev/null 2>&1 && selinuxenabled; then
+    command -v semanage >/dev/null 2>&1 || { echo "error: SELinux is on, but semanage is missing (Fedora: dnf install policycoreutils-python-utils)" >&2; exit 1; }
+    selinux=1
+fi
 
 echo "This will, with sudo:"
 echo "  - install the greeter to $dest/ (replacing what's there)"
 echo "  - make $state/ for greetd (last user and session, quickshell's cache)"
 echo "  - install greetd.toml as /etc/greetd/config.toml (the old one kept as config.toml.bak)"
+[ -z "$qs_copy" ] || echo "  - copy quickshell to $qs_copy (build-quickshell.sh keeps it current)"
+[ -z "$font_dir" ] || echo "  - copy the Departure Mono font to /usr/local/share/fonts/"
+[ "$selinux" = 0 ] || echo "  - label $state/ xdm_var_lib_t for SELinux, so greetd can write it"
 echo "  - enable greetd and disable getty@tty1, from the next boot"
 printf 'Continue? [y/N] '
 read -r reply
@@ -71,6 +88,23 @@ sudo chown -R root:root "$dest"
 sudo find "$dest" -type d -exec chmod 755 {} + -o -type f -exec chmod 644 {} +
 
 sudo install -d -o greetd -g greetd -m 750 "$state"
+
+if [ -n "$qs_copy" ]; then
+    sudo install -m 755 "$qs_bin" "$qs_copy"
+    sudo ln -sf quickshell "$(dirname "$qs_copy")/qs"
+fi
+if [ -n "$font_dir" ]; then
+    sudo install -d -m 755 /usr/local/share/fonts
+    sudo cp -r "$font_dir" /usr/local/share/fonts/
+    sudo fc-cache -s /usr/local/share/fonts
+fi
+if [ "$selinux" = 1 ]; then
+    sudo semanage fcontext -a -t xdm_var_lib_t "$state(/.*)?" 2>/dev/null \
+        || sudo semanage fcontext -m -t xdm_var_lib_t "$state(/.*)?"
+    sudo restorecon -R "$state" "$dest" /etc/greetd
+    [ -z "$qs_copy" ] || sudo restorecon "$qs_copy"
+    [ -z "$font_dir" ] || sudo restorecon -R /usr/local/share/fonts
+fi
 
 if [ -f /etc/greetd/config.toml ] && ! cmp -s /etc/greetd/config.toml "$here/greetd.toml"; then
     sudo cp /etc/greetd/config.toml /etc/greetd/config.toml.bak
