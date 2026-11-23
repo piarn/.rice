@@ -140,6 +140,12 @@ Item {
               aliases: "display screen monitor mirror hdmi",
               on: () => RiceState.currentLayout === l, run: () => RiceState.applyLayout(l) })
 
+        // top row layout
+        for (const [id, title] of [["wide", "Top row: edge to edge"], ["centered", "Top row: centered"]]) out.push(
+            { kind: "choice", group: "top row", key: "set:bar", title: title, glyph: "\u{e30c}",
+              aliases: "bar topbar status workspaces ultrawide center centre wide",
+              on: () => BarState.style === id, run: () => BarState.set(id) })
+
         // the console's pages
         for (const [page, title, aliases] of [["quick", "quick settings", "control panel overview"],
                                               ["sound", "sound settings", "audio mixer devices apps"],

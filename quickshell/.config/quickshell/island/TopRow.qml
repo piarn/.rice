@@ -1,6 +1,7 @@
 // One screen's top row, in a single window: the workspaces on the left, the
 // date and time in the middle, the status readout on the right, floating on
-// the wallpaper. The window spans the screen's width and reserves the
+// the wallpaper. BarState.centered pulls the workspaces and readout in
+// beside the clock instead of out to the screen's edges. The window spans the screen's width and reserves the
 // strip (40px) so windows start below it; its mask covers only the three
 // pieces, so clicks between them reach whatever is underneath.
 //
@@ -32,6 +33,10 @@ PanelWindow {
 
     readonly property int strip: 40
     readonly property int calendarWidth: 600
+    // centered bar: the pieces sit `pull` away from the (collapsed) clock
+    readonly property real centerX: width / 2
+    readonly property real clockHalf: (clock.implicitWidth + 2 * Style.border) / 2
+    readonly property int pull: 24
     readonly property bool grownHere: IslandState.islandOpen && IslandState.screen === modelData
 
     screen: modelData
@@ -79,7 +84,7 @@ PanelWindow {
 
     Workspaces {
         id: workspaces
-        x: 8
+        x: BarState.centered ? row.centerX - row.clockHalf - row.pull - width : 8
         y: 6
         height: Style.barHeight
     }
@@ -87,8 +92,7 @@ PanelWindow {
     StatusReadout {
         id: readout
         screen: row.modelData
-        anchors.right: parent.right
-        anchors.rightMargin: 8
+        x: BarState.centered ? row.centerX + row.clockHalf + row.pull : parent.width - width - 8
         y: 6
         height: Style.barHeight
     }

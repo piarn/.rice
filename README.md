@@ -14,7 +14,7 @@ git clone <rice> ~/.rice
 Each directory in its `PACKAGES` mirrors `$HOME`, and its files are linked there.
 `quickshell/` is the shell, ported from
 [piarn/.rice](https://github.com/piarn/.rice) at `4156a09`, its last styled
-version, without the greetd login screen and the theme switcher: a centered
+version, without the theme switcher (its greetd login screen is redone in `greeter/`): a centered
 island that grows into tabs (system, calendar, notifications, network, run,
 clipboard), toasts, OSD and lock screen, with its helpers in `.local/bin`.
 `$mod+d` opens the launcher; `=` `>` `/` `?` `@` `~` `!` `:` as the first
@@ -190,6 +190,26 @@ The tmux bar centers its window list, and the shell and session sections have
 icons from Symbols Nerd Font, foot's fallback font. Window 10 shows as `0` to
 match the number row, and the number keys in TMUX mode select windows the same
 way: `1`–`9`, then `0` for window 10.
+
+## Login screen
+
+`greeter/` is a greetd greeter in the lock screen's look: the clock, a user line, the
+password cells, and the session. greetd runs it as its own user in a throwaway sway, so
+`greeter/install.sh` copies it and the components it uses to `/etc/greetd/quickshell/`
+(standalone; rerun it after changing them), installs `/etc/greetd/config.toml`, and
+swaps the tty1 login for greetd from the next boot. It remembers the last user and
+session in `/var/lib/qs-greeter/last`, and starts the session through `bash -l`, like the
+tty1 login: sway goes through `sway-session`.
+
+| Keys | Action |
+| --- | --- |
+| `Tab` / `Enter` | user ↔ password / next field, then log in |
+| `F1` / `F2` | power off / reboot |
+| `F3`, `Ctrl+←/→` | session |
+
+Needs `gui-libs/greetd` (Gentoo). `install.sh --stage DIR` only assembles the config, for
+a preview (`QML2_IMPORT_PATH=DIR/theme qs -p DIR`, `Esc` quits). If it doesn't come up,
+`Ctrl+Alt+F2`, log in, and `greeter/install.sh --remove` brings back the tty1 login.
 
 ## Foot with ligatures
 

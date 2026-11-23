@@ -1,0 +1,8 @@
+# /etc/greetd/config.toml, installed by greeter/install.sh.
+[terminal]
+# tty1, where the console login used to start sway
+vt = 1
+
+[default_session]
+command = "sway --config /etc/greetd/quickshell/sway.conf"
+user = "greetd"
