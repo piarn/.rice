@@ -25,6 +25,9 @@ desktop	mpv	media-video/mpv	mpv	mpv	mpv	mpv	-
 desktop	dots-polkit-agent --check	gnome-extra/polkit-gnome	lxpolkit	mate-polkit	polkit-gnome	polkit-gnome	-
 desktop	file:/usr/share/xdg-desktop-portal/portals/wlr.portal	gui-libs/xdg-desktop-portal-wlr	xdg-desktop-portal-wlr	xdg-desktop-portal-wlr	xdg-desktop-portal-wlr	xdg-desktop-portal-wlr	-
 desktop	file:/usr/share/xdg-desktop-portal/portals/gtk.portal	sys-apps/xdg-desktop-portal-gtk	xdg-desktop-portal-gtk	xdg-desktop-portal-gtk	xdg-desktop-portal-gtk	xdg-desktop-portal-gtk	-
+# The login screen (greeter/install.sh). Installed with the rest, but only that script enables it.
+desktop	greetd	gui-libs/greetd	greetd	greetd,greetd-selinux	greetd	greetd	-
+desktop	semanage	-	-	policycoreutils-python-utils	-	-	-
 desktop	font:JetBrains Mono	media-fonts/jetbrains-mono	fonts-jetbrains-mono	jetbrains-mono-fonts	ttf-jetbrains-mono	jetbrains-mono-fonts	-
 desktop	font:Noto Color Emoji	media-fonts/noto-emoji	fonts-noto-color-emoji	google-noto-color-emoji-fonts	noto-fonts-emoji	google-noto-coloremoji-fonts	-
 desktop	font:Symbols Nerd Font	media-fonts/symbols-nerd-font	-	-	ttf-nerd-fonts-symbols	nerdfonts-symbolsonly-fonts	-

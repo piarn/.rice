@@ -207,7 +207,7 @@ tty1 login: sway goes through `sway-session`.
 | `F1` / `F2` | power off / reboot |
 | `F3`, `Ctrl+←/→` | session |
 
-Needs `gui-libs/greetd` (Gentoo) or `greetd greetd-selinux` (Fedora). Where quickshell
+greetd comes from the distro (`packages.tsv`; `install.sh` and the greeter script install it). Where quickshell
 is built into `~/.local/opt`, it copies it to `/usr/local/bin/quickshell` (which
 `build-quickshell.sh` keeps current), plus Departure Mono from `~/.local/share/fonts`, since
 the greetd user can't read your home; with SELinux on, it labels `/var/lib/qs-greeter`

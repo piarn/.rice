@@ -1,7 +1,8 @@
 #!/usr/bin/env bash
 # Puts the sway desktop onto a Linux machine, on top of ~/.dotfiles. Safe to re-run.
 #
-#   ./install.sh            packages (sudo), quickshell, links, fonts, portal, default apps
+#   ./install.sh            packages (sudo), quickshell, links, fonts, portal, default apps,
+#                           the greetd login screen
 #   ./install.sh --link     links only: no sudo, no network
 #   ./install.sh --apps     also the flatpak apps in apps.txt
 #   ./install.sh --no-sudo  only what needs no root
@@ -233,6 +234,15 @@ report_foot_lig() {
     echo "    foot-lig runs stock foot until you build it: see the foot-lig project's README"
 }
 
+# greetd and the quickshell login screen in place of the tty1 login. Reruns
+# reconfigure it. Only where systemd is the init (that's what it enables), and
+# a failure here mustn't stop the rest.
+setup_greeter() {
+    [ "$NO_SUDO" = 0 ] || return 0
+    [ -d /run/systemd/system ] || { warn "no systemd here: the login screen (greeter/) isn't set up"; return 0; }
+    "$RICE_DIR/greeter/install.sh" --yes || warn "the login screen didn't install; run greeter/install.sh to see why"
+}
+
 # ---------------------------------------------------------------- main
 
 ACTION=install
@@ -244,8 +254,8 @@ while [ $# -gt 0 ]; do
         --apps) APPS=1 ;;
         --no-sudo) NO_SUDO=1 ;;
         --dry-run) DRY_RUN=1 ;;
-        -h | --help) sed -n '2,15p' "$0" | sed 's/^# \{0,1\}//'; exit 0 ;;
-        *) echo "unknown option: $1" >&2; sed -n '2,15p' "$0" | sed 's/^# \{0,1\}//' >&2; exit 1 ;;
+        -h | --help) sed -n '2,16p' "$0" | sed 's/^# \{0,1\}//'; exit 0 ;;
+        *) echo "unknown option: $1" >&2; sed -n '2,16p' "$0" | sed 's/^# \{0,1\}//' >&2; exit 1 ;;
     esac
     shift
 done
@@ -265,6 +275,7 @@ if [ "$DRY_RUN" = 1 ]; then
     if [ -d /sys/module/nvidia_drm ] && ! "$RICE_DIR/build-sway.sh" --check; then
         echo "  sway: NVIDIA needs 1.12 or newer$([ "$PM" != dnf ] || echo ', rebuilt from Fedora'"'"'s packaging by build-sway.sh')"
     fi
+    echo "  login screen: greeter/install.sh --yes (greetd config, tty1 login swapped for it; needs systemd)"
     echo "  links: ${PACKAGES[*]}"
     exit 0
 fi
@@ -290,4 +301,5 @@ set_default_apps
 link_librewolf_prefs
 [ "$APPS" = 0 ] || install_flatpak_apps
 report_foot_lig
+setup_greeter
 say "done. Log in again to pick up the environment and the new configs."

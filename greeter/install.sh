@@ -1,16 +1,17 @@
 #!/usr/bin/env bash
-# The quickshell login screen, for greetd (see shell.qml). Like system/apply.sh
-# it's system-wide, so install.sh never runs it; it shows what it will do and
+# The quickshell login screen, for greetd (see shell.qml). System-wide, so it uses
+# sudo; install.sh runs it with --yes, and by hand it shows what it will do and
 # asks first.
 #
 #   greeter/install.sh               install it, and greetd in place of the tty1 login
+#   greeter/install.sh --yes         the same without asking (install.sh does this;
+#                                    safe to rerun: it reconfigures what's there)
 #   greeter/install.sh --stage DIR   only assemble the config into DIR, no sudo
 #                                    (preview: qs -p DIR, with
 #                                    QML2_IMPORT_PATH=DIR/theme)
 #   greeter/install.sh --remove      back to the tty1 login (works from tty2)
 #
-# greetd itself comes from the distro: emerge gui-libs/greetd on Gentoo,
-# dnf install greetd greetd-selinux on Fedora.
+# greetd comes from the distro (packages.tsv): installed here if it's missing.
 set -euo pipefail
 here="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 shell="$here/../quickshell/.config/quickshell"
@@ -26,6 +27,9 @@ assemble() {
     cp -L "$shell"/components/{SegmentDigit,Style,MonoText}.qml "$out/components/"
     cp -L "$shell"/theme/quickshell/{Colors.qml,qmldir} "$out/theme/quickshell/"
 }
+
+assume_yes=0
+[ "${1:-}" != --yes ] || { assume_yes=1; shift; }
 
 case ${1:-} in
 --stage)
@@ -45,10 +49,24 @@ case ${1:-} in
     exit 0
     ;;
 "") ;;
-*) sed -n '2,12p' "$0" >&2; exit 2 ;;
+*) sed -n '2,14p' "$0" >&2; exit 2 ;;
 esac
 
-command -v greetd >/dev/null 2>&1 || { echo "error: greetd isn't installed (Gentoo: emerge gui-libs/greetd; Fedora: dnf install greetd greetd-selinux)" >&2; exit 1; }
+# greetd comes from the distro's package manager, found the way install.sh does
+# (portage, dnf, apt, pacman, zypper), from the same packages.tsv.
+if ! command -v greetd >/dev/null 2>&1 || ! getent passwd greetd >/dev/null; then
+    DOTS_DIR="${DOTS_DIR:-$HOME/.dotfiles}"
+    [ -r "$DOTS_DIR/.bootstrap/lib.sh" ] || { echo "error: greetd isn't installed, and ~/.dotfiles (which installs it) isn't there" >&2; exit 1; }
+    # shellcheck source=/dev/null
+    . "$DOTS_DIR/.bootstrap/lib.sh"
+    detect_platform
+    [ "$PM" != none ] || { echo "error: greetd isn't installed, and there's no package manager to install it with" >&2; exit 1; }
+    if [ "$PM" = portage ]; then groups="desktop gentoo"; else groups="desktop xwayland"; fi
+    # shellcheck disable=SC2086
+    install_manifest "$here/../packages.tsv" rice $groups
+    hash -r
+fi
+command -v greetd >/dev/null 2>&1 || { echo "error: greetd didn't install" >&2; exit 1; }
 getent passwd greetd >/dev/null || { echo "error: no greetd user (Gentoo: acct-user/greetd)" >&2; exit 1; }
 command -v qs >/dev/null 2>&1 || { echo "error: quickshell isn't installed" >&2; exit 1; }
 
@@ -73,9 +91,11 @@ echo "  - install greetd.toml as /etc/greetd/config.toml (the old one kept as co
 [ -z "$font_dir" ] || echo "  - copy the Departure Mono font to /usr/local/share/fonts/"
 [ "$selinux" = 0 ] || echo "  - label $state/ xdm_var_lib_t for SELinux, so greetd can write it"
 echo "  - enable greetd and disable getty@tty1, from the next boot"
-printf 'Continue? [y/N] '
-read -r reply
-case $reply in y | Y) ;; *) echo "Nothing changed."; exit 0 ;; esac
+if [ "$assume_yes" = 0 ]; then
+    printf 'Continue? [y/N] '
+    read -r reply
+    case $reply in y | Y) ;; *) echo "Nothing changed."; exit 0 ;; esac
+fi
 
 tmp=$(mktemp -d)
 trap 'rm -rf "$tmp"' EXIT
